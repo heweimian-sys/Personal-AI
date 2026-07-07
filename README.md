@@ -18,7 +18,7 @@ Personal-AI/
 ├── 更新记录.md                 ← 仓库整体更新记录
 │
 ├── 项目/                      ← 所有正式项目
-│   └── 竞品调研网站/           ← 项目一：信息追踪平台
+│   └── 竞品调研网站/           ← 项目一：信息整理平台
 │       ├── 项目说明.md         ← 项目文档
 │       ├── 产品需求.md
 │       ├── 开发计划.md
@@ -37,11 +37,11 @@ Personal-AI/
 
 ### 竞品调研网站
 
-一个"知→行"信息差消除平台：输入关键词，自动搜索互联网信息，用 AI 整理成时间线、分类标记，输出结构化报告和行动建议。
+一个面向中文用户的信息整理平台：输入任意关键词，自动搜索互联网信息，用 AI 整理成时间线、分类标记，输出结构化报告和行动建议。可做竞品分析、趋势梳理、选题管理、知识演变追踪。
 
-- **技术栈**：Python + FastAPI + Next.js + OpenAI + Tavily
+- **技术栈**：Python + FastAPI + Next.js + DeepSeek + 博查搜索
 - **设计风格**：水墨文学风
-- **状态**：文档搭建完成，代码开发中
+- **状态**：MVP 方案制定完成，代码开发中
 - **详情**：[项目说明.md](./项目/竞品调研网站/项目说明.md)
 
 ## 技术栈
@@ -50,8 +50,8 @@ Personal-AI/
 |---|---|
 | 后端 | Python, FastAPI, SQLAlchemy, PostgreSQL |
 | 前端 | Next.js, TypeScript, Tailwind CSS |
-| AI | OpenAI GPT-4o, Tavily Search |
-| 部署 | Docker |
+| AI | DeepSeek（国内直连，JSON Output） |
+| 搜索 | 博查 Bocha API（国内直连） |
 | 版本管理 | Git + GitHub |
 
 ## 开发记录
