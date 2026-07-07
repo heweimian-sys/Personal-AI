@@ -37,11 +37,13 @@ Personal-AI/
 
 ### 竞品调研网站
 
-一个面向中文用户的信息整理平台：输入任意关键词，自动搜索互联网信息，用 AI 整理成时间线、分类标记，输出结构化报告和行动建议。可做竞品分析、趋势梳理、选题管理、知识演变追踪。
+一个面向中文用户的信息整理平台：输入任意关键词，自动搜索互联网信息，用 AI 整理成时间线、分类标记，建立主题间的双向链接（类似 Obsidian），输出结构化报告和行动建议。
 
-- **技术栈**：Python + FastAPI + Next.js + DeepSeek + 博查搜索
+- **技术栈**：Python + FastAPI + Next.js + DeepSeek + Firecrawl 自部署
 - **设计风格**：水墨文学风
-- **状态**：MVP 方案制定完成，代码开发中
+- **核心功能**：搜索 → AI 精炼 → 时间线 → 双向链接 → 报告
+- **参考项目**：deep-research、deep-research-web-ui
+- **状态**：MVP 方案确定，代码开发中
 - **详情**：[项目说明.md](./项目/竞品调研网站/项目说明.md)
 
 ## 技术栈
@@ -51,7 +53,7 @@ Personal-AI/
 | 后端 | Python, FastAPI, SQLAlchemy, PostgreSQL |
 | 前端 | Next.js, TypeScript, Tailwind CSS |
 | AI | DeepSeek（国内直连，JSON Output） |
-| 搜索 | 博查 Bocha API（国内直连） |
+| 搜索 | Firecrawl 自部署（完全免费） |
 | 版本管理 | Git + GitHub |
 
 ## 开发记录
