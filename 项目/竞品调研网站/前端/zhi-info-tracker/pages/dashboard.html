@@ -1,156 +1,364 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>知信 · 仪表盘</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..600&family=Noto+Sans+SC:wght@400;500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../colors_and_type.css">
-    <style>*,::before,::after{box-sizing:border-box}body{font-family:'Inter','Noto Sans SC',sans-serif;background:var(--color-bg);color:var(--color-text);margin:0;line-height:1.5;min-height:100vh;display:flex}/* ===== Sidebar ===== */.sidebar{width:240px;background:#fff;border-right:1px solid #e2e4e9;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50}.sidebar-brand{padding:24px 20px;border-bottom:1px solid #e2e4e9;display:flex;align-items:center;gap:10px}.sidebar-brand h1{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin:0;color:var(--color-text)}.sidebar-brand .dot{color:var(--color-primary)}.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}.nav-section{padding:0 16px;margin-bottom:8px}.nav-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--color-placeholder);padding:8px 8px 4px}.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;font-size:14px;color:var(--color-secondary);cursor:pointer;transition:all .15s;text-decoration:none}.nav-item:hover{background:#f1f2f4;color:var(--color-text)}.nav-item.active{background:rgba(0,154,252,.1);color:var(--color-primary);font-weight:500}.nav-item .badge{font-size:11px;background:var(--color-primary);color:#fff;border-radius:10px;padding:1px 7px;margin-left:auto}/* ===== Mobile hamburger ===== */.hamburger{display:none;position:fixed;top:16px;left:16px;z-index:100;background:#fff;border:1px solid #e2e4e9;border-radius:8px;width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer;font-size:20px}.sidebar.open{display:flex!important}/* ===== Main ===== */.main{flex:1;margin-left:240px;padding:32px 40px;max-width:calc(100vw - 240px)}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px}.topbar h2{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;margin:0}.topbar-actions{display:flex;gap:12px;align-items:center}.btn-primary{background:var(--color-primary);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;font-family:inherit}.btn-primary:hover{background:#0088e0}.btn-secondary{background:#fff;color:var(--color-text);border:1px solid #e2e4e9;border-radius:8px;padding:10px 20px;font-size:14px;cursor:pointer;transition:all .2s;font-family:inherit}.btn-secondary:hover{border-color:var(--color-primary);color:var(--color-primary)}/* ===== Stats ===== */.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}.stat-card{background:#fff;border:1px solid #e2e4e9;border-radius:12px;padding:24px}.stat-card .stat-label{font-size:13px;color:var(--color-secondary);margin-bottom:4px}.stat-card .stat-value{font-size:32px;font-weight:700;font-family:'Playfair Display',serif;margin-bottom:4px}.stat-card .stat-change{font-size:13px}.stat-change.up{color:#22c55e}.stat-change.down{color:#ef4444}/* ===== Table ===== */.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.section-header h3{font-family:'Playfair Display',serif;font-size:20px;margin:0}.data-table{width:100%;background:#fff;border:1px solid #e2e4e9;border-radius:12px;overflow:hidden}.table-row{display:grid;grid-template-columns:2fr 1fr .6fr 1fr;padding:14px 20px;border-bottom:1px solid #f1f2f4;font-size:14px;align-items:center}.table-row.header{background:#f9fafb;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--color-secondary)}.table-row:last-child{border-bottom:none}.table-row .topic-title{font-weight:500}.table-row .topic-title a{color:var(--color-text);text-decoration:none;transition:color .15s}.table-row .topic-title a:hover{color:var(--color-primary)}.status-badge{padding:4px 12px;border-radius:100px;font-size:12px;font-weight:500}.status-badge.active{background:rgba(34,197,94,.1);color:#16a34a}.status-badge.paused{background:rgba(156,163,175,.1);color:#6b7280}/* ===== Latest updates ===== */.latest-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px}.update-card{flex:0 0 280px;background:#fff;border:1px solid #e2e4e9;border-radius:10px;padding:16px}.update-card .update-time{font-size:11px;color:var(--color-placeholder);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}.update-card .update-text{font-size:14px;line-height:1.5;color:var(--color-text);margin-bottom:8px}.update-card .update-topic{font-size:12px;color:var(--color-primary)}/* Responsive */@media (max-width:768px){.hamburger{display:flex}.sidebar{display:none}.sidebar.open{display:flex!important;position:fixed;top:0;left:0;bottom:0;z-index:99;box-shadow:2px 0 8px rgba(0,0,0,.1)}.main{margin-left:0;max-width:100vw;padding:24px 16px}.stats-grid{grid-template-columns:1fr}.table-row{grid-template-columns:1fr 1fr;font-size:13px;padding:12px 16px}}</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知信 · 仪表盘</title>
+<style>
+:root {
+  --color-mist: #f3f4f6;
+  --color-paper: #ffffff;
+  --color-ink: #1f2937;
+  --color-ink-muted: #6b7280;
+  --color-slate-blue: #4b5563;
+  --color-surf-blue: #009afc;
+  --color-surf-light: #e6f4fe;
+  --color-hairline: #e5e7eb;
+  --color-hairline-strong: #d1d5db;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --font-ui: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-display: "Playfair Display", "Georgia", serif;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --sidebar-w: 240px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--color-mist);color:var(--color-ink);font-family:var(--font-ui);display:flex;min-height:100vh;line-height:1.5}
+
+/* Sidebar */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--color-paper);border-right:1px solid var(--color-hairline);padding:24px 0;z-index:100;overflow-y:auto;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1)}
+.sidebar-logo{font-family:var(--font-display);font-size:22px;font-weight:700;padding:0 24px 20px;border-bottom:1px solid var(--color-hairline);margin-bottom:12px}
+.sidebar-nav{display:flex;flex-direction:column;padding:0 12px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;color:var(--color-slate-blue);text-decoration:none;transition:all 0.2s;cursor:pointer}
+.sidebar-item:hover{background:var(--color-surf-light);color:var(--color-surf-blue)}
+.sidebar-item.active{background:var(--color-surf-light);color:var(--color-surf-blue);font-weight:600}
+.sidebar-item svg{width:20px;height:20px;flex-shrink:0}
+
+/* Overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:99;display:none;opacity:0;transition:opacity 0.3s}
+.overlay.visible{display:block;opacity:1}
+
+/* Main */
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;padding:32px 40px}
+
+/* Top bar */
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.top-bar h1{font-family:var(--font-display);font-size:28px;font-weight:700}
+.top-bar-actions{display:flex;align-items:center;gap:12px}
+.btn{height:38px;padding:0 18px;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s}
+.btn-primary{background:var(--color-surf-blue);color:#fff}
+.btn-primary:hover{background:#0084d6}
+.btn-ghost{background:transparent;color:var(--color-slate-blue);border:1px solid var(--color-hairline-strong)}
+.btn-ghost:hover{background:var(--color-mist)}
+
+/* Hamburger */
+.hamburger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border:none;background:transparent;cursor:pointer;border-radius:var(--radius-sm)}
+.hamburger:hover{background:var(--color-mist)}
+.hamburger svg{width:22px;height:22px}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:28px}
+.stat-card{padding:24px;border-radius:var(--radius-lg);background:var(--color-paper);border:1px solid var(--color-hairline)}
+.stat-card .stat-label{font-size:13px;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+.stat-card .stat-value{font-family:var(--font-display);font-size:36px;font-weight:700;line-height:1}
+.stat-card .stat-change{font-size:13px;margin-top:6px}
+.stat-change.up{color:#10b981}
+.stat-change.down{color:var(--color-danger)}
+
+/* Table */
+.table-wrap{border-radius:var(--radius-lg);background:var(--color-paper);border:1px solid var(--color-hairline);overflow:hidden;margin-bottom:28px}
+.table-header{padding:20px 24px;border-bottom:1px solid var(--color-hairline);display:flex;align-items:center;justify-content:space-between}
+.table-header h2{font-size:18px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+thead th{padding:12px 24px;text-align:left;font-size:12px;font-weight:600;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:0.05em;background:var(--color-mist);border-bottom:1px solid var(--color-hairline)}
+tbody td{padding:14px 24px;font-size:14px;border-bottom:1px solid var(--color-hairline)}
+tbody tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500}
+.badge-active{background:#ecfdf5;color:#10b981}
+.badge-paused{background:var(--color-mist);color:var(--color-ink-muted)}
+
+/* Updates */
+.updates-scroll{display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+.updates-scroll::-webkit-scrollbar{height:4px}
+.updates-scroll::-webkit-scrollbar-thumb{background:var(--color-hairline-strong);border-radius:2px}
+.update-card{min-width:280px;padding:20px;border-radius:var(--radius-md);background:var(--color-paper);border:1px solid var(--color-hairline);flex-shrink:0}
+.update-card h4{font-size:15px;font-weight:600;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-clamp:2}
+.update-card .update-meta{font-size:12px;color:var(--color-ink-muted)}
+
+/* Responsive */
+@media(max-width:1024px){
+  .stats-grid{grid-template-columns:1fr}
+  .main{padding:24px 20px}
+}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding:20px 16px}
+  .hamburger{display:flex}
+  .top-bar h1{font-size:22px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .sidebar,.overlay{transition:none}
+}
+
+/* Focus visible for keyboard users */
+:focus-visible{outline:2px solid var(--color-surf-blue);outline-offset:2px}
+</style>
 </head>
 <body>
-    <!-- 移动端汉堡菜单 -->
-    <button class="hamburger" id="hamburgerBtn" aria-label="打开菜单" title="菜单">☰</button>
 
-    <aside class="sidebar" id="sidebar" aria-label="主导航侧边栏">
-        <div class="sidebar-brand">
-            <h1>知信<span class="dot">·</span></h1>
-        </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">
-                <div class="nav-section-title">主导航</div>
-                <a href="dashboard.html" class="nav-item active" aria-label="仪表盘">
-                    📊 仪表盘
-                </a>
-                <a href="graph.html" class="nav-item" aria-label="关系图谱">
-                    🔗 关系图谱
-                </a>
-                <a href="report.html" class="nav-item" aria-label="研究报告">
-                    📝 研究报告
-                </a>
-            </div>
-            <div class="nav-section">
-                <div class="nav-section-title">工具</div>
-                <a href="settings.html" class="nav-item" aria-label="设置">
-                    ⚙️ 设置
-                </a>
-            </div>
-        </nav>
-    </aside>
-    
-    <main class="main" aria-label="主内容区">
-        <div class="topbar">
-            <h2>仪表盘</h2>
-            <div class="topbar-actions">
-                <button class="btn-secondary">导出数据</button>
-                <button class="btn-primary">+ 新建专题</button>
-            </div>
-        </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">追踪专题</div>
-                <div class="stat-value">12</div>
-                <div class="stat-change up">+2 本周新增</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">今日更新</div>
-                <div class="stat-value">47</div>
-                <div class="stat-change up">+12% 较昨日</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">AI 对话次数</div>
-                <div class="stat-value">8</div>
-                <div class="stat-change down">-3 较昨日</div>
-            </div>
-        </div>
-        
-        <div class="section-header">
-            <h3>追踪专题</h3>
-            <button class="btn-secondary">查看全部</button>
-        </div>
-        
-        <div class="data-table">
-            <div class="table-row header">
-                <span>专题名称</span>
-                <span>状态</span>
-                <span>更新</span>
-                <span>最近更新</span>
-            </div>
-            <div class="table-row">
-                <span class="topic-title"><a href="#">AI 行业趋势</a></span>
-                <span><span class="status-badge active">追踪中</span></span>
-                <span>23</span>
-                <span>2 小时前</span>
-            </div>
-            <div class="table-row">
-                <span class="topic-title"><a href="#">新能源政策动向</a></span>
-                <span><span class="status-badge active">追踪中</span></span>
-                <span>18</span>
-                <span>5 小时前</span>
-            </div>
-            <div class="table-row">
-                <span class="topic-title"><a href="#">短视频赛道</a></span>
-                <span><span class="status-badge paused">已暂停</span></span>
-                <span>6</span>
-                <span>1 天前</span>
-            </div>
-        </div>
-        
-        <div style="margin-top:32px">
-            <div class="section-header">
-                <h3>最新更新</h3>
-                <button class="btn-secondary">查看全部</button>
-            </div>
-        </div>
-        
-        <div class="latest-scroll">
-            <div class="update-card">
-                <div class="update-time">2 小时前</div>
-                <div class="update-text">DeepSeek V4 正式发布，推理能力大幅提升，API 价格下调 50%</div>
-                <div class="update-topic">AI 行业趋势</div>
-            </div>
-            <div class="update-card">
-                <div class="update-time">3 小时前</div>
-                <div class="update-text">国务院发布《新一代人工智能发展规划》2026修订版</div>
-                <div class="update-topic">AI 行业趋势</div>
-            </div>
-            <div class="update-card">
-                <div class="update-time">4 小时前</div>
-                <div class="update-text">深圳出台新能源补贴新政策，最高补贴 2.5 万元</div>
-                <div class="update-topic">新能源政策动向</div>
-            </div>
-            <div class="update-card">
-                <div class="update-time">5 小时前</div>
-                <div class="update-text">宁德时代发布固态电池技术突破，能量密度提升 40%</div>
-                <div class="update-topic">新能源政策动向</div>
-            </div>
-            <div class="update-card">
-                <div class="update-time">6 小时前</div>
-                <div class="update-text">抖音调整算法推荐机制，知识类内容将获更多流量倾斜</div>
-                <div class="update-topic">短视频赛道</div>
-            </div>
-        </div>
-    </main>
+<!-- Overlay -->
+<div class="overlay" id="overlay" aria-hidden="true" tabindex="-1"></div>
 
-    <script>
-        // 登录状态检查
-        // TODO: 后端认证接入后，此处改为检查 sessionStorage token
-        // if (!sessionStorage.getItem('auth_token')) {
-        //     window.location.href = 'login.html';
-        // }
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar" aria-label="主导航侧边栏" role="navigation">
+  <div class="sidebar-logo">知信</div>
+  <nav class="sidebar-nav" aria-label="主导航">
+    <a href="#" class="sidebar-item active" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      仪表盘
+    </a>
+    <a href="#" class="sidebar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10"/></svg>
+      关系图谱
+    </a>
+    <a href="#" class="sidebar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      研究报告
+    </a>
+    <a href="#" class="sidebar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      设置
+    </a>
+  </nav>
+</aside>
 
-        // 移动端汉堡菜单
-        document.getElementById('hamburgerBtn').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('open');
-        });
+<!-- Main content -->
+<main class="main" id="mainContent" role="main">
+  <div class="top-bar">
+    <button class="hamburger" id="hamburger" aria-label="打开菜单" aria-expanded="false" aria-controls="sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <h1>仪表盘</h1>
+    <div class="top-bar-actions">
+      <span style="font-size:13px;color:var(--color-ink-muted)" id="userStatus">未登录</span>
+    </div>
+  </div>
 
-        // 点击主内容区关闭侧边栏
-        document.querySelector('.main').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.remove('open');
-        });
-    </script>
+  <!-- Stats -->
+  <div class="stats-grid" role="region" aria-label="统计数据">
+    <div class="stat-card">
+      <div class="stat-label">追踪专题</div>
+      <div class="stat-value">12</div>
+      <div class="stat-change up">+2 本周</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">今日更新</div>
+      <div class="stat-value">47</div>
+      <div class="stat-change up">+12%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">AI 对话次数</div>
+      <div class="stat-value">8</div>
+      <div class="stat-change down">-3</div>
+    </div>
+  </div>
+
+  <!-- Topic table -->
+  <div class="table-wrap" role="region" aria-label="专题列表">
+    <div class="table-header">
+      <h2>我的专题</h2>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">专题名称</th>
+          <th scope="col">状态</th>
+          <th scope="col">更新数</th>
+          <th scope="col">最近更新</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>AI 行业趋势</td>
+          <td><span class="badge badge-active">追踪中</span></td>
+          <td>24</td>
+          <td>10 分钟前</td>
+        </tr>
+        <tr>
+          <td>新能源政策动向</td>
+          <td><span class="badge badge-active">追踪中</span></td>
+          <td>18</td>
+          <td>1 小时前</td>
+        </tr>
+        <tr>
+          <td>短视频赛道</td>
+          <td><span class="badge badge-paused">已暂停</span></td>
+          <td>5</td>
+          <td>3 天前</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Latest updates -->
+  <div role="region" aria-label="最新动态">
+    <div class="table-header" style="background:transparent;padding-left:0">
+      <h2>最新动态</h2>
+    </div>
+    <div class="updates-scroll" role="list" aria-label="更新列表">
+      <article class="update-card" role="listitem">
+        <h4>DeepSeek V4 发布：推理能力提升 40%</h4>
+        <div class="update-meta">AI 行业趋势 · 15 分钟前</div>
+      </article>
+      <article class="update-card" role="listitem">
+        <h4>国务院发布 AI 产业发展规划（2026-2030）</h4>
+        <div class="update-meta">AI 行业趋势 · 32 分钟前</div>
+      </article>
+      <article class="update-card" role="listitem">
+        <h4>欧盟通过新能源补贴法案，风电光伏受益</h4>
+        <div class="update-meta">新能源政策动向 · 1 小时前</div>
+      </article>
+      <article class="update-card" role="listitem">
+        <h4>固态电池突破：宁德时代宣布量产计划</h4>
+        <div class="update-meta">新能源政策动向 · 2 小时前</div>
+      </article>
+      <article class="update-card" role="listitem">
+        <h4>抖音算法机制调整，内容创作者需关注</h4>
+        <div class="update-meta">短视频赛道 · 3 小时前</div>
+      </article>
+    </div>
+  </div>
+</main>
+
+<script>
+// ============================================
+// 知信·仪表盘 客户端逻辑
+// ============================================
+
+(function() {
+  'use strict';
+
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const hamburger = document.getElementById('hamburger');
+  const mainContent = document.getElementById('mainContent');
+  const sidebarNav = sidebar.querySelector('.sidebar-nav');
+
+  let sidebarOpen = false;
+
+  // --- Sidebar toggle with accessibility ---
+  function openSidebar() {
+    sidebarOpen = true;
+    sidebar.classList.add('open');
+    overlay.classList.add('visible');
+    overlay.setAttribute('aria-hidden', 'false');
+    hamburger.setAttribute('aria-expanded', 'true');
+    hamburger.setAttribute('aria-label', '关闭菜单');
+
+    // Focus management: move focus to first nav item
+    const firstNavItem = sidebarNav.querySelector('.sidebar-item');
+    if (firstNavItem) {
+      setTimeout(function() { firstNavItem.focus(); }, 100);
+    }
+  }
+
+  function closeSidebar() {
+    sidebarOpen = false;
+    sidebar.classList.remove('open');
+    overlay.classList.remove('visible');
+    overlay.setAttribute('aria-hidden', 'true');
+    hamburger.setAttribute('aria-expanded', 'false');
+    hamburger.setAttribute('aria-label', '打开菜单');
+
+    // Return focus to hamburger
+    hamburger.focus();
+  }
+
+  hamburger.addEventListener('click', function() {
+    if (sidebarOpen) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  });
+
+  // Close sidebar when clicking overlay
+  overlay.addEventListener('click', closeSidebar);
+
+  // Close sidebar when clicking main content area (mobile)
+  mainContent.addEventListener('click', function(e) {
+    if (sidebarOpen && window.innerWidth <= 768) {
+      closeSidebar();
+    }
+  });
+
+  // Keyboard: Escape to close sidebar
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && sidebarOpen) {
+      closeSidebar();
+    }
+  });
+
+  // Trap focus inside sidebar when open
+  sidebar.addEventListener('keydown', function(e) {
+    if (!sidebarOpen || e.key !== 'Tab') return;
+
+    var focusable = sidebar.querySelectorAll(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
+  // --- Login status check (placeholder) ---
+  // TODO: 后端认证接入后，检查登录状态并更新 UI
+  (function checkLoginStatus() {
+    var statusEl = document.getElementById('userStatus');
+    // Placeholder: 后续接入 fetch('/api/auth/me')
+    if (statusEl) {
+      statusEl.textContent = '未登录';
+    }
+  })();
+
+  // --- Sidebar navigation: aria-current ---
+  var navItems = sidebarNav.querySelectorAll('.sidebar-item');
+  navItems.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      navItems.forEach(function(n) {
+        n.classList.remove('active');
+        n.removeAttribute('aria-current');
+      });
+      this.classList.add('active');
+      this.setAttribute('aria-current', 'page');
+
+      // On mobile, close sidebar after navigation
+      if (window.innerWidth <= 768) {
+        closeSidebar();
+      }
+    });
+  });
+
+})();
+</script>
+
 </body>
 </html>
