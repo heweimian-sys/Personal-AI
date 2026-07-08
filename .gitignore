@@ -18,6 +18,14 @@ build/
 .env.local
 .env.*.local
 
+# Secrets & Credentials (keys, certs, credential files)
+*.key
+*.pem
+*.p12
+*.pfx
+credentials*
+secrets/
+
 # OS
 .DS_Store
 Thumbs.db

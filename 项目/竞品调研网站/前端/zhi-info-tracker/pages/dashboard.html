@@ -72,7 +72,8 @@
         padding: 8px 16px 8px 36px; font-family: var(--font-ui); font-size: var(--text-sm);
         background: var(--color-paper); border: 1px solid var(--color-hairline-strong);
         border-radius: var(--radius-md); color: var(--color-ink); outline: none;
-        width: 220px; transition: border-color 0.2s ease, box-shadow 0.2s ease, width 0.2s ease;
+        width: 220px; min-width: 0; flex-shrink: 1;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, width 0.2s ease;
       }
       .search-input:focus { border-color: var(--color-surf-blue); box-shadow: 0 0 0 3px var(--color-surf-light); width: 280px; }
       .search-input::placeholder { color: var(--color-ink-muted); }
@@ -159,73 +160,110 @@
         border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm);
         background: var(--color-paper); cursor: pointer; flex-shrink: 0;
       }
+      .hamburger svg { width: 18px; height: 18px; }
       .mobile-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.06); z-index: 90; }
 
       /* Responsive */
       @media (max-width: 1024px) {
         .sidebar { width: 64px; min-width: 64px; }
         .sidebar-logo { padding: 20px 14px 16px; text-align: center; font-size: 16px; }
+        .sidebar-item span { display: none; }
+        .sidebar-item { justify-content: center; padding: 10px; }
+        .sidebar-dot { display: none; }
+        .sidebar-user { justify-content: center; }
+        .sidebar-username { display: none; }
+        .content-area { margin-left: 64px; }
         .feature-grid { padding: 20px 24px 24px; }
         .top-bar { padding: 24px 24px 0; }
       }
       @media (max-width: 768px) {
         .hamburger { display: flex; }
         .sidebar { width: 240px; min-width: 240px; transform: translateX(-100%); transition: transform 0.3s ease; }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-logo { padding: 24px 20px 20px; text-align: left; font-size: 20px; }
+        .sidebar-item span { display: inline; }
+        .sidebar-item { justify-content: flex-start; padding: 9px 12px; }
+        .sidebar-dot { display: block; }
+        .sidebar-user { justify-content: flex-start; }
+        .sidebar-username { display: block; }
+        .content-area { margin-left: 0; }
+        .stats-row { grid-template-columns: 1fr; padding: 20px 16px 0; }
+        .feature-grid { grid-template-columns: 1fr; padding: 20px 16px 24px; }
+        .top-bar { padding: 20px 16px 0; }
+        .mobile-overlay { display: none; }
+        .mobile-overlay.show { display: block; }
+        .search-input { width: 160px; }
+        .search-input:focus { width: 200px; }
+      }
+
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        .breathing-dot, .fade-up-in, .sidebar-dot {
+          animation: none;
+          opacity: 1;
+          transform: none;
+        }
+      }
+    </style>
 </head>
 <body class="bg-noise">
 <div class="dash-layout">
     <aside class="sidebar" id="sidebar" aria-label="主导航">
         <div class="sidebar-logo">知信</div>
-        <nav class="sidebar-nav">
-            <a href="#" class="sidebar-item" data-dom-id="sidebar-home">
-                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <nav class="sidebar-nav" aria-label="主导航">
+            <a href="#" class="sidebar-item">
+                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 <span>首页</span>
             </a>
-            <a href="#" class="sidebar-item active">
-                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <span>资讯检索</span><div class="sidebar-dot"></div>
+            <a href="#" class="sidebar-item active" aria-current="page">
+                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>资讯检索</span><div class="sidebar-dot" aria-hidden="true"></div>
             </a>
             <a href="#" class="sidebar-item">
-                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 <span>我的专题</span>
             </a>
             <a href="#" class="sidebar-item">
-                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 <span>自动追踪</span>
             </a>
             <a href="#" class="sidebar-item">
-                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <span>AI 对话</span>
             </a>
             <a href="graph.html" class="sidebar-item">
-                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 <span>知识图谱</span>
             </a>
             <a href="report.html" class="sidebar-item">
-                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 <span>调研报告</span>
             </a>
         </nav>
         <div class="sidebar-user">
-            <div class="sidebar-avatar">张</div>
+            <div class="sidebar-avatar" aria-hidden="true">张</div>
             <div class="sidebar-username">张三</div>
         </div>
     </aside>
-    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <div class="mobile-overlay" id="mobileOverlay" aria-hidden="true"></div>
 
-    <div class="content-area">
-        <div class="sky-glow"></div>
+    <main class="content-area" id="main">
+        <div class="sky-glow" aria-hidden="true"></div>
         <div class="top-bar" style="position:relative;z-index:1;">
             <div style="display:flex;align-items:center;gap:12px;">
-                <button class="hamburger" id="hamburgerBtn" aria-label="菜单">
+                <button class="hamburger" id="hamburgerBtn" aria-label="菜单" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <h1 class="page-title">工作台</h1>
+            </div>
             <div class="top-actions">
                 <div class="search-wrap">
-                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input type="text" class="search-input" placeholder="搜索资讯、专题..." aria-label="搜索">
                 </div>
                 <button class="notif-btn" aria-label="通知">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                    <div class="notif-badge"></div>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <div class="notif-badge" aria-hidden="true"></div>
                 </button>
             </div>
         </div>
@@ -233,27 +271,27 @@
         <div class="stats-row" style="position:relative;z-index:1;">
             <div class="stat-card fade-up-in" style="animation-delay:0.1s;">
                 <div class="stat-label">追踪专题</div>
-                <div class="stat-row"><span class="stat-num">12</span><div class="stat-indicator"><span class="dot"></span><span>+3 本周</span></div><div class="breathing-dot"></div></div>
+                <div class="stat-row"><span class="stat-num">12</span><div class="stat-indicator"><span class="dot" aria-hidden="true"></span><span>+3 本周</span></div></div>
             </div>
             <div class="stat-card fade-up-in" style="animation-delay:0.2s;">
                 <div class="stat-label">今日更新</div>
-                <div class="stat-row"><span class="stat-num">47</span><div class="breathing-dot"></div></div>
+                <div class="stat-row"><span class="stat-num">47</span></div>
             </div>
             <div class="stat-card fade-up-in" style="animation-delay:0.3s;">
                 <div class="stat-label">AI 对话次数</div>
-                <div class="stat-row"><span class="stat-num">8</span><div class="breathing-dot"></div></div>
+                <div class="stat-row"><span class="stat-num">8</span></div>
             </div>
         </div>
 
         <div class="feature-grid" style="position:relative;z-index:1;">
             <div class="dash-card full fade-up-in" style="animation-delay:0.35s;">
                 <div class="card-header"><h2 class="card-title">最新动态</h2><a href="#" class="card-link">查看全部</a></div>
-                <div class="updates-scroll no-scrollbar">
-                    <div class="update-item"><div class="update-title">OpenAI 发布 GPT-5 Turbo：推理速度提升 3 倍</div><div class="update-meta"><span class="update-source">36Kr</span><span>·</span><span>12 分钟前</span></div></div>
-                    <div class="update-item"><div class="update-title">国务院印发新能源汽车产业高质量发展指导意见</div><div class="update-meta"><span class="update-source">新华社</span><span>·</span><span>1 小时前</span></div></div>
-                    <div class="update-item"><div class="update-title">台积电 Q2 营收创历史新高，3nm 产能满载</div><div class="update-meta"><span class="update-source">财联社</span><span>·</span><span>2 小时前</span></div></div>
-                    <div class="update-item"><div class="update-title">百度文心大模型 4.5 开放 API，支持 100K 上下文</div><div class="update-meta"><span class="update-source">钛媒体</span><span>·</span><span>3 小时前</span></div></div>
-                    <div class="update-item"><div class="update-title">宁德时代发布全固态电池量产计划，2027 年落地</div><div class="update-meta"><span class="update-source">第一财经</span><span>·</span><span>4 小时前</span></div></div>
+                <div class="updates-scroll no-scrollbar" role="list">
+                    <div class="update-item" role="listitem"><div class="update-title">OpenAI 发布 GPT-5 Turbo：推理速度提升 3 倍</div><div class="update-meta"><span class="update-source">36Kr</span><span>·</span><span>12 分钟前</span></div></div>
+                    <div class="update-item" role="listitem"><div class="update-title">国务院印发新能源汽车产业高质量发展指导意见</div><div class="update-meta"><span class="update-source">新华社</span><span>·</span><span>1 小时前</span></div></div>
+                    <div class="update-item" role="listitem"><div class="update-title">台积电 Q2 营收创历史新高，3nm 产能满载</div><div class="update-meta"><span class="update-source">财联社</span><span>·</span><span>2 小时前</span></div></div>
+                    <div class="update-item" role="listitem"><div class="update-title">百度文心大模型 4.5 开放 API，支持 100K 上下文</div><div class="update-meta"><span class="update-source">钛媒体</span><span>·</span><span>3 小时前</span></div></div>
+                    <div class="update-item" role="listitem"><div class="update-title">宁德时代发布全固态电池量产计划，2027 年落地</div><div class="update-meta"><span class="update-source">第一财经</span><span>·</span><span>4 小时前</span></div></div>
                 </div>
             </div>
             <div class="dash-card fade-up-in" style="animation-delay:0.45s;">
@@ -269,25 +307,51 @@
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
 <script>
+(function() {
     var sidebar = document.getElementById('sidebar');
     var overlay = document.getElementById('mobileOverlay');
     var hamburger = document.getElementById('hamburgerBtn');
+
+    function toggleSidebar(open) {
+        if (open) {
+            sidebar.classList.add('open');
+            overlay.classList.add('show');
+            overlay.setAttribute('aria-hidden', 'false');
+            hamburger.setAttribute('aria-expanded', 'true');
+            hamburger.setAttribute('aria-label', '关闭菜单');
+        } else {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+            overlay.setAttribute('aria-hidden', 'true');
+            hamburger.setAttribute('aria-expanded', 'false');
+            hamburger.setAttribute('aria-label', '菜单');
+        }
+    }
+
     if (hamburger) {
         hamburger.addEventListener('click', function() {
-            sidebar.classList.toggle('open');
-            overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+            var isOpen = sidebar.classList.contains('open');
+            toggleSidebar(!isOpen);
         });
     }
+
     if (overlay) {
         overlay.addEventListener('click', function() {
-            sidebar.classList.remove('open');
-            overlay.style.display = 'none';
+            toggleSidebar(false);
         });
     }
+
+    // Close sidebar on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+            toggleSidebar(false);
+            hamburger.focus();
+        }
+    });
 })();
 </script>
 </body>
