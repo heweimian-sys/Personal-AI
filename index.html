@@ -1,183 +1,411 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>知信 — 一站式信息调研平台</title>
-
-<link rel="stylesheet" href="colors_and_type.css">
-
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--color-mist);color:var(--color-ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;line-height:1.5}
-
-/* Header */
-.header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 24px;border-bottom:1px solid transparent;transition:all 0.3s}
-.header.scrolled{background:rgba(243,244,246,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--color-hairline)}
-.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
-.logo{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--color-ink);text-decoration:none}
-.nav{display:flex;align-items:center;gap:32px}
-.nav a{font-size:14px;font-weight:500;color:var(--color-slate-blue);text-decoration:none;transition:color 0.2s}
-.nav a:hover{color:var(--color-ink)}
-
-/* Hero */
-.hero{position:relative;min-height:80vh;display:flex;align-items:center;overflow:hidden;padding:140px 24px 80px}
-.hero-bg{position:absolute;top:-15%;right:-5%;width:600px;height:600px;border-radius:50%;background:var(--gradient-sky);filter:blur(100px);opacity:0.07;pointer-events:none}
-.hero-content{max-width:1200px;margin:0 auto;width:100%;position:relative;z-index:10}
-
-/* Headline */
-.h1{font-family:var(--font-display);font-size:clamp(36px,5vw,56px);line-height:1.05;letter-spacing:-0.03em;color:var(--color-ink);margin:0 0 16px 0;font-weight:700}
-.sub{font-size:17px;line-height:1.6;color:var(--color-ink-muted);margin:0 0 32px 0;max-width:420px}
-
-/* Search bar */
-.search-wrap{display:flex;align-items:center;height:50px;padding:0 4px 0 20px;border-radius:var(--radius-lg);background:var(--color-paper);border:1px solid var(--color-hairline-strong);box-shadow:0 1px 3px rgba(0,0,0,0.04);transition:border-color 0.2s,box-shadow 0.2s;width:100%;max-width:500px}
-.search-wrap:focus-within{border-color:var(--color-surf-blue);box-shadow:0 0 0 3px var(--color-surf-light)}
-.search-wrap input{flex:1;border:none;outline:none;background:transparent;font-family:var(--font-ui);font-size:15px;color:var(--color-ink)}
-.search-wrap input::placeholder{color:var(--color-ink-muted)}
-.search-wrap .btn{height:38px;padding:0 22px;font-size:14px;flex-shrink:0}
-
-/* Mode switcher */
-.modes{display:flex;align-items:center;gap:12px;margin-top:16px}
-.modes button{font-size:14px;font-weight:500;color:var(--color-slate-blue);border:none;background:none;cursor:pointer;padding:0;transition:color 0.2s}
-.modes button.active{color:var(--color-ink);font-weight:600}
-.modes button:hover{color:var(--color-ink)}
-.modes .div{width:1px;height:14px;background:var(--color-hairline-strong)}
-
-/* Section */
-.section{padding:80px 24px 120px}
-.section-inner{max-width:1200px;margin:0 auto}
-.section-title{font-family:var(--font-display);font-size:clamp(26px,3.5vw,40px);line-height:1.05;letter-spacing:-0.03em;color:var(--color-ink);margin:0 0 48px 0;max-width:480px}
-
-/* Feature cards */
-.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
-
-/* Footer */
-footer{padding:32px 24px;text-align:center;border-top:1px solid var(--color-hairline)}
-footer p{font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--color-ink-muted)}
-
-/* Animations */
-.fade{opacity:0;animation:fadeUpIn 0.6s ease-out forwards}
-.fade-1{animation-delay:0.1s}
-.fade-2{animation-delay:0.2s}
-.fade-3{animation-delay:0.3s}
-.fade-4{animation-delay:0.4s}
-
-/* Dots */
-.dots{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-.dots .dot{width:6px;height:6px;border-radius:50%;background:var(--color-surf-blue);animation:breathe 4s cubic-bezier(0.4,0,0.6,1) infinite}
-.dots .dot:nth-child(2){animation-delay:0.8s}
-.dots .dot:nth-child(3){animation-delay:1.6s}
-.dots .dot:nth-child(4){animation-delay:2.4s}
-.dots .dot:nth-child(5){animation-delay:3.2s}
-.dots .dot:nth-child(1){margin-left:0;margin-top:8px}
-.dots .dot:nth-child(2){margin-left:24px;margin-top:0}
-.dots .dot:nth-child(3){margin-left:8px;margin-top:16px}
-.dots .dot:nth-child(4){margin-left:40px;margin-top:10px}
-.dots .dot:nth-child(5){margin-left:56px;margin-top:4px}
-
-/* Ghost link */
-.ghost{color:var(--color-slate-blue);text-decoration:none;font-size:14px;font-weight:500;position:relative;transition:color 0.2s}
-.ghost:hover{color:var(--color-surf-blue)}
-.ghost::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1px;background:var(--color-surf-blue);transition:width 0.3s}
-.ghost:hover::after{width:100%}
-
-/* Responsive */
-@media(max-width:768px){
-  .nav{display:none}
-  .grid-3{grid-template-columns:1fr;gap:16px}
-  .hero{padding:120px 16px 60px}
-  .section{padding:60px 16px 80px}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="知信 - 一个让信息像好文章一样自然流入大脑的阅读式信息流平台。输入关键词，系统自动生成带因果脉络的深度报告。">
+    <title>知信 · 认知加速器</title>
+    
+    <!-- Fonts: Playfair Display + Inter + Noto Sans SC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..600&family=Noto+Sans+SC:wght@400;500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="./项目/竞品调研网站/前端/zhi-info-tracker/colors_and_type.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        
+        /* Hero Section */
+        .hero {
+            width: 100%;
+            max-width: 1100px;
+            padding: 120px 32px 80px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .hero-tag {
+            display: inline-block;
+            background: rgba(0, 154, 252, 0.1);
+            color: var(--color-primary);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            padding: 6px 20px;
+            border-radius: 100px;
+            margin-bottom: 32px;
+        }
+        
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 6vw, 64px);
+            font-weight: 700;
+            color: var(--color-text);
+            line-height: 1.2;
+            margin-bottom: 24px;
+            max-width: 700px;
+        }
+        
+        .hero-title .dot { color: var(--color-primary); }
+        
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--color-secondary);
+            max-width: 520px;
+            line-height: 1.7;
+            margin-bottom: 48px;
+        }
+        
+        /* Search Bar */
+        .search-wrapper {
+            width: 100%;
+            max-width: 620px;
+            margin-bottom: 16px;
+        }
+        
+        .search-bar {
+            display: flex;
+            background: #fff;
+            border: 1px solid #e2e4e9;
+            border-radius: 12px;
+            padding: 6px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-bar:focus-within {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0, 154, 252, 0.15);
+        }
+        
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-family: inherit;
+            color: var(--color-text);
+            background: transparent;
+        }
+        .search-input::placeholder { color: var(--color-placeholder); }
+        
+        .search-btn {
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 28px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+        .search-btn:hover { background: #0088e0; }
+        .search-btn:active { transform: scale(0.98); }
+        
+        /* Mode Switcher */
+        .mode-switcher {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 48px;
+            background: #f1f2f4;
+            border-radius: 8px;
+            padding: 4px;
+        }
+        
+        .mode-btn {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            color: var(--color-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .mode-btn.active {
+            background: #fff;
+            color: var(--color-text);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .mode-btn:hover:not(.active) { color: var(--color-text); }
+        
+        /* Keyword Tags */
+        .keyword-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 64px;
+        }
+        
+        .keyword-tag {
+            padding: 8px 18px;
+            background: #fff;
+            border: 1px solid #e2e4e9;
+            border-radius: 100px;
+            font-size: 14px;
+            color: var(--color-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .keyword-tag:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+            background: rgba(0, 154, 252, 0.05);
+        }
+        
+        /* Features */
+        .features {
+            width: 100%;
+            max-width: 900px;
+            padding: 0 32px 120px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        
+        .feature-card {
+            text-align: center;
+            padding: 40px 24px;
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 154, 252, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 22px;
+        }
+        
+        .feature-card h3 {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .feature-card p {
+            font-size: 14px;
+            color: var(--color-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Footer */
+        .footer {
+            width: 100%;
+            padding: 40px 32px;
+            text-align: center;
+            border-top: 1px solid #e2e4e9;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 16px;
+        }
+        
+        .footer-links a {
+            font-size: 13px;
+            color: var(--color-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: var(--color-text); }
+        
+        .footer-note {
+            font-size: 12px;
+            color: var(--color-placeholder);
+        }
+        
+        /* Scroll animations */
+        @media (prefers-reduced-motion: no-preference) {
+            @keyframes fadeUp {
+                from { opacity: 0; transform: translateY(30px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            .feature-card {
+                animation: fadeUp 0.6s ease-out both;
+            }
+            .feature-card:nth-child(1) { animation-delay: 0.1s; }
+            .feature-card:nth-child(2) { animation-delay: 0.2s; }
+            .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero { padding: 80px 24px 60px; }
+            .features { grid-template-columns: 1fr; padding: 0 24px 80px; }
+            .search-bar { flex-direction: column; }
+            .search-btn { width: 100%; }
+            .hero-title { font-size: clamp(28px, 8vw, 42px); }
+        }
+        
+        /* Dark mode toggle placeholder */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #e2e4e9;
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            z-index: 100;
+            transition: border-color 0.2s;
+        }
+        .dark-mode-toggle:hover { border-color: var(--color-primary); }
+    </style>
 </head>
 <body>
-
-<header class="header" id="header">
-  <div class="header-inner">
-    <a href="/" class="logo">知信</a>
-    <nav class="nav" aria-label="主导航">
-      <a href="#features">功能</a>
-      <a href="#">定价</a>
-      <a href="#">关于</a>
-      <a href="pages/login.html" class="btn-primary">开始使用</a>
-    </nav>
-  </div>
-</header>
-
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-content">
-    <div class="dots fade fade-1">
-      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <span class="dot"></span><span class="dot"></span>
-    </div>
-
-    <div class="badge fade fade-1" style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:var(--radius-full);background:var(--color-surf-light);border:1px solid rgba(0,154,252,0.15);font-size:13px;font-weight:500;color:var(--color-surf-blue);margin-bottom:20px">
-      <span class="badge-dot" style="width:6px;height:6px;border-radius:50%;background:var(--color-surf-blue);animation:breathe 4s ease-in-out infinite"></span>
-      全新 v4 版本 · 现已发布
-    </div>
-
-    <h1 class="h1 fade fade-2">让调研<br>像呼吸一样自然</h1>
-    <p class="sub fade fade-2">知信帮你追踪、整理、洞察全网信息</p>
-
-    <div class="fade fade-3">
-      <form class="search-wrap" method="GET" action="/search" onsubmit="return false;">
-        <input type="text" name="q" placeholder="输入关键词，开始调研..." aria-label="搜索" required maxlength="200" autocomplete="off">
-        <button type="submit" class="btn btn-primary">检索</button>
-      </div>
-      <div class="modes">
-        <button class="active" type="button">全网</button>
-        <span class="div"></span>
-        <button type="button">资讯</button>
-        <span class="div"></span>
-        <button type="button">学术</button>
-      </div>
-    </div>
-
-    <p style="margin-top:24px" class="fade fade-4">
-      <a href="#features" class="ghost">了解更多 &rarr;</a>
-    </p>
-  </div>
-</section>
-
-<section class="section" id="features">
-  <div class="section-inner">
-    <p class="section-eyebrow" style="margin:0 0 8px 0">核心功能</p>
-    <h2 class="section-title">三个步骤，信息尽在掌握</h2>
-    <div class="grid-3">
-      <div class="card fade fade-1" style="padding:32px">
-        <div class="card-icon" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);margin-bottom:20px;background:var(--color-surf-light)">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-surf-blue)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <!-- Dark mode toggle (placeholder) -->
+    <button class="dark-mode-toggle" id="darkModeToggle" aria-label="切换深色模式">🌙</button>
+    
+    <section class="hero">
+        <span class="hero-tag">认知加速器 · 阅读式信息流</span>
+        <h1 class="hero-title">
+            信息不该是噪音<br>而是认知的<span class="dot">加速器</span>
+        </h1>
+        <p class="hero-subtitle">
+            输入一个关键词，不只是搜索。AI 帮你理清因果脉络，像读一篇深度报道一样理解一个领域。
+        </p>
+        
+        <!-- Search -->
+        <div class="search-wrapper">
+            <div class="search-bar">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    placeholder="输入你想了解的关键词..."
+                    id="searchInput"
+                    aria-label="搜索关键词"
+                    maxlength="100"
+                >
+                <button class="search-btn" id="searchBtn" aria-label="开始探索">开始探索</button>
+            </div>
         </div>
-        <h3 style="font-family:var(--font-display);font-size:20px;color:var(--color-ink);margin:0 0 8px 0">资讯检索</h3>
-        <p style="font-size:15px;line-height:1.6;color:var(--color-slate-blue);margin:0">全网多源信息聚合，AI 智能筛选</p>
-      </div>
-      <div class="card fade fade-2" style="padding:32px">
-        <div class="card-icon" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);margin-bottom:20px;background:rgba(2,132,199,0.10)">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        
+        <div class="mode-switcher" id="modeSwitcher">
+            <button class="mode-btn active" data-mode="web">🌐 全网</button>
+            <button class="mode-btn" data-mode="news">📰 资讯</button>
+            <button class="mode-btn" data-mode="academic">📚 学术</button>
         </div>
-        <h3 style="font-family:var(--font-display);font-size:20px;color:var(--color-ink);margin:0 0 8px 0">自动追踪</h3>
-        <p style="font-size:15px;line-height:1.6;color:var(--color-slate-blue);margin:0">设定主题，自动追踪更新推送</p>
-      </div>
-      <div class="card fade fade-3" style="padding:32px">
-        <div class="card-icon" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);margin-bottom:20px;background:rgba(99,102,241,0.10)">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        
+        <div class="keyword-tags">
+            <span class="keyword-tag" data-keyword="AI行业">AI行业</span>
+            <span class="keyword-tag" data-keyword="新能源">新能源</span>
+            <span class="keyword-tag" data-keyword="半导体">半导体</span>
+            <span class="keyword-tag" data-keyword="美食文化">美食文化</span>
+            <span class="keyword-tag" data-keyword="短视频赛道">短视频赛道</span>
         </div>
-        <h3 style="font-family:var(--font-display);font-size:20px;color:var(--color-ink);margin:0 0 8px 0">AI 对话</h3>
-        <p style="font-size:15px;line-height:1.6;color:var(--color-slate-blue);margin:0">与资料库对话，快速获取洞察</p>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
+    
+    <section class="features">
+        <div class="feature-card">
+            <div class="feature-icon">🔍</div>
+            <h3>资讯检索</h3>
+            <p>输入关键词，AI 自动搜索全网信息，提取关键事件</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔗</div>
+            <h3>因果脉络</h3>
+            <p>不只是时间线，理清事件间的因果、竞争和连锁关系</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💡</div>
+            <h3>行动洞察</h3>
+            <p>AI 提炼趋势判断，给出分角色的行动建议</p>
+        </div>
+    </section>
+    
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="https://github.com/heweimian-sys/Personal-AI">GitHub</a>
+            <a href="#">关于知信</a>
+            <a href="#">帮助</a>
+        </div>
+        <p class="footer-note">© 2026 知信 · 认知加速器。信息有，脑子也能进得去。</p>
+    </footer>
+    
+    <script>
+        var currentMode = 'web';
 
-<footer>
-  <p>&copy; 2026 知信 ZhiXin</p>
-</footer>
+        // 输入过滤：移除危险字符，限制长度
+        function sanitizeInput(input) {
+            return input.replace(/[<>"'&]/g, '').substring(0, 100).trim();
+        }
 
-<script>
-var h=document.getElementById('header');
-window.addEventListener('scroll',function(){h.classList.toggle('scrolled',window.scrollY>40)});
-</script>
+        // 模式切换
+        document.querySelectorAll('.mode-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                currentMode = this.getAttribute('data-mode');
+                document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+            });
+        });
 
+        // 关键词标签点击
+        document.querySelectorAll('.keyword-tag').forEach(function(tag) {
+            tag.addEventListener('click', function() {
+                var keyword = this.getAttribute('data-keyword');
+                document.getElementById('searchInput').value = keyword;
+                handleSearch();
+            });
+        });
+
+        // 搜索按钮
+        document.getElementById('searchBtn').addEventListener('click', handleSearch);
+
+        // 回车搜索
+        document.getElementById('searchInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') handleSearch();
+        });
+
+        function handleSearch() {
+            var rawQuery = document.getElementById('searchInput').value;
+            var query = sanitizeInput(rawQuery);
+            if (!query) return;
+
+            // 临时跳转到 v4 dashboard 预览
+            // TODO: 替换为后端 /api/research 接口
+            if (query === 'AI行业') {
+                window.location.href = './项目/竞品调研网站/前端/zhi-info-tracker/pages/dashboard.html';
+            } else {
+                alert('搜索结果页面开发中...\n搜索内容: ' + query + '\n模式: ' + currentMode);
+            }
+        }
+
+        // 暗色模式占位
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            alert('深色模式即将上线，敬请期待 ✨');
+        });
+    </script>
 </body>
 </html>
