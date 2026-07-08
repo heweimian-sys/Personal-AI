@@ -13,11 +13,13 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from app.core.config import settings
 from app.core.db import init_db
+from app.services.research_service import ResearchService, ResearchError
 
 
 @asynccontextmanager
@@ -66,3 +68,38 @@ async def root():
         "docs": "/docs",
         "health": "/health",
     }
+
+
+# ============================================================
+# 研究接口
+# ============================================================
+
+class ResearchRequest(BaseModel):
+    """研究请求体"""
+
+    query: str
+    search_limit: int = 10
+    max_events: int = 8
+
+
+@app.post("/api/research")
+async def research(req: ResearchRequest):
+    """研究接口：输入关键词，返回带因果脉络的完整报告
+
+    流程：搜索 → 提取事件 → 分析关系 → 组织章节 → 生成摘要
+    """
+    if not req.query or not req.query.strip():
+        raise HTTPException(status_code=400, detail="查询关键词不能为空")
+
+    service = ResearchService()
+
+    try:
+        result = await service.research(
+            query=req.query.strip(),
+            search_limit=req.search_limit,
+            max_events=req.max_events,
+        )
+    except ResearchError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return result.to_dict()
