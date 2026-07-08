@@ -6,13 +6,16 @@ SQLite 无需额外安装数据库服务，数据存储在文件中。
 """
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import settings
+# Base 从 models/base.py 导入，确保所有模型共用同一个 Base
+from app.models.base import Base
+# 导入所有模型，确保它们注册到 Base.metadata
+# 这样 init_db() 调用 create_all 时能创建所有表
+import app.models  # noqa: F401
 
 
 def _ensure_data_dir() -> None:
@@ -43,11 +46,6 @@ async_session = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
-
-
-class Base(DeclarativeBase):
-    """所有模型的基类"""
-    pass
 
 
 async def get_db() -> AsyncSession:
