@@ -18,7 +18,7 @@ Personal-AI/
 ├── 更新记录.md                 ← 仓库整体更新记录
 │
 ├── 项目/                      ← 所有正式项目
-│   └── 竞品调研网站/           ← 项目一：信息整理平台
+│   └── 竞品调研网站/           ← 知信·认知加速器
 │       ├── 项目说明.md         ← 项目文档
 │       ├── 产品需求.md
 │       ├── 开发计划.md
@@ -35,22 +35,25 @@ Personal-AI/
 
 ## 当前项目
 
-### 竞品调研网站
+### 知信 · 认知加速器
 
-一个面向中文用户的信息整理平台：输入任意关键词，自动搜索互联网信息，用 AI 整理成时间线、分类标记，建立主题间的双向链接（类似 Obsidian），输出结构化报告和行动建议。
+一个让信息像好文章一样自然流入大脑的阅读式信息流平台。输入关键词，系统生成带因果脉络的结构化深度分析，以章节式阅读体验展示，最终输出趋势判断和行动建议。
 
-- **技术栈**：Python + FastAPI + Next.js + DeepSeek + Firecrawl 自部署
-- **设计风格**：水墨文学风
-- **核心功能**：搜索 → AI 精炼 → 时间线 → 双向链接 → 报告
-- **参考项目**：deep-research、deep-research-web-ui
-- **状态**：MVP 方案确定，代码开发中
+**核心创新**：
+- 三层认知模型：时间线 → 因果网络 → 洞察行动
+- 阅读式信息流：章节叙事 + 因果连接线 + 侧边注释 + 留白节奏
+- 5 种关系类型：因果、竞争、包含、技术依赖、连锁反应
+
+- **技术栈**：Python + FastAPI + SQLite + DeepSeek + Firecrawl 自部署 + Next.js
+- **设计风格**：Deta Surf（#009afc + Inter / Playfair Display）
+- **状态**：v5 方案确定，代码开发中
 - **详情**：[项目说明.md](./项目/竞品调研网站/项目说明.md)
 
 ## 技术栈
 
 | 领域 | 技术 |
 |---|---|
-| 后端 | Python, FastAPI, SQLAlchemy, PostgreSQL |
+| 后端 | Python, FastAPI, SQLAlchemy, SQLite |
 | 前端 | Next.js, TypeScript, Tailwind CSS |
 | AI | DeepSeek（国内直连，JSON Output） |
 | 搜索 | Firecrawl 自部署（完全免费） |
