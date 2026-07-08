@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     # 应用配置
     APP_NAME: str = "知信"
-    DEBUG: bool = True
+    DEBUG: bool = False  # 默认关闭调试模式，开发时在 .env 中设为 true
 
     # 数据库（SQLite，文件存储在 data/ 目录）
     DATABASE_URL: str = "sqlite+aiosqlite:///./data/zhixin.db"
@@ -33,6 +33,14 @@ class Settings(BaseSettings):
     DEEPSEEK_API_KEY: str = ""
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com/v1"
     DEEPSEEK_MODEL: str = "deepseek-chat"
+
+    # 访问认证（Phase 1 最小安全方案）
+    # 设置为空字符串跳过认证（仅开发环境）
+    # 部署时设置一个随机字符串：openssl rand -hex 32
+    ACCESS_PASSWORD: str = ""
+
+    # 频率限制（格式：次数/秒数，如 "30/60" 表示每分钟 30 次）
+    RATE_LIMIT: str = "30/60"
 
     # CORS（前端地址，逗号分隔多个）
     CORS_ORIGINS: str = "http://localhost:3000"
