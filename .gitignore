@@ -1,33 +1,35 @@
-﻿# 依赖
+# Dependencies
 node_modules/
-__pycache__/
-*.pyc
-.venv/
-venv/
 
-# 环境变量
+# Environment & secrets  
 .env
 .env.local
+.env.*.local
 
-# 数据库
-*.db
-*.sqlite3
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.uv-cache/
 
-# IDE
-.vscode/
-.idea/
-
-# 系统
-.DS_Store
-Thumbs.db
-
-# 构建产物
-.next/
+# Build output
 dist/
 build/
+.next/
+.nuxt/
 
-# 测试
-test.db
-.pytest_cache/
-htmlcov/
-.coverage
+# IDE & editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
