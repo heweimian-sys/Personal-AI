@@ -1,0 +1,124 @@
+{
+  "project": {
+    "name": "知信信息追踪 V4",
+    "operation": "create",
+    "designRead": "Information tracking platform / researchers & analysts / editorial luxury with breathing rhythm / medium-low density / avoid neon AI hero",
+    "designDials": {
+      "layoutVariance": 4,
+      "motionIntensity": 2,
+      "visualDensity": 2
+    },
+    "styleContinuityAnchors": {
+      "typographySystem": {
+        "display": "Playfair Display / Georgia / Noto Serif SC",
+        "body": "Inter / Noto Sans SC / system-ui"
+      },
+      "radiusScale": ["2px", "6px", "10px", "14px", "9999px"],
+      "surfaceDepthModel": "border-first, shadow max 0.05 alpha for static, 0.12 for modal only",
+      "shapeSystem": "glass-panel + solid-panel, restrained radius, pill buttons",
+      "motionLanguage": "breathing dots, gentle float, fade-up-in, tilted card hover"
+    }
+  },
+  "designSource": {
+    "operatingMode": "free-explore",
+    "brandCssPath": "colors_and_type.css",
+    "styleConstraints": {
+      "radiusMax": 16,
+      "staticShadowAlphaMax": 0.05
+    }
+  },
+  "pages": [
+    {
+      "id": "page-index",
+      "title": "首页",
+      "htmlSrc": "pages/index.html",
+      "pageIndex": 1,
+      "pageType": "showcase",
+      "visualNorthStar": "OFF+BRAND iridescent orb hero + breathing dots + editorial display typography",
+      "compositionPattern": "full-viewport hero with iridescent orb, asymmetric 60/40 split, breathing dot cluster, three floating feature cards with tilt",
+      "continuityAnchors": {
+        "nav": "minimal ghost-link top bar, logo left, pill nav right",
+        "footer": "single-line condensed uppercase copyright"
+      },
+      "imagePlan": [
+        { "role": "critical-hero", "section": "hero", "filename": "hero-orb.jpg", "status": "planned" }
+      ],
+      "chartsRequired": false
+    },
+    {
+      "id": "page-login",
+      "title": "登录",
+      "htmlSrc": "pages/login.html",
+      "pageIndex": 2,
+      "pageType": "task-driven",
+      "visualNorthStar": "Minimal centered glass card on warm canvas, breathing dots cluster, ghost-link CTA",
+      "compositionPattern": "centered single card, left brand illustration, right form with pill tab switcher",
+      "continuityAnchors": {
+        "nav": "none (auth page)",
+        "footer": "none (auth page)"
+      },
+      "imagePlan": [
+        { "role": "supporting-content", "section": "detail", "filename": "login-illustration.jpg", "status": "planned" }
+      ],
+      "chartsRequired": false
+    },
+    {
+      "id": "page-dashboard",
+      "title": "工作台",
+      "htmlSrc": "pages/dashboard.html",
+      "pageIndex": 3,
+      "pageType": "information-dense",
+      "visualNorthStar": "Glass sidebar + stat cards with breathing dot indicators, horizontal scroll latest updates",
+      "compositionPattern": "left glass sidebar, right content area with stat row + feature grid + horizontal scroll section",
+      "continuityAnchors": {
+        "nav": "left glass sidebar, 5 icon+label items, active = ink fill",
+        "footer": "none (app page)"
+      },
+      "imagePlan": [],
+      "chartsRequired": false
+    },
+    {
+      "id": "page-graph",
+      "title": "知识图谱",
+      "htmlSrc": "pages/graph.html",
+      "pageIndex": 4,
+      "pageType": "showcase",
+      "visualNorthStar": "Full SVG canvas with organic bezier branches, floating glass-card info chips on hover",
+      "compositionPattern": "left thin info sidebar, center SVG graph canvas, floating info chips, bottom-right controls",
+      "continuityAnchors": {
+        "nav": "left glass sidebar (same as dashboard)",
+        "footer": "none (app page)"
+      },
+      "imagePlan": [],
+      "chartsRequired": false
+    },
+    {
+      "id": "page-report",
+      "title": "调研报告",
+      "htmlSrc": "pages/report.html",
+      "pageIndex": 5,
+      "pageType": "information-dense",
+      "visualNorthStar": "Editorial reading surface with section accent bars, pill tags, version navigation",
+      "compositionPattern": "3-column layout (sidebar / reading area / sidebar), glass reading panel, version nav at top",
+      "continuityAnchors": {
+        "nav": "left glass sidebar (same as dashboard)",
+        "footer": "none (app page)"
+      },
+      "imagePlan": [],
+      "chartsRequired": false
+    }
+  ],
+  "assets": [],
+  "wiringPlan": [
+    { "from": "page-index", "to": "page-login", "domId": "nav-login", "label": "登录" },
+    { "from": "page-login", "to": "page-dashboard", "domId": "login-submit", "label": "登录成功" },
+    { "from": "page-dashboard", "to": "page-graph", "domId": "sidebar-graph", "label": "知识图谱" },
+    { "from": "page-dashboard", "to": "page-report", "domId": "sidebar-report", "label": "调研报告" }
+  ],
+  "hiddenInteractionPlan": [
+    { "from": "page-dashboard", "to": "page-index", "domId": "sidebar-home", "hideEdge": true, "label": "首页" },
+    { "from": "page-graph", "to": "page-dashboard", "domId": "sidebar-back", "hideEdge": true, "label": "返回工作台" },
+    { "from": "page-report", "to": "page-dashboard", "domId": "sidebar-back", "hideEdge": true, "label": "返回工作台" },
+    { "from": "page-login", "to": "page-index", "domId": "login-back", "hideEdge": true, "label": "返回首页" }
+  ]
+}

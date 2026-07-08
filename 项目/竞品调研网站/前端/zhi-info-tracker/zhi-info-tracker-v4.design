@@ -1,0 +1,166 @@
+{
+  "data": [
+    {
+      "id": "page-index",
+      "title": "首页",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1751884800000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/index.html",
+        "interactions": [
+          {
+            "domId": "nav-login",
+            "targetPageId": "page-login",
+            "transitionLabel": "登录"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-login",
+      "title": "登录",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1751884800000,
+      "canvasData": {
+        "x": 620,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/login.html",
+        "interactions": [
+          {
+            "domId": "login-submit",
+            "targetPageId": "page-dashboard",
+            "transitionLabel": "登录成功"
+          },
+          {
+            "domId": "login-back",
+            "targetPageId": "page-index",
+            "hideEdge": true,
+            "transitionLabel": "返回首页"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-dashboard",
+      "title": "工作台",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1751884800000,
+      "canvasData": {
+        "x": 1240,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/dashboard.html",
+        "interactions": [
+          {
+            "domId": "sidebar-graph",
+            "targetPageId": "page-graph",
+            "transitionLabel": "知识图谱"
+          },
+          {
+            "domId": "sidebar-report",
+            "targetPageId": "page-report",
+            "transitionLabel": "调研报告"
+          },
+          {
+            "domId": "sidebar-home",
+            "targetPageId": "page-index",
+            "hideEdge": true,
+            "transitionLabel": "首页"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-graph",
+      "title": "知识图谱",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1751884800000,
+      "canvasData": {
+        "x": 1860,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/graph.html",
+        "interactions": [
+          {
+            "domId": "sidebar-back",
+            "targetPageId": "page-dashboard",
+            "hideEdge": true,
+            "transitionLabel": "返回工作台"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-report",
+      "title": "调研报告",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1751884800000,
+      "canvasData": {
+        "x": 1860,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/report.html",
+        "interactions": [
+          {
+            "domId": "sidebar-back",
+            "targetPageId": "page-dashboard",
+            "hideEdge": true,
+            "transitionLabel": "返回工作台"
+          }
+        ]
+      }
+    },
+    {
+      "id": "image-001",
+      "title": "首页主视觉",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1751884800000,
+      "canvasData": {
+        "x": 0,
+        "y": 792
+      },
+      "devMetadata": {
+        "imageSrc": "assets/hero-orb.jpg"
+      }
+    },
+    {
+      "id": "image-002",
+      "title": "登录装饰图",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1751884800000,
+      "canvasData": {
+        "x": 620,
+        "y": 792
+      },
+      "devMetadata": {
+        "imageSrc": "assets/login-illustration.jpg"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "desktop",
+    "projectName": "知信信息追踪 V4"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "root": {
+    "id": "project-shell",
+    "type": "project",
+    "status": "generated",
+    "children": ["page-index", "page-login", "page-dashboard", "page-graph", "page-report"]
+  },
+  "nodes": {
+    "page-index": { "type": "page", "status": "generated", "htmlSrc": "pages/index.html" },
+    "page-login": { "type": "page", "status": "generated", "htmlSrc": "pages/login.html" },
+    "page-dashboard": { "type": "page", "status": "generated", "htmlSrc": "pages/dashboard.html" },
+    "page-graph": { "type": "page", "status": "generated", "htmlSrc": "pages/graph.html" },
+    "page-report": { "type": "page", "status": "generated", "htmlSrc": "pages/report.html" }
+  }
+}

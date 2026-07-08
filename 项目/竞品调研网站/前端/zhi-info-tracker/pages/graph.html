@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知信 — 知识图谱</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../colors_and_type.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <style type="text/tailwindcss">
+  @theme inline {
+    --color-canvas: #f3f4f6;
+    --color-surface: #ffffff;
+    --color-primary: #009afc;
+    --color-ink: #000000;
+    --color-ink-secondary: #5b6882;
+    --color-ink-tertiary: #808080;
+    --color-hairline: #e5e7eb;
+    --font-display: 'Playfair Display', 'Noto Serif SC', serif;
+    --font-body: 'Inter', 'Noto Sans SC', sans-serif;
+  }
+  @layer base {
+    body {
+      background: var(--color-canvas);
+      font-family: var(--font-body);
+      color: var(--color-ink);
+      margin: 0;
+      overflow: hidden;
+    }
+  }
+  </style>
+
+  <style>
+    .graph-container {
+      position: relative;
+      width: calc(100vw - 240px);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .graph-svg { width: 100%; height: 100%; }
+
+    .graph-svg .branch-path {
+      fill: none;
+      stroke: var(--color-hairline-strong);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+
+    .graph-svg .node-circle {
+      fill: var(--color-surface);
+      stroke: var(--color-hairline-strong);
+      stroke-width: 1.5;
+      transition: stroke 0.3s ease;
+    }
+
+    .graph-svg .node-circle:hover {
+      stroke: var(--color-primary);
+      stroke-width: 2.5;
+    }
+
+    .graph-svg .root-circle {
+      fill: var(--color-surface);
+      stroke: var(--color-primary);
+      stroke-width: 2.5;
+    }
+
+    .graph-svg .root-circle:hover {
+      stroke-width: 3.5;
+    }
+
+    .graph-svg .node-label {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      fill: var(--color-ink);
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+    }
+
+    .graph-svg .root-label {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      fill: var(--color-ink);
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+    }
+
+    .graph-svg .sub-label {
+      font-size: 11px;
+      font-weight: 400;
+      fill: var(--color-ink-secondary);
+    }
+
+    .root-breathing-dot {
+      animation: breathe var(--breathing-duration) var(--breathing-ease) infinite;
+    }
+
+    .node-breathing-dot {
+      animation: breathe var(--breathing-duration) var(--breathing-ease) infinite;
+    }
+
+    .node-breathing-dot.delay-1 { animation-delay: 1.2s; }
+    .node-breathing-dot.delay-2 { animation-delay: 2s; }
+    .node-breathing-dot.delay-3 { animation-delay: 2.8s; }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 240px;
+      height: 100vh;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 16px;
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-hairline);
+    }
+
+    .sidebar-logo {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-ink);
+      margin-bottom: 40px;
+      padding-left: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-nav li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      font-size: var(--text-body);
+      font-weight: 400;
+      color: var(--color-ink-secondary);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-nav li a:hover {
+      color: var(--color-ink);
+      background: var(--color-canvas);
+    }
+
+    .sidebar-nav li a.active {
+      font-weight: 600;
+      color: var(--color-primary);
+      background: var(--color-primary-light);
+    }
+
+    .sidebar-nav li a .nav-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .info-chip {
+      position: absolute;
+      padding: 14px 18px;
+      max-width: 220px;
+      z-index: 50;
+      pointer-events: auto;
+      background: var(--color-surface);
+      border: 1px solid var(--color-hairline);
+    }
+
+    .info-chip .chip-title {
+      font-weight: 600;
+      font-size: var(--text-body-sm);
+      color: var(--color-ink);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-chip .chip-desc {
+      font-size: var(--text-caption);
+      color: var(--color-ink-tertiary);
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .info-chip .chip-link {
+      font-size: var(--text-caption);
+      font-weight: 500;
+      color: var(--color-ink);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .info-chip .chip-link:hover {
+      color: var(--color-primary);
+    }
+
+    .controls-panel {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-hairline);
+    }
+
+    .controls-panel button {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-hairline-strong);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .controls-panel button:hover {
+      background: var(--color-canvas);
+      border-color: var(--color-ink-muted);
+    }
+
+    .controls-panel .reset-btn {
+      width: auto;
+      padding: 0 14px;
+      height: 36px;
+      font-size: var(--text-caption);
+      font-weight: 500;
+      font-family: var(--font-body);
+    }
+
+    .graph-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: var(--gradient-sky);
+      filter: blur(120px);
+      opacity: 0.08;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 64px; padding: 20px 8px; }
+      .sidebar-logo { font-size: 18px; padding-left: 4px; margin-bottom: 24px; text-align: center; }
+      .sidebar-nav li a span:not(.nav-icon) { display: none; }
+      .sidebar-nav li a { justify-content: center; padding: 10px; }
+      .graph-container { width: 100vw; margin-left: 64px; }
+      .info-chip { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .sidebar { display: none; }
+      .graph-container { width: 100vw; margin-left: 0; }
+    }
+  </style>
+</head>
+<body class="bg-noise">
+
+  <!-- ── Left Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">知信</div>
+    <nav>
+      <ul class="sidebar-nav">
+        <li>
+          <a href="dashboard.html" data-dom-id="sidebar-back">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </span>
+            <span>首页</span>
+          </a>
+        </li>
+        <li>
+          <a href="dashboard.html">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="7" height="7" rx="1"/>
+              </svg>
+            </span>
+            <span>仪表盘</span>
+          </a>
+        </li>
+        <li>
+          <a href="graph.html" class="active">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <circle cx="4" cy="6" r="2"/>
+                <circle cx="20" cy="6" r="2"/>
+                <circle cx="4" cy="18" r="2"/>
+                <circle cx="20" cy="18" r="2"/>
+                <line x1="9.5" y1="10.5" x2="5.5" y2="7.5"/>
+                <line x1="14.5" y1="10.5" x2="18.5" y2="7.5"/>
+                <line x1="9.5" y1="13.5" x2="5.5" y2="16.5"/>
+                <line x1="14.5" y1="13.5" x2="18.5" y2="16.5"/>
+              </svg>
+            </span>
+            <span>知识图谱</span>
+          </a>
+        </li>
+        <li>
+          <a href="report.html">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </span>
+            <span>报告</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- ── Graph Canvas ── -->
+  <div class="graph-container">
+    <div class="graph-glow"></div>
+
+    <svg class="graph-svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+
+      <!-- Branch Paths -->
+      <path class="branch-path" d="M600,400 C520,380 440,300 340,220" />
+      <path class="branch-path" d="M340,220 C310,190 280,160 220,130" />
+      <path class="branch-path" d="M340,220 C360,180 370,140 380,100" />
+      <path class="branch-path" d="M340,220 C300,240 260,270 200,290" />
+
+      <path class="branch-path" d="M600,400 C680,380 760,300 860,220" />
+      <path class="branch-path" d="M860,220 C890,190 920,160 980,130" />
+      <path class="branch-path" d="M860,220 C840,180 830,140 820,100" />
+      <path class="branch-path" d="M860,220 C900,240 940,270 1000,290" />
+
+      <path class="branch-path" d="M600,400 C520,420 440,500 340,580" />
+      <path class="branch-path" d="M340,580 C310,610 280,640 220,670" />
+      <path class="branch-path" d="M340,580 C360,620 370,660 380,700" />
+      <path class="branch-path" d="M340,580 C300,560 260,530 200,510" />
+
+      <path class="branch-path" d="M600,400 C680,420 760,500 860,580" />
+      <path class="branch-path" d="M860,580 C890,610 920,640 980,670" />
+      <path class="branch-path" d="M860,580 C840,620 830,660 820,700" />
+
+      <!-- Root Node -->
+      <circle class="root-circle" cx="600" cy="400" r="40" />
+      <circle class="root-breathing-dot" cx="600" cy="432" r="4" fill="var(--color-primary)" opacity="0.8" />
+      <text class="root-label" x="600" y="398">AI行业</text>
+
+      <!-- Branch 1: 大模型 -->
+      <circle class="node-circle" cx="340" cy="220" r="28" />
+      <text class="node-label" x="340" y="220">大模型</text>
+
+      <circle class="node-circle" cx="220" cy="130" r="18" />
+      <circle class="node-breathing-dot" cx="220" cy="145" r="3" fill="var(--color-primary)" opacity="0.7" />
+      <text class="node-label sub-label" x="220" y="128">GPT-5</text>
+
+      <circle class="node-circle" cx="380" cy="100" r="18" />
+      <text class="node-label sub-label" x="380" y="98">Gemini</text>
+
+      <circle class="node-circle" cx="200" cy="290" r="18" />
+      <circle class="node-breathing-dot delay-1" cx="200" cy="305" r="3" fill="var(--color-primary)" opacity="0.7" />
+      <text class="node-label sub-label" x="200" y="288">Claude</text>
+
+      <!-- Branch 2: 芯片 -->
+      <circle class="node-circle" cx="860" cy="220" r="28" />
+      <text class="node-label" x="860" y="220">芯片</text>
+
+      <circle class="node-circle" cx="980" cy="130" r="18" />
+      <circle class="node-breathing-dot delay-2" cx="980" cy="145" r="3" fill="var(--color-primary)" opacity="0.7" />
+      <text class="node-label sub-label" x="980" y="128">NVIDIA</text>
+
+      <circle class="node-circle" cx="820" cy="100" r="18" />
+      <text class="node-label sub-label" x="820" y="98">AMD</text>
+
+      <circle class="node-circle" cx="1000" cy="290" r="18" />
+      <text class="node-label sub-label" x="1000" y="288">Intel</text>
+
+      <!-- Branch 3: 应用 -->
+      <circle class="node-circle" cx="340" cy="580" r="28" />
+      <text class="node-label" x="340" y="580">应用</text>
+
+      <circle class="node-circle" cx="220" cy="670" r="20" />
+      <circle class="node-breathing-dot delay-3" cx="220" cy="687" r="3" fill="var(--color-primary)" opacity="0.7" />
+      <text class="node-label sub-label" x="220" y="668">自动驾驶</text>
+
+      <circle class="node-circle" cx="380" cy="700" r="18" />
+      <text class="node-label sub-label" x="380" y="698">医疗AI</text>
+
+      <circle class="node-circle" cx="200" cy="510" r="18" />
+      <text class="node-label sub-label" x="200" y="508">机器人</text>
+
+      <!-- Branch 4: 政策 -->
+      <circle class="node-circle" cx="860" cy="580" r="28" />
+      <text class="node-label" x="860" y="580">政策</text>
+
+      <circle class="node-circle" cx="980" cy="670" r="20" />
+      <text class="node-label sub-label" x="980" y="668">欧盟AI法案</text>
+
+      <circle class="node-circle" cx="820" cy="700" r="22" />
+      <circle class="node-breathing-dot delay-1" cx="820" cy="718" r="3" fill="var(--color-primary)" opacity="0.7" />
+      <text class="node-label sub-label" x="820" y="698">中国算力规划</text>
+    </svg>
+
+    <!-- Info Chips -->
+    <div class="info-chip" style="top: 12%; right: 18%;">
+      <div class="chip-title">
+        <span class="breathing-dot" style="width:5px;height:5px;"></span>
+        NVIDIA
+      </div>
+      <div class="chip-desc">全球AI芯片龙头，H100/B200 系列持续供不应求，市值突破 3 万亿美元。</div>
+      <a href="#" class="chip-link">查看详情 &rarr;</a>
+    </div>
+
+    <div class="info-chip" style="top: 72%; left: 8%;">
+      <div class="chip-title">自动驾驶</div>
+      <div class="chip-desc">L4 级别商业落地加速，Waymo、萝卜快跑领跑城市出行。</div>
+      <a href="#" class="chip-link">查看详情 &rarr;</a>
+    </div>
+
+    <div class="info-chip" style="bottom: 18%; right: 6%;">
+      <div class="chip-title">欧盟AI法案</div>
+      <div class="chip-desc">全球首部综合性 AI 监管法案，2024 年正式生效，分风险等级管理。</div>
+      <a href="#" class="chip-link">查看详情 &rarr;</a>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-panel">
+      <button title="放大">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button title="缩小">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button class="reset-btn" title="重置视图">重置视图</button>
+    </div>
+  </div>
+
+</body>
+</html>
