@@ -3,333 +3,226 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>知信 — 登录</title>
+  <title>知信 - 登录</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
   <link rel="stylesheet" href="../colors_and_type.css">
 
   <style>
     .login-bg {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 0;
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background:var(--color-mist);font-family:var(--font-ui);
+      position:relative;overflow:hidden;
     }
-
-    .login-glow {
-      position: absolute;
-      width: 500px; height: 500px;
-      border-radius: 50%;
-      background: var(--gradient-sky);
-      filter: blur(120px);
-      opacity: 0.08;
-      pointer-events: none;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 1;
+    .login-bg::before {
+      content:'';position:absolute;top:-40%;right:-20%;
+      width:600px;height:600px;border-radius:50%;
+      background:var(--gradient-sky);filter:blur(120px);
+      opacity:0.05;pointer-events:none;
     }
-
-    .login-wrap {
-      position: relative;
-      z-index: 10;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .login-card-wrap {
-      position: relative;
-      max-width: 400px;
-      width: 100%;
-    }
-
-    .login-dots {
-      position: absolute;
-      left: -32px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 20;
-    }
-
     .login-card {
-      background: var(--color-paper);
-      border: 1px solid var(--color-hairline);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
-      padding: 36px;
-      position: relative;
-      z-index: 10;
+      position:relative;z-index:1;
+      width:min(420px,calc(100%-32px));
+      padding:40px 36px;background:var(--color-paper);
+      border:1px solid var(--color-hairline);
+      border-radius:var(--radius-xl);
+      box-shadow:var(--shadow-lg);
     }
-
     .login-brand {
-      text-align: center;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--color-hairline);
-      margin-bottom: 24px;
+      display:flex;align-items:center;gap:10px;
+      margin-bottom:32px;
     }
-
+    .login-brand-svg {width:36px;height:36px;color:var(--color-surf-blue)}
     .login-brand-name {
-      font-family: var(--font-display);
-      font-size: 34px;
-      font-weight: 600;
-      color: var(--color-ink);
-      margin: 0 0 12px;
-      line-height: 1.2;
-    }
-
-    .login-brand-dots {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
+      font-family:var(--font-display);font-size:24px;font-weight:700;
+      color:var(--color-ink);
     }
 
     /* Pill Switcher */
     .pill-switcher {
-      display: flex;
-      gap: 4px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-hairline);
-      padding: 3px;
-      margin-bottom: 24px;
+      display:flex;gap:4px;
+      padding:4px;margin-bottom:24px;
+      background:var(--color-mist);border-radius:var(--radius-full);
     }
-
     .pill-switcher-item {
-      flex: 1;
-      padding: 6px 20px;
-      font-family: var(--font-ui);
-      font-size: var(--text-sm);
-      font-weight: 500;
-      border-radius: var(--radius-sm);
-      border: none;
-      background: transparent;
-      color: var(--color-silver);
-      cursor: pointer;
-      transition: all 0.25s ease;
+      flex:1;padding:8px 0;border:none;border-radius:var(--radius-full);
+      background:transparent;font-size:var(--text-sm);font-weight:500;
+      color:var(--color-slate-blue);cursor:pointer;transition:all 0.2s;
     }
-
     .pill-switcher-item.active {
-      background: var(--color-surf-blue);
-      color: #ffffff;
-    }
-
-    .pill-switcher-item:not(.active):hover {
-      color: var(--color-ink);
-      background: var(--color-mist);
+      background:var(--color-paper);color:var(--color-ink);
+      box-shadow:0 1px 3px rgba(0,0,0,0.06);
     }
 
     .login-title {
-      font-family: var(--font-display);
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--color-ink);
-      margin: 0 0 4px;
+      font-family:var(--font-display);font-size:28px;font-weight:600;
+      color:var(--color-ink);margin:0 0 6px;
     }
-
     .login-sub {
-      font-size: var(--text-sm);
-      color: var(--color-silver);
-      margin: 0 0 24px;
+      font-size:var(--text-sm);color:var(--color-silver);
+      margin:0 0 24px;
     }
 
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom:16px;
+    }
+    .input-field {
+      width:100%;padding:12px 16px;
+      font-family:var(--font-ui);font-size:var(--text-sm);
+      border:1px solid var(--color-hairline-strong);
+      border-radius:var(--radius-md);
+      background:var(--color-paper);color:var(--color-ink);
+      outline:none;box-sizing:border-box;
+      transition:border-color 0.2s,box-shadow 0.2s;
+    }
+    .input-field:focus {
+      border-color:var(--color-surf-blue);
+      box-shadow:0 0 0 3px var(--color-surf-light);
     }
 
     .form-group .error-msg {
-      display: none;
-      font-size: var(--text-xs);
-      color: var(--state-error);
-      margin-top: 4px;
+      display:none;font-size:var(--text-xs);color:var(--state-error);
+      margin-top:4px;
     }
-
     .form-group.has-error .error-msg {
-      display: block;
+      display:block;
     }
-
     .form-group.has-error .input-field {
-      border-color: var(--state-error);
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.10);
+      border-color:var(--state-error);
+      box-shadow:0 0 0 3px rgba(239,68,68,0.10);
     }
 
     .form-actions {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      margin-top: 24px;
+      display:flex;flex-direction:column;gap:12px;margin-top:24px;
     }
-
     .login-btn {
-      width: 100%;
-      padding: 12px 22px;
+      width:100%;padding:12px 0;
+      font-size:var(--text-sm);font-weight:600;cursor:pointer;
+      transition:opacity 0.2s;
     }
-
+    .login-btn:disabled {
+      opacity:0.6;cursor:not-allowed;
+    }
     .login-links {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      margin-top: 4px;
+      display:flex;justify-content:space-between;
     }
-
     .login-link {
-      font-size: var(--text-sm);
-      color: var(--color-silver);
-      text-decoration: none;
-      transition: color 0.2s ease;
+      font-size:var(--text-xs);color:var(--color-silver);
+      text-decoration:none;transition:color 0.2s;
     }
-
-    .login-link:hover {
-      color: var(--color-surf-blue);
-    }
+    .login-link:hover {color:var(--color-surf-blue)}
 
     .divider {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      margin: 24px 0;
-      gap: 16px;
+      display:flex;align-items:center;gap:16px;
+      margin:24px 0;color:var(--color-silver);font-size:var(--text-xs);
     }
-
-    .divider::before,
-    .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--color-hairline);
-    }
-
-    .divider span {
-      font-size: var(--text-xs);
-      color: var(--color-ink-muted);
-      text-transform: uppercase;
-      font-weight: 500;
+    .divider::before,.divider::after {
+      content:'';flex:1;height:1px;background:var(--color-hairline);
     }
 
     .social-btns {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
+      display:flex;gap:12px;
     }
-
     .social-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 10px 22px;
-      font-family: var(--font-ui);
-      font-size: var(--text-sm);
-      font-weight: 500;
-      color: var(--color-slate-blue);
-      background: transparent;
-      border: 1px solid var(--color-hairline-strong);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: all 0.2s ease;
+      flex:1;display:flex;align-items:center;justify-content:center;
+      gap:8px;padding:10px 0;
+      border:1px solid var(--color-hairline-strong);
+      border-radius:var(--radius-md);
+      background:var(--color-paper);font-size:var(--text-sm);
+      color:var(--color-ink);cursor:pointer;
+      transition:background 0.2s;
     }
+    .social-btn:hover {background:var(--color-mist)}
 
-    .social-btn:hover {
-      background: var(--color-mist);
-      border-color: var(--color-surf-blue);
-      color: var(--color-surf-blue);
+    /* Loading spinner */
+    .spinner {
+      display:none;width:18px;height:18px;
+      border:2px solid rgba(255,255,255,0.3);
+      border-top-color:#fff;border-radius:50%;
+      animation:spin 0.6s linear infinite;
     }
+    @keyframes spin {
+      to {transform:rotate(360deg)}
+    }
+    .login-btn.loading .btn-text {display:none}
+    .login-btn.loading .spinner {display:inline-block}
 
-    @media (max-width: 560px) {
-      .login-card { padding: 28px; }
-      .login-dots { display: none; }
+    @media(max-width:480px) {
+      .login-card {padding:32px 24px}
     }
   </style>
 </head>
-<body class="bg-noise">
+<body>
+<div class="login-bg">
+  <div class="login-card">
+    <div class="login-brand">
+      <svg class="login-brand-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="16"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+      </svg>
+      <h1 class="login-brand-name">知信</h1>
+    </div>
 
-  <div class="login-bg">
-    <div class="login-glow"></div>
-  </div>
+    <div class="pill-switcher">
+      <button class="pill-switcher-item active" type="button" onclick="switchTab('login')">登录</button>
+      <button class="pill-switcher-item" type="button" onclick="switchTab('register')">注册</button>
+    </div>
 
-  <div class="login-wrap">
-    <div class="login-card-wrap fade-up-in">
+    <h2 class="login-title" id="form-title">欢迎回来</h2>
+    <p class="login-sub" id="form-sub">登录以继续使用知信</p>
 
-      <!-- Breathing dots -->
-      <div class="login-dots">
-        <div class="breathing-dot"></div>
-        <div class="breathing-dot"></div>
-        <div class="breathing-dot"></div>
-        <div class="breathing-dot"></div>
-        <div class="breathing-dot"></div>
+    <form id="login-form" method="POST" action="/api/auth" novalidate>
+      <div class="form-group" id="email-group">
+        <input type="email" class="input-field" id="email" name="email"
+               placeholder="邮箱" autocomplete="email" required
+               aria-describedby="email-error">
+        <span class="error-msg" id="email-error" role="alert">请输入有效的邮箱地址</span>
       </div>
 
-      <!-- Card -->
-      <div class="login-card">
-
-        <div class="login-brand">
-          <h1 class="login-brand-name">知信</h1>
-          <div class="login-brand-dots">
-            <div class="breathing-dot"></div>
-            <div class="breathing-dot"></div>
-            <div class="breathing-dot"></div>
-          </div>
-        </div>
-
-        <div class="pill-switcher">
-          <button class="pill-switcher-item active" type="button" onclick="switchTab('login')">登录</button>
-          <button class="pill-switcher-item" type="button" onclick="switchTab('register')">注册</button>
-        </div>
-
-        <h2 class="login-title" id="form-title">欢迎回来</h2>
-        <p class="login-sub" id="form-sub">登录以继续使用知信</p>
-
-        <form id="login-form" novalidate>
-          <div class="form-group" id="email-group">
-            <input type="email" class="input-field" id="email" placeholder="邮箱" autocomplete="email" required>
-            <span class="error-msg">请输入有效的邮箱地址</span>
-          </div>
-
-          <div class="form-group" id="password-group">
-            <input type="password" class="input-field" id="password" placeholder="密码" autocomplete="current-password" required minlength="8">
-            <span class="error-msg">密码长度不能少于 8 位</span>
-          </div>
-
-          <div class="form-group" id="confirm-group" style="display:none;">
-            <input type="password" class="input-field" id="confirm-password" placeholder="确认密码" autocomplete="new-password" minlength="8">
-            <span class="error-msg">两次输入的密码不一致</span>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn-primary login-btn" data-dom-id="login-submit">登录</button>
-            <div class="login-links">
-              <a href="#" class="login-link">忘记密码？</a>
-              <a href="../pages/index.html" class="login-link" data-dom-id="login-back">返回首页 &rarr;</a>
-            </div>
-          </div>
-        </form>
-
-        <div class="divider">
-          <span>或</span>
-        </div>
-
-        <div class="social-btns">
-          <button class="social-btn" type="button" aria-label="微信登录">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.7 4.3A9.7 9.7 0 0 1 12 4c5.5 0 10 4 10 9a9 9 0 0 1-3.5 7L17 17.6a6 6 0 0 0-10 0L5.5 20A9 9 0 0 1 8.7 4.3z"/></svg>
-            微信登录
-          </button>
-          <button class="social-btn" type="button" aria-label="GitHub 登录">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-            GitHub 登录
-          </button>
-        </div>
-
+      <div class="form-group" id="password-group">
+        <input type="password" class="input-field" id="password" name="password"
+               placeholder="密码" autocomplete="current-password" required minlength="8"
+               aria-describedby="password-error">
+        <span class="error-msg" id="password-error" role="alert">密码长度不能少于 8 位</span>
       </div>
+
+      <div class="form-group" id="confirm-group" style="display:none;">
+        <input type="password" class="input-field" id="confirm-password" name="confirm_password"
+               placeholder="确认密码" autocomplete="new-password" minlength="8"
+               aria-describedby="confirm-error">
+        <span class="error-msg" id="confirm-error" role="alert">两次输入的密码不一致</span>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary login-btn" id="submit-btn">
+          <span class="btn-text">登录</span>
+          <span class="spinner"></span>
+        </button>
+        <div class="login-links">
+          <a href="#" class="login-link">忘记密码？</a>
+          <a href="../index.html" class="login-link">返回首页 &rarr;</a>
+        </div>
+      </div>
+    </form>
+
+    <div class="divider"><span>或</span></div>
+
+    <div class="social-btns">
+      <button class="social-btn" type="button" aria-label="微信登录">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.7 4.3A9.7 9.7 0 0 1 12 4c5.5 0 10 4 10 9a9 9 0 0 1-3.5 7L17 17.6a6 6 0 0 0-10 0L5.5 20A9 9 0 0 1 8.7 4.3z"/></svg>
+        微信登录
+      </button>
+      <button class="social-btn" type="button" aria-label="GitHub 登录">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub 登录
+      </button>
     </div>
   </div>
+</div>
 
 <script>
 (function() {
@@ -337,7 +230,9 @@
   var email = document.getElementById('email');
   var password = document.getElementById('password');
   var confirmPwd = document.getElementById('confirm-password');
+  var submitBtn = document.getElementById('submit-btn');
   var isLogin = true;
+  var isSubmitting = false;
 
   function showError(el) {
     el.parentElement.classList.add('has-error');
@@ -345,6 +240,12 @@
 
   function clearError(el) {
     el.parentElement.classList.remove('has-error');
+  }
+
+  function setLoading(loading) {
+    isSubmitting = loading;
+    submitBtn.disabled = loading;
+    submitBtn.classList.toggle('loading', loading);
   }
 
   function validateEmail(val) {
@@ -356,7 +257,7 @@
     var title = document.getElementById('form-title');
     var sub = document.getElementById('form-sub');
     var confirmGroup = document.getElementById('confirm-group');
-    var btn = form.querySelector('.btn-primary');
+    var btnText = submitBtn.querySelector('.btn-text');
 
     switcher.forEach(function(s) { s.classList.remove('active'); });
 
@@ -365,24 +266,30 @@
       title.textContent = '欢迎回来';
       sub.textContent = '登录以继续使用知信';
       confirmGroup.style.display = 'none';
-      btn.textContent = '登录';
+      btnText.textContent = '登录';
+      form.action = '/api/auth/login';
       isLogin = true;
     } else {
       switcher[1].classList.add('active');
       title.textContent = '创建账号';
       sub.textContent = '注册知信账号，开始信息调研';
       confirmGroup.style.display = 'block';
-      btn.textContent = '注册';
+      btnText.textContent = '注册';
+      form.action = '/api/auth/register';
       isLogin = false;
     }
   };
 
   form.addEventListener('submit', function(e) {
     e.preventDefault();
-    var valid = true;
+    if (isSubmitting) return;
 
-    [email, password].forEach(clearError);
-    if (confirmPwd) clearError(confirmPwd);
+    // Clear previous errors
+    [email, password, confirmPwd].forEach(function(el) {
+      if (el) clearError(el);
+    });
+
+    var valid = true;
 
     if (!validateEmail(email.value)) {
       showError(email);
@@ -399,13 +306,49 @@
       valid = false;
     }
 
-    if (valid) {
-      // TODO: 对接后端认证 API
-      console.log(isLogin ? '登录提交' : '注册提交', { email: email.value });
+    if (!valid) return;
+
+    // Set loading state
+    setLoading(true);
+
+    // Call backend auth API
+    var endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    var body = isLogin
+      ? JSON.stringify({ email: email.value, password: password.value })
+      : JSON.stringify({ email: email.value, password: password.value, confirm_password: confirmPwd.value });
+
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body,
+      credentials: 'same-origin'  // Include cookies for CSRF
+    })
+    .then(function(res) {
+      if (!res.ok) {
+        return res.json().then(function(data) {
+          throw new Error(data.message || '请求失败');
+        });
+      }
+      return res.json();
+    })
+    .then(function(data) {
+      // Auth successful - redirect to dashboard
+      // Token should be set as HttpOnly cookie by the server
       window.location.href = 'dashboard.html';
-    }
+    })
+    .catch(function(err) {
+      setLoading(false);
+      // Show server error on both fields
+      showError(email);
+      showError(password);
+      var emailError = document.getElementById('email-error');
+      if (emailError) {
+        emailError.textContent = err.message || '登录失败，请稍后重试';
+      }
+    });
   });
 
+  // Clear errors on input
   [email, password].forEach(function(el) {
     el.addEventListener('input', function() { clearError(el); });
   });

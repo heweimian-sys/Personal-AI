@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>知信 — 工作台</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知信 - 工作台</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
     <link rel="stylesheet" href="../colors_and_type.css">
 
@@ -165,37 +165,12 @@
       @media (max-width: 1024px) {
         .sidebar { width: 64px; min-width: 64px; }
         .sidebar-logo { padding: 20px 14px 16px; text-align: center; font-size: 16px; }
-        .sidebar-nav { padding: 10px 6px; align-items: center; }
-        .sidebar-item { padding: 10px; justify-content: center; gap: 0; }
-        .sidebar-item span { display: none; }
-        .sidebar-dot { display: none; }
-        .sidebar-user { justify-content: center; padding: 14px 6px 18px; }
-        .sidebar-username { display: none; }
-        .content-area { margin-left: 64px; }
-        .stats-row { padding: 24px 24px 0; }
         .feature-grid { padding: 20px 24px 24px; }
         .top-bar { padding: 24px 24px 0; }
       }
       @media (max-width: 768px) {
         .hamburger { display: flex; }
         .sidebar { width: 240px; min-width: 240px; transform: translateX(-100%); transition: transform 0.3s ease; }
-        .sidebar.open { transform: translateX(0); }
-        .sidebar.open ~ .mobile-overlay { display: block; }
-        .sidebar-item span { display: inline; }
-        .sidebar-dot { display: block; }
-        .sidebar-username { display: block; }
-        .content-area { margin-left: 0; }
-        .stats-row { grid-template-columns: 1fr; padding: 20px 16px 0; }
-        .feature-grid { grid-template-columns: 1fr; padding: 16px 16px 24px; }
-        .dash-card.full { grid-column: 1; }
-        .top-bar { padding: 20px 16px 0; flex-wrap: wrap; gap: 12px; }
-        .page-title { font-size: 24px; }
-        .search-input { width: 100%; }
-        .search-input:focus { width: 100%; }
-        .top-actions { width: 100%; order: 2; }
-        .search-wrap { flex: 1; }
-      }
-    </style>
 </head>
 <body class="bg-noise">
 <div class="dash-layout">
@@ -243,10 +218,6 @@
         <div class="top-bar" style="position:relative;z-index:1;">
             <div style="display:flex;align-items:center;gap:12px;">
                 <button class="hamburger" id="hamburgerBtn" aria-label="菜单">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                </button>
-                <h1 class="page-title">工作台</h1>
-            </div>
             <div class="top-actions">
                 <div class="search-wrap">
                     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -302,7 +273,6 @@
 </div>
 
 <script>
-(function() {
     var sidebar = document.getElementById('sidebar');
     var overlay = document.getElementById('mobileOverlay');
     var hamburger = document.getElementById('hamburgerBtn');

@@ -121,16 +121,16 @@ footer p{font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var
     <p class="sub fade fade-2">知信帮你追踪、整理、洞察全网信息</p>
 
     <div class="fade fade-3">
-      <div class="search-wrap">
-        <input type="text" placeholder="输入关键词，开始调研..." aria-label="搜索">
-        <button class="btn btn-primary">检索</button>
+      <form class="search-wrap" method="GET" action="/search" onsubmit="return false;">
+        <input type="text" name="q" placeholder="输入关键词，开始调研..." aria-label="搜索" required maxlength="200" autocomplete="off">
+        <button type="submit" class="btn btn-primary">检索</button>
       </div>
       <div class="modes">
-        <button class="active">全网</button>
+        <button class="active" type="button">全网</button>
         <span class="div"></span>
-        <button>资讯</button>
+        <button type="button">资讯</button>
         <span class="div"></span>
-        <button>学术</button>
+        <button type="button">学术</button>
       </div>
     </div>
 
