@@ -9,7 +9,9 @@ JSON Output 模式：response_format={'type': 'json_object'}
 
 核心方法：
     extract_events() — 从搜索结果提取结构化事件
-    （后续 Task 5/12 会扩展 analyze_relations() 和 generate_insight()）
+    analyze_relations() — 分析事件间关联关系
+    organize_chapters() — 将事件按叙事逻辑分章
+    generate_insight() — 生成趋势判断和行动建议（Task 12 扩展）
 """
 from __future__ import annotations
 
@@ -64,6 +66,61 @@ class ExtractedEvent:
             "sources": self.sources,
             "key_quote": self.key_quote,
             "confidence": self.confidence,
+        }
+
+
+@dataclass
+class AnalyzedRelation:
+    """AI 分析的事件间关联关系
+
+    5 种关系类型：
+    - causal      因果关系   A → B
+    - competitive 竞争关系   A ↔ B
+    - contains    包含关系   A ⊂ B
+    - dependency  技术依赖   A ⇢ B
+    - chain       连锁反应   A → B → C
+    """
+
+    from_event_index: int
+    to_event_index: int
+    type: str
+    description: str = ""
+    confidence: float = 0.7
+
+    VALID_TYPES = {"causal", "competitive", "contains", "dependency", "chain"}
+
+    def __post_init__(self) -> None:
+        if self.type not in self.VALID_TYPES:
+            logger.warning("未知关系类型: %s（允许: %s）", self.type, self.VALID_TYPES)
+
+    def to_dict(self) -> dict:
+        return {
+            "from_event_index": self.from_event_index,
+            "to_event_index": self.to_event_index,
+            "type": self.type,
+            "description": self.description,
+            "confidence": self.confidence,
+        }
+
+
+@dataclass
+class ChapterOutline:
+    """AI 组织的章节结构
+
+    将事件按叙事逻辑分成 2-4 章，每章包含标题和事件索引列表。
+    """
+
+    title: str
+    event_indices: list[int]
+
+    def __post_init__(self) -> None:
+        if self.event_indices is None:
+            self.event_indices = []
+
+    def to_dict(self) -> dict:
+        return {
+            "title": self.title,
+            "event_indices": self.event_indices,
         }
 
 
@@ -219,6 +276,114 @@ class DeepSeekService:
         logger.info("事件提取完成: 提取了 %d 个事件", len(events))
         return events
 
+    async def analyze_relations(
+        self,
+        query: str,
+        events: list[ExtractedEvent],
+    ) -> list[AnalyzedRelation]:
+        """分析事件间的关联关系
+
+        AI 处理流程的第二步：分析事件之间的因果、竞争、包含、依赖、连锁关系。
+        这是"因果网络"的核心，让信息不只是时间线，而是有脉络的网络。
+
+        Args:
+            query: 用户搜索的关键词
+            events: extract_events() 返回的事件列表
+
+        Returns:
+            关联关系列表，from_event_index 和 to_event_index 对应 events 列表的索引
+        """
+        if len(events) < 2:
+            logger.info("事件数不足 2 个，跳过关系分析")
+            return []
+
+        system_prompt = _RELATION_ANALYSIS_SYSTEM_PROMPT
+        user_prompt = _build_relation_analysis_user_prompt(query, events)
+
+        logger.info(
+            "开始关系分析: query='%s', 事件数=%d",
+            query,
+            len(events),
+        )
+
+        result = await self.chat_json(system_prompt, user_prompt, temperature=0.2)
+
+        relations_data = result.get("relations", [])
+        relations: list[AnalyzedRelation] = []
+
+        for rel_data in relations_data:
+            try:
+                rel = AnalyzedRelation(
+                    from_event_index=int(rel_data.get("from_event_index", 0)),
+                    to_event_index=int(rel_data.get("to_event_index", 0)),
+                    type=rel_data.get("type", "causal"),
+                    description=rel_data.get("description", ""),
+                    confidence=float(rel_data.get("confidence", 0.7)),
+                )
+                # 校验索引范围
+                if 0 <= rel.from_event_index < len(events) and 0 <= rel.to_event_index < len(events):
+                    relations.append(rel)
+                else:
+                    logger.warning("跳过索引越界的关系: %d→%d（事件数=%d）", rel.from_event_index, rel.to_event_index, len(events))
+            except (TypeError, ValueError) as e:
+                logger.warning("跳过格式异常的关系: %s", e)
+                continue
+
+        logger.info("关系分析完成: 分析出 %d 个关系", len(relations))
+        return relations
+
+    async def organize_chapters(
+        self,
+        query: str,
+        events: list[ExtractedEvent],
+        relations: list[AnalyzedRelation],
+    ) -> list[ChapterOutline]:
+        """将事件按叙事逻辑分成章节
+
+        AI 处理流程的第三步：将事件和关系组织成 2-4 章的叙事结构，
+        每章有标题和事件分组，形成阅读式信息流。
+
+        Args:
+            query: 用户搜索的关键词
+            events: extract_events() 返回的事件列表
+            relations: analyze_relations() 返回的关系列表
+
+        Returns:
+            章节列表，每个章节包含标题和事件索引
+        """
+        if not events:
+            logger.info("事件为空，跳过章节组织")
+            return []
+
+        system_prompt = _CHAPTER_ORGANIZATION_SYSTEM_PROMPT
+        user_prompt = _build_chapter_organization_user_prompt(query, events, relations)
+
+        logger.info(
+            "开始章节组织: query='%s', 事件数=%d, 关系数=%d",
+            query,
+            len(events),
+            len(relations),
+        )
+
+        result = await self.chat_json(system_prompt, user_prompt, temperature=0.3)
+
+        chapters_data = result.get("chapters", [])
+        chapters: list[ChapterOutline] = []
+
+        for ch_data in chapters_data:
+            try:
+                chapter = ChapterOutline(
+                    title=ch_data.get("title", "未命名章节"),
+                    event_indices=ch_data.get("event_indices", []),
+                )
+                chapters.append(chapter)
+            except (TypeError, ValueError) as e:
+                logger.warning("跳过格式异常的章节: %s", e)
+                continue
+
+        logger.info("章节组织完成: 分成 %d 章", len(chapters))
+        return chapters
+
 
 # ============================================================
 # 提示词
@@ -275,5 +440,115 @@ def _build_event_extraction_user_prompt(
             markdown_content = result.markdown[:2000]
             parts.append(f"内容：\n{markdown_content}")
         parts.append("---\n")
+
+    return "\n".join(parts)
+
+
+# ============================================================
+# 关系分析提示词
+# ============================================================
+
+_RELATION_ANALYSIS_SYSTEM_PROMPT = """你是一个关系分析专家。你的任务是分析事件之间的关联关系。
+
+5 种关系类型：
+1. causal（因果关系）：A 导致 B。例如"Claude 4 发布" → "OpenAI 加速 GPT-5 开发"
+2. competitive（竞争关系）：A 和 B 互相竞争。例如"GPT-5" ↔ "Claude 4"
+3. contains（包含关系）：A 是 B 的一部分。例如"端侧AI芯片" ⊂ "半导体产业链"
+4. dependency（技术依赖）：A 依赖 B 才能运作。例如"AI应用" ⇢ "GPU供应"
+5. chain（连锁反应）：A → B → C 的连锁过程。例如"成本下降 → 创业潮 → 人才短缺"
+
+要求：
+1. from_event_index 和 to_event_index 是事件列表中的索引（从 0 开始）
+2. 只分析有明确关联的事件对，不要强行关联
+3. description 解释为什么存在这个关系（50-100字）
+4. confidence 是你对这个关系的确信度，范围 0-1
+5. 每对事件只标注一种最主要的关系类型
+
+输出格式（JSON）：
+{
+  "relations": [
+    {
+      "from_event_index": 0,
+      "to_event_index": 1,
+      "type": "causal",
+      "description": "Claude 4 的发布给 OpenAI 带来竞争压力，迫使其加速 GPT-5 开发",
+      "confidence": 0.85
+    }
+  ]
+}"""
+
+
+def _build_relation_analysis_user_prompt(
+    query: str,
+    events: list[ExtractedEvent],
+) -> str:
+    """构建关系分析的用户提示词"""
+    parts = [f"查询关键词：{query}\n"]
+    parts.append("请分析以下事件之间的关联关系。\n")
+    parts.append("---\n")
+    parts.append("事件列表：\n")
+
+    for i, event in enumerate(events):
+        parts.append(f"[{i}] {event.title}")
+        parts.append(f"    日期：{event.date or '未知'}")
+        parts.append(f"    摘要：{event.summary}")
+        parts.append("")
+
+    return "\n".join(parts)
+
+
+# ============================================================
+# 章节组织提示词
+# ============================================================
+
+_CHAPTER_ORGANIZATION_SYSTEM_PROMPT = """你是一个叙事结构设计专家。你的任务是将事件按叙事逻辑组织成章节。
+
+要求：
+1. 分成 2-4 章，不要太多也不要太少
+2. 每章 2-4 个事件，保持均衡
+3. 章节标题要有叙事感，像一篇深度报道的章节标题
+4. 章节顺序应符合逻辑：可以按时间线、按因果链、或按主题分类
+5. event_indices 是事件列表中的索引（从 0 开始）
+6. 每个事件只能出现在一个章节中
+7. 所有事件都应被分配到某个章节中
+
+输出格式（JSON）：
+{
+  "chapters": [
+    {
+      "title": "第一章·模型之争",
+      "event_indices": [0, 1, 2]
+    },
+    {
+      "title": "第二章·应用爆发",
+      "event_indices": [3, 4]
+    }
+  ]
+}"""
+
+
+def _build_chapter_organization_user_prompt(
+    query: str,
+    events: list[ExtractedEvent],
+    relations: list[AnalyzedRelation],
+) -> str:
+    """构建章节组织的用户提示词"""
+    parts = [f"查询关键词：{query}\n"]
+    parts.append("请将以下事件和关系组织成 2-4 章的叙事结构。\n")
+    parts.append("---\n")
+    parts.append("事件列表：\n")
+
+    for i, event in enumerate(events):
+        parts.append(f"[{i}] {event.title}（{event.date or '日期未知'}）")
+        parts.append(f"    {event.summary[:100]}")
+        parts.append("")
+
+    if relations:
+        parts.append("已知关联关系：\n")
+        for rel in relations:
+            parts.append(
+                f"  [{rel.from_event_index}] --{rel.type}--> [{rel.to_event_index}]: {rel.description}"
+            )
+        parts.append("")
 
     return "\n".join(parts)
