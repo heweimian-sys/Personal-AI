@@ -10,30 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="../colors_and_type.css">
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-
-  <style type="text/tailwindcss">
-@theme inline {
-  --color-mist: #f3f4f6;
-  --color-paper: #ffffff;
-  --color-surf-blue: #009afc;
-  --color-ink: #000000;
-  --color-slate-blue: #5b6882;
-  --color-silver: #808080;
-  --color-hairline: #e5e7eb;
-  --font-ui: 'Inter', 'Noto Sans SC', sans-serif;
-  --font-display: 'Playfair Display', 'Noto Serif SC', serif;
-}
-@layer base {
-  body {
-    background: var(--color-mist);
-    font-family: var(--font-ui);
-    color: var(--color-ink);
-    margin: 0;
-    min-height: 100vh;
-  }
-}
-  </style>
 
   <style>
     .login-bg {
@@ -114,7 +90,7 @@
       gap: 6px;
     }
 
-    /* ── Pill Switcher ── */
+    /* Pill Switcher */
     .pill-switcher {
       display: flex;
       gap: 4px;
@@ -164,6 +140,22 @@
 
     .form-group {
       margin-bottom: 16px;
+    }
+
+    .form-group .error-msg {
+      display: none;
+      font-size: var(--text-xs);
+      color: var(--state-error);
+      margin-top: 4px;
+    }
+
+    .form-group.has-error .error-msg {
+      display: block;
+    }
+
+    .form-group.has-error .input-field {
+      border-color: var(--state-error);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.10);
     }
 
     .form-actions {
@@ -288,39 +280,48 @@
         </div>
 
         <div class="pill-switcher">
-          <button class="pill-switcher-item active">登录</button>
-          <button class="pill-switcher-item">注册</button>
+          <button class="pill-switcher-item active" type="button" onclick="switchTab('login')">登录</button>
+          <button class="pill-switcher-item" type="button" onclick="switchTab('register')">注册</button>
         </div>
 
-        <h2 class="login-title">欢迎回来</h2>
-        <p class="login-sub">登录以继续使用知信</p>
+        <h2 class="login-title" id="form-title">欢迎回来</h2>
+        <p class="login-sub" id="form-sub">登录以继续使用知信</p>
 
-        <div class="form-group">
-          <input type="email" class="input-field" placeholder="邮箱" autocomplete="email">
-        </div>
-
-        <div class="form-group">
-          <input type="password" class="input-field" placeholder="密码" autocomplete="current-password">
-        </div>
-
-        <div class="form-actions">
-          <button class="btn-primary login-btn" data-dom-id="login-submit">登录</button>
-          <div class="login-links">
-            <a href="#" class="login-link">忘记密码？</a>
-            <a href="../pages/index.html" class="login-link" data-dom-id="login-back">返回首页 &rarr;</a>
+        <form id="login-form" novalidate>
+          <div class="form-group" id="email-group">
+            <input type="email" class="input-field" id="email" placeholder="邮箱" autocomplete="email" required>
+            <span class="error-msg">请输入有效的邮箱地址</span>
           </div>
-        </div>
+
+          <div class="form-group" id="password-group">
+            <input type="password" class="input-field" id="password" placeholder="密码" autocomplete="current-password" required minlength="8">
+            <span class="error-msg">密码长度不能少于 8 位</span>
+          </div>
+
+          <div class="form-group" id="confirm-group" style="display:none;">
+            <input type="password" class="input-field" id="confirm-password" placeholder="确认密码" autocomplete="new-password" minlength="8">
+            <span class="error-msg">两次输入的密码不一致</span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary login-btn" data-dom-id="login-submit">登录</button>
+            <div class="login-links">
+              <a href="#" class="login-link">忘记密码？</a>
+              <a href="../pages/index.html" class="login-link" data-dom-id="login-back">返回首页 &rarr;</a>
+            </div>
+          </div>
+        </form>
 
         <div class="divider">
           <span>或</span>
         </div>
 
         <div class="social-btns">
-          <button class="social-btn">
+          <button class="social-btn" type="button" aria-label="微信登录">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.7 4.3A9.7 9.7 0 0 1 12 4c5.5 0 10 4 10 9a9 9 0 0 1-3.5 7L17 17.6a6 6 0 0 0-10 0L5.5 20A9 9 0 0 1 8.7 4.3z"/></svg>
             微信登录
           </button>
-          <button class="social-btn">
+          <button class="social-btn" type="button" aria-label="GitHub 登录">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
             GitHub 登录
           </button>
@@ -329,6 +330,90 @@
       </div>
     </div>
   </div>
+
+<script>
+(function() {
+  var form = document.getElementById('login-form');
+  var email = document.getElementById('email');
+  var password = document.getElementById('password');
+  var confirmPwd = document.getElementById('confirm-password');
+  var isLogin = true;
+
+  function showError(el) {
+    el.parentElement.classList.add('has-error');
+  }
+
+  function clearError(el) {
+    el.parentElement.classList.remove('has-error');
+  }
+
+  function validateEmail(val) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+  }
+
+  window.switchTab = function(tab) {
+    var switcher = document.querySelectorAll('.pill-switcher-item');
+    var title = document.getElementById('form-title');
+    var sub = document.getElementById('form-sub');
+    var confirmGroup = document.getElementById('confirm-group');
+    var btn = form.querySelector('.btn-primary');
+
+    switcher.forEach(function(s) { s.classList.remove('active'); });
+
+    if (tab === 'login') {
+      switcher[0].classList.add('active');
+      title.textContent = '欢迎回来';
+      sub.textContent = '登录以继续使用知信';
+      confirmGroup.style.display = 'none';
+      btn.textContent = '登录';
+      isLogin = true;
+    } else {
+      switcher[1].classList.add('active');
+      title.textContent = '创建账号';
+      sub.textContent = '注册知信账号，开始信息调研';
+      confirmGroup.style.display = 'block';
+      btn.textContent = '注册';
+      isLogin = false;
+    }
+  };
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var valid = true;
+
+    [email, password].forEach(clearError);
+    if (confirmPwd) clearError(confirmPwd);
+
+    if (!validateEmail(email.value)) {
+      showError(email);
+      valid = false;
+    }
+
+    if (password.value.length < 8) {
+      showError(password);
+      valid = false;
+    }
+
+    if (!isLogin && password.value !== confirmPwd.value) {
+      showError(confirmPwd);
+      valid = false;
+    }
+
+    if (valid) {
+      // TODO: 对接后端认证 API
+      console.log(isLogin ? '登录提交' : '注册提交', { email: email.value });
+      window.location.href = 'dashboard.html';
+    }
+  });
+
+  [email, password].forEach(function(el) {
+    el.addEventListener('input', function() { clearError(el); });
+  });
+  if (confirmPwd) {
+    confirmPwd.addEventListener('input', function() { clearError(confirmPwd); });
+  }
+})();
+</script>
 
 </body>
 </html>
