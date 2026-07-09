@@ -158,28 +158,92 @@ async def test_research_search_called_with_correct_params():
 
 @pytest.mark.asyncio
 async def test_research_empty_search_results():
-    """测试搜索结果为空"""
+    """测试搜索结果为空 — 主搜索返回空时降级到兜底数据
+
+    新契约：_search 有三级降级链（Tavily → Firecrawl → 兜底），
+    主搜索返回空不再导致整个流程返回空，而是降级到兜底预设数据。
+    """
     service = _create_mocked_research_service(search_results=[])
 
-    result = await service.research("不存在的关键词")
+    # mock Firecrawl 也不可用，确保走兜底预设数据
+    with patch("app.services.research_service.FirecrawlSearchService") as MockFC:
+        MockFC.return_value.search = AsyncMock(side_effect=Exception("Firecrawl 不可用"))
+        result = await service.research("不存在的关键词")
 
-    assert len(result.events) == 0
-    assert "未找到" in result.summary
-    # 不应该调用 AI
-    service.ai_service.extract_events.assert_not_called()
+    # 兜底数据返回 3 条，AI 会从中提取事件（mock extract_events 返回 2 个）
+    assert result.query == "不存在的关键词"
+    assert len(result.events) == 2  # mock extract_events 的返回值
+    service.ai_service.extract_events.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_research_search_error():
-    """测试搜索失败"""
+    """测试搜索失败 — 主搜索报错时降级到兜底数据
+
+    新契约：搜索失败不再抛 ResearchError，而是降级到兜底预设数据，
+    保证 AI 处理流程不中断。
+    """
     from app.services.firecrawl_service import FirecrawlConnectionError
 
     service = _create_mocked_research_service(search_error=FirecrawlConnectionError("连接失败"))
 
-    with pytest.raises(Exception) as exc_info:
-        await service.research("AI行业")
+    # mock Firecrawl 也不可用，确保走兜底预设数据
+    with patch("app.services.research_service.FirecrawlSearchService") as MockFC:
+        MockFC.return_value.search = AsyncMock(side_effect=Exception("Firecrawl 不可用"))
+        result = await service.research("AI行业")
 
-    assert "搜索失败" in str(exc_info.value)
+    # 降级到兜底数据，流程正常继续
+    assert result.query == "AI行业"
+    assert len(result.events) == 2  # mock extract_events 的返回值
+    service.ai_service.extract_events.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_default_search_service_selection():
+    """测试默认搜索服务选择逻辑
+
+    - TAVILY_API_KEY 有值时 → 默认 TavilySearchService
+    - TAVILY_API_KEY 为空时 → 默认 FirecrawlSearchService
+    """
+    from app.services.firecrawl_service import TavilySearchService, FirecrawlSearchService
+
+    # 场景 1：配置了 Tavily Key
+    with patch("app.services.research_service.settings") as mock_settings:
+        mock_settings.TAVILY_API_KEY = "tvly-test-key"
+        service = ResearchService()
+        assert isinstance(service.search_service, TavilySearchService)
+
+    # 场景 2：未配置 Tavily Key
+    with patch("app.services.research_service.settings") as mock_settings:
+        mock_settings.TAVILY_API_KEY = ""
+        service = ResearchService()
+        assert isinstance(service.search_service, FirecrawlSearchService)
+
+
+@pytest.mark.asyncio
+async def test_fallback_chain_tavily_then_firecrawl():
+    """测试降级链：Tavily 失败 → Firecrawl 命中"""
+    from app.services.firecrawl_service import FirecrawlConnectionError, TavilySearchService
+
+    # 主搜索（Tavily）失败
+    mock_tavily = AsyncMock()
+    mock_tavily.search = AsyncMock(side_effect=FirecrawlConnectionError("Tavily 不可用"))
+
+    service = ResearchService(search_service=mock_tavily, ai_service=AsyncMock())
+
+    # mock Firecrawl 返回结果
+    mock_fc_results = _mock_search_results()
+    with patch("app.services.research_service.FirecrawlSearchService") as MockFC:
+        MockFC.return_value.search = AsyncMock(return_value=mock_fc_results)
+        # mock AI 服务
+        service.ai_service.extract_events = AsyncMock(return_value=_mock_events())
+        service.ai_service.analyze_relations = AsyncMock(return_value=_mock_relations())
+        service.ai_service.organize_chapters = AsyncMock(return_value=_mock_chapters())
+
+        result = await service.research("AI行业")
+
+    assert result.query == "AI行业"
+    assert len(result.events) == 2
 
 
 @pytest.mark.asyncio
