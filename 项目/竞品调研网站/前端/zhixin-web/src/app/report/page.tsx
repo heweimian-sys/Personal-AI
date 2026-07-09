@@ -3,16 +3,11 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  ArrowLeft,
   Download,
   Bookmark,
   Home,
   FileText,
-  Search,
-  TrendingUp,
-  MessageSquare,
   ExternalLink,
-  ChevronDown,
   Share2,
 } from 'lucide-react';
 import { research } from '@/lib/api';
@@ -27,6 +22,14 @@ const RELATION_META: Record<string, { label: string; symbol: string }> = {
   chain: { label: '链式', symbol: '→→' },
 };
 
+/** 加载步骤定义 */
+const LOADING_STEPS = [
+  { label: '搜索全网信息', desc: '抓取多个来源的最新内容' },
+  { label: '提取关键事件', desc: 'AI 识别重要事件和时间节点' },
+  { label: '分析因果脉络', desc: '梳理事件间的关联关系' },
+  { label: '生成深度报告', desc: '组织章节、生成洞察和建议' },
+];
+
 function ReportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,6 +38,7 @@ function ReportContent() {
   const [result, setResult] = useState<ResearchResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingStep, setLoadingStep] = useState(0);
 
   useEffect(() => {
     if (!query) {
@@ -42,6 +46,19 @@ function ReportContent() {
       return;
     }
     let cancelled = false;
+    let stepTimer: ReturnType<typeof setTimeout>;
+
+    // 逐步推进加载进度（模拟，因为后端是一次性返回）
+    const advanceStep = () => {
+      setLoadingStep((prev) => {
+        if (prev < LOADING_STEPS.length - 1) {
+          stepTimer = setTimeout(advanceStep, 8000 + Math.random() * 6000);
+        }
+        return prev + 1;
+      });
+    };
+    stepTimer = setTimeout(advanceStep, 6000);
+
     const fetchData = async () => {
       setLoading(true);
       setError(null);
@@ -54,22 +71,52 @@ function ReportContent() {
           setError(`调研失败：${msg}`);
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          clearTimeout(stepTimer);
+          setLoadingStep(LOADING_STEPS.length);
+          setLoading(false);
+        }
       }
     };
     fetchData();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      clearTimeout(stepTimer);
+    };
   }, [query, router]);
 
-  /** 加载中 */
+  /** 加载中 — 多步骤进度 */
   if (loading) {
     return (
       <div className="loading-container">
-        <div className="loading-spinner" />
-        <p className="loading-text">正在深度调研「{query}」...</p>
-        <p className="loading-text" style={{ fontSize: '12px', opacity: 0.6 }}>
-          AI 正在搜索、提取事件、分析因果关系
-        </p>
+        <div className="loading-brand">
+          <div className="loading-brand-icon">知</div>
+          <span className="loading-brand-text">知<span className="brand-dot">·</span>行</span>
+        </div>
+        <div className="loading-query">正在调研「{query}」</div>
+        <div className="loading-steps">
+          {LOADING_STEPS.map((step, i) => {
+            const status = i < loadingStep ? 'done' : i === loadingStep ? 'active' : 'pending';
+            return (
+              <div key={i} className={`loading-step ${status}`}>
+                <div className="loading-step-indicator">
+                  {status === 'done' ? (
+                    <span className="loading-step-check">✓</span>
+                  ) : status === 'active' ? (
+                    <span className="loading-step-dot" />
+                  ) : (
+                    <span className="loading-step-num">{i + 1}</span>
+                  )}
+                </div>
+                <div className="loading-step-content">
+                  <span className="loading-step-label">{step.label}</span>
+                  <span className="loading-step-desc">{step.desc}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="loading-hint">通常需要 1-3 分钟，请耐心等待</p>
       </div>
     );
   }
@@ -78,6 +125,7 @@ function ReportContent() {
   if (error) {
     return (
       <div className="error-container">
+        <div className="error-icon">⚠</div>
         <p className="error-text">{error}</p>
         <button className="retry-btn" onClick={() => router.push('/')}>返回搜索</button>
       </div>
@@ -100,7 +148,7 @@ function ReportContent() {
           <span className="sidebar-logo-text">知<span className="dot">·</span>行</span>
         </div>
 
-        {/* 导航 */}
+        {/* 导航 — 只保留已实现的菜单 */}
         <nav className="sidebar-nav">
           <a className="sidebar-nav-item" onClick={() => router.push('/')}>
             <Home size={18} /> 首页
@@ -108,24 +156,9 @@ function ReportContent() {
           <a className="sidebar-nav-item active">
             <FileText size={18} /> 调研报告
           </a>
-          <a className="sidebar-nav-item">
-            <Search size={18} /> 智搜
-          </a>
-          <a className="sidebar-nav-item">
-            <TrendingUp size={18} /> 信息追踪
-          </a>
-          <a className="sidebar-nav-item">
-            <MessageSquare size={18} /> AI 对话
-          </a>
         </nav>
 
         <div style={{ flex: 1 }} />
-
-        {/* 用户 */}
-        <div className="sidebar-user">
-          <div className="sidebar-user-icon">U</div>
-          <span>用户</span>
-        </div>
       </aside>
 
       {/* ===== 中间：阅读区 ===== */}
