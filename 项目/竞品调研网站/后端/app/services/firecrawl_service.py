@@ -226,3 +226,123 @@ class FirecrawlSearchService:
         速度更快，适合只需要链接列表的场景。
         """
         return await self.search(query, limit=limit, scrape_markdown=False)
+
+
+class TavilySearchService:
+    """Tavily 搜索服务 — 免费、AI 优化、无需自部署
+
+    Tavily 是专为 AI Agent 设计的搜索 API，
+    返回结构化的搜索结果（含标题、内容、URL、markdown 原文）。
+
+    注册地址：https://tavily.com
+    免费额度：1000 credits/月（basic=1 credit，advanced=2 credits）
+    认证方式：HTTP 请求头 Authorization: Bearer <tvly-xxx>
+
+    用法：
+        service = TavilySearchService()
+        results = await service.search("AI行业", limit=10)
+
+    依赖配置（.env）：
+        TAVILY_API_KEY=tvly-your-key
+    """
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        timeout: int = 30,
+        search_depth: str = "basic",
+        topic: str = "general",
+    ) -> None:
+        """初始化 Tavily 搜索服务
+
+        Args:
+            api_key: Tavily API 密钥，默认从配置读取
+            timeout: 请求超时秒数
+            search_depth: 搜索深度（basic/fast/ultra-fast/advanced）
+            topic: 搜索类别（general/news/finance）
+        """
+        self.api_key = api_key if api_key is not None else settings.TAVILY_API_KEY
+        self.base_url = "https://api.tavily.com"
+        self.timeout = timeout
+        self.search_depth = search_depth
+        self.topic = topic
+
+    def _get_headers(self) -> dict[str, str]:
+        """构建请求头 — Bearer 认证"""
+        return {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
+    async def search(
+        self,
+        query: str,
+        limit: int = 10,
+    ) -> list[SearchResult]:
+        """执行搜索
+
+        Args:
+            query: 搜索关键词
+            limit: 返回结果数量上限（自动钳制到 1-20）
+
+        Returns:
+            搜索结果列表
+
+        Raises:
+            FirecrawlConnectionError: 配置缺失或网络错误
+            FirecrawlAPIError: API 返回错误
+        """
+        if not self.api_key:
+            raise FirecrawlConnectionError(
+                "Tavily API Key 未配置，请在 .env 中设置 TAVILY_API_KEY"
+            )
+
+        # Tavily 官方限制 max_results 范围 0-20
+        max_results = max(1, min(int(limit), 20))
+
+        logger.info("Tavily 搜索: query='%s', max_results=%d", query, max_results)
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}/search",
+                    json={
+                        "query": query,
+                        "max_results": max_results,
+                        "search_depth": self.search_depth,
+                        "topic": self.topic,
+                        "include_answer": True,
+                        "include_raw_content": "markdown",
+                    },
+                    headers=self._get_headers(),
+                )
+        except (httpx.ConnectError, httpx.TimeoutException) as e:
+            logger.error("Tavily 搜索失败: %s", e)
+            raise FirecrawlConnectionError(f"Tavily 服务不可用: {e}") from e
+
+        if response.status_code != 200:
+            error_msg = f"Tavily API 返回错误: HTTP {response.status_code}"
+            try:
+                detail = response.json()
+                error_msg += f", {detail.get('error', detail)})"
+            except Exception:
+                pass
+            logger.error(error_msg)
+            raise FirecrawlAPIError(error_msg, status_code=response.status_code)
+
+        data = response.json()
+        results = data.get("results", [])
+
+        parsed = []
+        for r in results:
+            content = r.get("content", "")
+            raw = r.get("raw_content", "") or content
+            parsed.append(SearchResult(
+                title=r.get("title", ""),
+                url=r.get("url", ""),
+                description=content,
+                markdown=raw,
+            ))
+
+        logger.info("Tavily 搜索完成: 返回 %d 条结果", len(parsed))
+        return parsed
