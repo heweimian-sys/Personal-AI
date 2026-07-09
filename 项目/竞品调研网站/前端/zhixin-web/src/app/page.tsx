@@ -3,17 +3,20 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
-/** 推荐搜索词 */
+/** 推荐搜索词 — 更贴近真实用户场景 */
 const SUGGESTIONS = [
-  { text: 'AI行业', desc: '技术趋势' },
-  { text: '新能源政策', desc: '政策解读' },
-  { text: '半导体产业链', desc: '产业分析' },
-  { text: '美食文化', desc: '文化探索' },
+  { text: 'AI Agent 工具市场', desc: '行业趋势' },
+  { text: 'Dify 和 Coze 竞品分析', desc: '竞品调研' },
+  { text: '飞书知识库机器人', desc: '产品机会' },
+  { text: '小红书 AI 运营工具', desc: '创业选题' },
+  { text: '跨境电商 AI 工具', desc: '市场分析' },
 ];
 
+/** 适用人群 */
+const AUDIENCES = ['创业者', '产品经理', '运营', '自媒体选题'];
+
 /**
- * 搜索入口页 — 知行 · 信息追踪平台
- * 水墨风首页：品牌标识 + 搜索区 + 三步流程 + 推荐标签
+ * 搜索入口页 — 知行 · AI 深度调研助手
  */
 export default function SearchPage() {
   const router = useRouter();
@@ -51,9 +54,9 @@ export default function SearchPage() {
         <h1 className="search-hero-title">
           知<span className="title-accent">·</span>行
         </h1>
-        <p className="search-hero-subtitle">消除信息差 · 从知道到做到</p>
+        <p className="search-hero-subtitle">AI 深度调研助手</p>
         <p className="search-hero-desc">
-          输入任意关键词，AI 自动搜索全网信息，提取关键事件，分析因果脉络，生成可阅读的深度报告
+          输入一个行业、产品、公司或趋势关键词，自动生成带时间线、因果关系和行动建议的调研报告
         </p>
 
         {/* 搜索框 */}
@@ -64,7 +67,7 @@ export default function SearchPage() {
               className="search-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="输入关键词，如：AI 行业趋势 / 深圳经济政策 / 竞品动态..."
+              placeholder="输入关键词，如：AI Agent 工具市场 / Dify 和 Coze 竞品分析..."
               autoFocus
             />
             <button
@@ -93,6 +96,16 @@ export default function SearchPage() {
             ))}
           </div>
         </div>
+
+        {/* 适用人群 */}
+        <div className="search-audience">
+          <span className="audience-label">适合：</span>
+          {AUDIENCES.map((role, i) => (
+            <span key={role} className="audience-tag">
+              {role}{i < AUDIENCES.length - 1 && <span className="audience-sep"> ·</span>}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* 三步流程 */}
@@ -119,7 +132,7 @@ export default function SearchPage() {
       {/* 底部 */}
       <footer className="search-footer">
         <span className="footer-ornament">◇ ◆ ◇</span>
-        <p className="footer-text">知行 · 让信息像好文章一样自然流入大脑</p>
+        <p className="footer-text">知行 · AI 深度调研助手 · 从信息搜索，到因果分析，再到行动建议</p>
       </footer>
     </main>
   );

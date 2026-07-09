@@ -4,11 +4,13 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Download,
-  Bookmark,
+  Copy,
+  Check,
   Home,
   FileText,
   ExternalLink,
-  Share2,
+  RotateCcw,
+  Code,
 } from 'lucide-react';
 import { research } from '@/lib/api';
 import type { ResearchResult, EventItem, Insight } from '@/lib/types';
@@ -30,6 +32,64 @@ const LOADING_STEPS = [
   { label: '生成深度报告', desc: '组织章节、生成洞察和建议' },
 ];
 
+/** 将报告转为 Markdown 格式 */
+function reportToMarkdown(result: ResearchResult): string {
+  let md = `# ${result.query}\n\n`;
+  md += `> 知行 · AI 深度调研助手 | ${new Date().toISOString().split('T')[0]}\n\n`;
+
+  md += `## 引导摘要\n\n${result.summary}\n\n`;
+
+  if (result.chapters.length > 0) {
+    result.chapters.forEach((ch, ci) => {
+      md += `## ${ci + 1}. ${ch.title}\n\n`;
+      ch.event_indices.forEach((evtIdx) => {
+        const evt = result.events[evtIdx];
+        if (!evt) return;
+        md += `### ${evt.title}\n\n`;
+        if (evt.date) md += `**日期：** ${evt.date}  \n\n`;
+        md += `${evt.summary}\n\n`;
+        if (evt.key_quote) md += `> ${evt.key_quote}\n\n`;
+        if (evt.sources.length > 0) {
+          md += `**来源：** ${evt.sources.map(s => `[${s.name}](${s.url})`).join('、')}\n\n`;
+        }
+      });
+    });
+  }
+
+  if (result.relations.length > 0) {
+    md += `## 关系网络\n\n`;
+    result.relations.forEach((rel) => {
+      const meta = RELATION_META[rel.type] || { label: rel.type, symbol: '?' };
+      const from = result.events[rel.from_event_index];
+      const to = result.events[rel.to_event_index];
+      md += `- ${meta.symbol} ${meta.label}：${from?.title || '?'} → ${to?.title || '?'} — ${rel.description}\n`;
+    });
+    md += `\n`;
+  }
+
+  if (result.insight && result.insight.title) {
+    md += `## 洞察总结\n\n`;
+    md += `### ${result.insight.title}\n\n`;
+    if (result.insight.body) md += `${result.insight.body}\n\n`;
+    if (result.insight.judgments.length > 0) {
+      md += `**关键判断：**\n\n`;
+      result.insight.judgments.forEach((j) => { md += `- ${j}\n`; });
+      md += `\n`;
+    }
+    if (Object.keys(result.insight.suggestions).length > 0) {
+      md += `**行动建议：**\n\n`;
+      Object.entries(result.insight.suggestions).forEach(([role, items]) => {
+        md += `**${role}：**\n`;
+        items.forEach((s) => { md += `- ${s}\n`; });
+        md += `\n`;
+      });
+    }
+  }
+
+  md += `---\n本报告由 AI 基于公开搜索结果生成，请结合原始来源核验重要结论。\n`;
+  return md;
+}
+
 function ReportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,6 +99,7 @@ function ReportContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!query) {
@@ -48,7 +109,6 @@ function ReportContent() {
     let cancelled = false;
     let stepTimer: ReturnType<typeof setTimeout>;
 
-    // 逐步推进加载进度（模拟，因为后端是一次性返回）
     const advanceStep = () => {
       setLoadingStep((prev) => {
         if (prev < LOADING_STEPS.length - 1) {
@@ -84,6 +144,53 @@ function ReportContent() {
       clearTimeout(stepTimer);
     };
   }, [query, router]);
+
+  /** 复制全文 */
+  const handleCopy = async () => {
+    if (!result) return;
+    const md = reportToMarkdown(result);
+    try {
+      await navigator.clipboard.writeText(md);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = md;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  /** 导出 Markdown */
+  const handleExportMarkdown = () => {
+    if (!result) return;
+    const md = reportToMarkdown(result);
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `知行_${result.query}_报告.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  /** 导出 JSON（开发用） */
+  const handleExportJSON = () => {
+    if (!result) return;
+    const data = JSON.stringify(result, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `知行_${result.query}_报告.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   /** 加载中 — 多步骤进度 */
   if (loading) {
@@ -142,13 +249,11 @@ function ReportContent() {
 
       {/* ===== 左侧边栏 ===== */}
       <aside className="sidebar">
-        {/* Logo */}
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">知</div>
           <span className="sidebar-logo-text">知<span className="dot">·</span>行</span>
         </div>
 
-        {/* 导航 — 只保留已实现的菜单 */}
         <nav className="sidebar-nav">
           <a className="sidebar-nav-item" onClick={() => router.push('/')}>
             <Home size={18} /> 首页
@@ -163,18 +268,21 @@ function ReportContent() {
 
       {/* ===== 中间：阅读区 ===== */}
       <main className="main-content">
-        {/* 阅读面板 */}
         <div className="reading-panel">
           {/* 标题区 */}
           <div className="report-header">
             <h1 className="report-title">{result.query}</h1>
             <div className="report-meta">
-              <span className="section-eyebrow">知行研究团队</span>
+              <span className="section-eyebrow">知行 · AI 深度调研助手</span>
               <span className="meta-sep" />
               <span className="section-eyebrow">{new Date().toISOString().split('T')[0]}</span>
               <span className="meta-sep" />
               <span className="section-eyebrow">阅读约 {Math.max(1, Math.ceil(result.events.length * 1.5))} 分钟</span>
             </div>
+            {/* 可信度提示 */}
+            <p className="report-disclaimer">
+              本报告由 AI 基于公开搜索结果生成，请结合原始来源核验重要结论。
+            </p>
           </div>
 
           <div className="report-divider" />
@@ -197,7 +305,6 @@ function ReportContent() {
                   const event = result.events[evtIdx];
                   if (!event) return null;
 
-                  // 同一章节内的事件间关系
                   const outgoing = result.relations.filter(
                     (r) => r.from_event_index === evtIdx && chapter.event_indices.includes(r.to_event_index)
                   );
@@ -206,7 +313,6 @@ function ReportContent() {
                     <div key={ei} style={{ position: 'relative' }}>
                       <EventCard event={event} />
 
-                      {/* 因果连接线 */}
                       {outgoing.map((rel, ri) => {
                         const targetEvent = result.events[rel.to_event_index];
                         const meta = RELATION_META[rel.type] || { label: rel.type, symbol: '?' };
@@ -227,7 +333,6 @@ function ReportContent() {
                         );
                       })}
 
-                      {/* 来源侧注（内嵌版） */}
                       {event.sources.length > 0 && (
                         <div className="side-note">
                           <p className="side-note-label">📎 来源</p>
@@ -291,25 +396,26 @@ function ReportContent() {
             <InsightCard insight={result.insight} />
           )}
 
-          {/* 操作区 */}
+          {/* 操作区 — 主按钮 */}
           <div className="action-section">
             <button
               className="action-btn action-btn-primary"
-              onClick={() => {
-                const data = JSON.stringify(result, null, 2);
-                const blob = new Blob([data], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `知行_${result.query}_报告.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
+              onClick={handleCopy}
             >
-              <Download size={16} /> 导出报告
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+              {copied ? '已复制' : '复制全文'}
             </button>
-            <button className="action-btn action-btn-outline" onClick={() => router.push('/')}>
-              <Bookmark size={16} /> 追踪此主题
+            <button
+              className="action-btn action-btn-outline"
+              onClick={handleExportMarkdown}
+            >
+              <Download size={16} /> 导出 Markdown
+            </button>
+            <button
+              className="action-btn action-btn-outline"
+              onClick={() => router.push('/')}
+            >
+              <RotateCcw size={16} /> 重新调研
             </button>
           </div>
         </div>
@@ -317,7 +423,6 @@ function ReportContent() {
 
       {/* ===== 右侧目录 ===== */}
       <aside className="right-toc">
-        {/* 目录 */}
         <div className="toc-section">
           <p className="toc-heading">目录</p>
           <div className="toc-links">
@@ -344,22 +449,10 @@ function ReportContent() {
           </div>
         </div>
 
-        {/* 操作按钮 */}
+        {/* 操作按钮 — JSON 降级为开发按钮 */}
         <div className="toc-actions">
-          <button className="toc-action-btn" onClick={() => {
-            const data = JSON.stringify(result, null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `知行_${result.query}_报告.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-          }}>
-            <Download size={14} /> 导出 JSON
-          </button>
-          <button className="toc-action-btn">
-            <Share2 size={14} /> 分享
+          <button className="toc-action-btn toc-action-dev" onClick={handleExportJSON}>
+            <Code size={14} /> 导出 JSON（开发）
           </button>
         </div>
       </aside>
@@ -377,8 +470,8 @@ function EventCard({ event }: { event: EventItem }) {
       {event.key_quote && (
         <blockquote className="event-quote">{event.key_quote}</blockquote>
       )}
-      {/* 置信度条 */}
-      <div className="confidence-bar">
+      {/* 置信度条 — 加 title 说明 */}
+      <div className="confidence-bar" title="置信度表示 AI 对该事件可靠性的估计，不代表事实绝对准确。">
         <span className="confidence-label">置信度</span>
         <div className="confidence-track">
           <div className="confidence-fill" style={{ width: `${Math.round(event.confidence * 100)}%` }} />
