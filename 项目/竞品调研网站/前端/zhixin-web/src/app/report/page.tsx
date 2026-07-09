@@ -2,9 +2,9 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ExternalLink, TrendingDown } from 'lucide-react';
+import { ArrowLeft, ExternalLink, TrendingDown, Download, Bookmark } from 'lucide-react';
 import { research } from '@/lib/api';
-import type { ResearchResult, EventItem, Relation, Chapter } from '@/lib/types';
+import type { ResearchResult, EventItem, Insight } from '@/lib/types';
 
 /** 关系类型 → 中文标签 + 符号 */
 const RELATION_META: Record<string, { label: string; symbol: string }> = {
@@ -217,6 +217,38 @@ function ReportContent() {
             </div>
           </section>
         )}
+
+        {/* 洞察总结 */}
+        {result.insight && result.insight.title && (
+          <InsightCard insight={result.insight} />
+        )}
+
+        {/* 操作区 */}
+        <div className="action-section">
+          <button
+            className="action-btn action-btn-primary"
+            onClick={() => {
+              const data = JSON.stringify(result, null, 2);
+              const blob = new Blob([data], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `知信_${result.query}_报告.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            <Download size={16} />
+            导出报告
+          </button>
+          <button
+            className="action-btn action-btn-outline"
+            onClick={() => router.push('/')}
+          >
+            <Bookmark size={16} />
+            追踪此主题
+          </button>
+        </div>
       </main>
     </>
   );
@@ -248,6 +280,55 @@ function EventCard({ event }: { event: EventItem }) {
         </span>
       </div>
     </div>
+  );
+}
+
+/** 洞察卡片组件 */
+function InsightCard({ insight }: { insight: Insight }) {
+  /** 角色图标映射 */
+  const roleLabels: Record<string, string> = {
+    '投资者': '投资者',
+    '创业者': '创业者',
+    '求职者': '求职者',
+  };
+
+  return (
+    <section className="insight-section">
+      <p className="insight-label">洞察 · 第三层认知</p>
+      <h2 className="insight-title">{insight.title}</h2>
+      {insight.body && <p className="insight-body">{insight.body}</p>}
+
+      {/* 关键判断 */}
+      {insight.judgments.length > 0 && (
+        <div className="insight-judgments">
+          {insight.judgments.map((judgment, ji) => (
+            <div key={ji} className="insight-judgment">
+              <span className="insight-judgment-bullet">◆</span>
+              <span>{judgment}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 分角色建议 */}
+      {Object.keys(insight.suggestions).length > 0 && (
+        <div className="insight-suggestions">
+          {Object.entries(insight.suggestions).map(([role, suggestions]) => (
+            <div key={role} className="insight-suggestion-group">
+              <p className="insight-suggestion-role">
+                {roleLabels[role] || role}
+              </p>
+              {suggestions.map((suggestion, si) => (
+                <div key={si} className="insight-suggestion-item">
+                  <span className="insight-suggestion-arrow">→</span>
+                  <span>{suggestion}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

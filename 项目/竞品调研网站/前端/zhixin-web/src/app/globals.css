@@ -414,6 +414,143 @@ a {
   text-decoration: underline;
 }
 
+/* ── 报告页 — 洞察总结 ── */
+.insight-section {
+  margin-top: 56px;
+  padding: 32px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.insight-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-surf-blue);
+  margin-bottom: 12px;
+}
+
+.insight-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.insight-body {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-slate-blue);
+  margin-bottom: 24px;
+}
+
+.insight-judgments {
+  margin-bottom: 24px;
+}
+
+.insight-judgment {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-ink);
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.insight-judgment:last-child {
+  border-bottom: none;
+}
+
+.insight-judgment-bullet {
+  color: var(--color-surf-blue);
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.insight-suggestions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.insight-suggestion-group {
+  padding: 16px;
+  background: var(--color-mist);
+  border-radius: var(--radius-md);
+}
+
+.insight-suggestion-role {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-surf-blue);
+  margin-bottom: 8px;
+}
+
+.insight-suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-slate-blue);
+}
+
+.insight-suggestion-arrow {
+  color: var(--color-surf-blue);
+  flex-shrink: 0;
+}
+
+/* ── 报告页 — 操作区 ── */
+.action-section {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--color-hairline);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn-primary {
+  color: #fff;
+  background: var(--color-surf-blue);
+}
+
+.action-btn-primary:hover {
+  background: var(--color-deep-current);
+}
+
+.action-btn-outline {
+  color: var(--color-slate-blue);
+  background: var(--color-paper);
+  border: 1px solid var(--color-hairline-strong);
+}
+
+.action-btn-outline:hover {
+  border-color: var(--color-surf-blue);
+  color: var(--color-surf-blue);
+}
+
 /* ── 加载状态 ── */
 .loading-container {
   min-height: 100vh;

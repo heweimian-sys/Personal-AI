@@ -124,6 +124,44 @@ class ChapterOutline:
         }
 
 
+@dataclass
+class GeneratedInsight:
+    """AI 生成的洞察
+
+    属于"第三层认知：洞察行动"。
+    包含核心判断、详细分析和分角色行动建议。
+
+    示例：
+        title: "模型层战争结束，应用层刚刚开始"
+        body: "过去一年大模型竞争焦点从参数规模转向..."
+        judgments: ["GPU供需矛盾短期无解", "端侧AI是下一个增长点"]
+        suggestions: {
+            "投资者": ["关注端侧AI芯片赛道", "关注AI Agent工具链"],
+            "创业者": ["AI Agent工具链是蓝海", "多模态应用有差异化机会"],
+            "求职者": ["多模态应用开发技能需求激增", "AI infra人才仍然稀缺"]
+        }
+    """
+
+    title: str
+    body: str = ""
+    judgments: list[str] = None
+    suggestions: dict[str, list[str]] = None
+
+    def __post_init__(self) -> None:
+        if self.judgments is None:
+            self.judgments = []
+        if self.suggestions is None:
+            self.suggestions = {}
+
+    def to_dict(self) -> dict:
+        return {
+            "title": self.title,
+            "body": self.body,
+            "judgments": self.judgments,
+            "suggestions": self.suggestions,
+        }
+
+
 class DeepSeekService:
     """DeepSeek AI 服务
 
@@ -384,6 +422,59 @@ class DeepSeekService:
         logger.info("章节组织完成: 分成 %d 章", len(chapters))
         return chapters
 
+    async def generate_insight(
+        self,
+        query: str,
+        events: list[ExtractedEvent],
+        relations: list[AnalyzedRelation],
+    ) -> GeneratedInsight:
+        """生成趋势判断和行动建议
+
+        AI 处理流程的第四步：基于事件和关系，
+        生成核心判断、详细分析和分角色行动建议。
+        这是"第三层认知：洞察行动"的核心。
+
+        Args:
+            query: 用户搜索的关键词
+            events: extract_events() 返回的事件列表
+            relations: analyze_relations() 返回的关系列表
+
+        Returns:
+            包含标题、判断、建议的洞察对象
+
+        Raises:
+            DeepSeekError: 生成失败
+        """
+        if not events:
+            logger.info("事件为空，跳过洞察生成")
+            return GeneratedInsight(title="", body="暂无足够信息生成洞察。")
+
+        system_prompt = _INSIGHT_GENERATION_SYSTEM_PROMPT
+        user_prompt = _build_insight_generation_user_prompt(query, events, relations)
+
+        logger.info(
+            "开始洞察生成: query='%s', 事件数=%d, 关系数=%d",
+            query,
+            len(events),
+            len(relations),
+        )
+
+        result = await self.chat_json(system_prompt, user_prompt, temperature=0.4)
+
+        try:
+            insight = GeneratedInsight(
+                title=result.get("title", ""),
+                body=result.get("body", ""),
+                judgments=result.get("judgments", []),
+                suggestions=result.get("suggestions", {}),
+            )
+        except (TypeError, ValueError, AttributeError) as e:
+            logger.warning("洞察格式异常: %s", e)
+            return GeneratedInsight(title="", body="洞察生成异常。")
+
+        logger.info("洞察生成完成: %s", insight.title[:50])
+        return insight
+
 
 # ============================================================
 # 提示词
@@ -550,5 +641,72 @@ def _build_chapter_organization_user_prompt(
                 f"  [{rel.from_event_index}] --{rel.type}--> [{rel.to_event_index}]: {rel.description}"
             )
         parts.append("")
+
+    return "\n".join(parts)
+
+
+# ============================================================
+# 洞察生成提示词
+# ============================================================
+
+_INSIGHT_GENERATION_SYSTEM_PROMPT = """你是一个深度分析专家和战略顾问。你的任务是基于事件和关系，生成趋势判断和行动建议。
+
+这是"第三层认知：洞察行动"——不只是告诉用户发生了什么，而是告诉用户"这意味着什么"和"该怎么办"。
+
+要求：
+1. title 是一句话核心判断，要有洞察力，像深度报道的标题（15-30字）
+2. body 是详细分析，解释为什么得出这些判断（200-400字）
+3. judgments 是 2-4 个关键判断，每个一句话（20-50字）
+4. suggestions 是按角色分组的行动建议，包含以下角色：
+   - "投资者"：投资方向建议
+   - "创业者"：创业机会建议
+   - "求职者"：技能和职业方向建议
+   每个角色 1-3 条建议，每条一句话（20-50字）
+5. 判断要有依据，不要空话套话
+6. 建议要具体可执行，不要"关注行业动态"这种废话
+
+输出格式（JSON）：
+{
+  "title": "模型层战争结束，应用层刚刚开始",
+  "body": "过去一年大模型竞争焦点从参数规模转向多模态能力和成本效率...",
+  "judgments": [
+    "GPU供需矛盾短期无解，端侧AI芯片是突破口",
+    "模型层趋同化加速，差异化在应用层",
+    "AI Agent是下一个增长点"
+  ],
+  "suggestions": {
+    "投资者": ["关注端侧AI芯片赛道", "AI Agent工具链是投资蓝海"],
+    "创业者": ["AI Agent工具链有差异化机会", "多模态垂直应用是蓝海"],
+    "求职者": ["多模态应用开发技能需求激增", "AI infra人才仍然稀缺"]
+  }
+}"""
+
+
+def _build_insight_generation_user_prompt(
+    query: str,
+    events: list[ExtractedEvent],
+    relations: list[AnalyzedRelation],
+) -> str:
+    """构建洞察生成的用户提示词"""
+    parts = [f"查询关键词：{query}\n"]
+    parts.append("请基于以下事件和关系，生成趋势判断和行动建议。\n")
+    parts.append("---\n")
+    parts.append("事件列表：\n")
+
+    for i, event in enumerate(events):
+        parts.append(f"[{i}] {event.title}（{event.date or '日期未知'}）")
+        parts.append(f"    {event.summary}")
+        parts.append("")
+
+    if relations:
+        parts.append("已知关联关系：\n")
+        for rel in relations:
+            parts.append(
+                f"  [{rel.from_event_index}] --{rel.type}--> [{rel.to_event_index}]: {rel.description}"
+            )
+        parts.append("")
+
+    parts.append("---\n")
+    parts.append("请从事件中提炼出核心趋势判断，并给出分角色行动建议。")
 
     return "\n".join(parts)

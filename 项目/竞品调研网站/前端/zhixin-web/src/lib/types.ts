@@ -37,6 +37,14 @@ export interface Chapter {
   event_indices: number[];
 }
 
+/** AI 洞察 */
+export interface Insight {
+  title: string;
+  body: string;
+  judgments: string[];
+  suggestions: Record<string, string[]>;
+}
+
 /** 研究结果 */
 export interface ResearchResult {
   query: string;
@@ -44,6 +52,7 @@ export interface ResearchResult {
   events: EventItem[];
   relations: Relation[];
   chapters: Chapter[];
+  insight: Insight | null;
 }
 
 /** 研究请求 */

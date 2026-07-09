@@ -28,6 +28,7 @@ from app.services.deepseek_service import (
     ExtractedEvent,
     AnalyzedRelation,
     ChapterOutline,
+    GeneratedInsight,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ class ResearchError(Exception):
 class ResearchResult:
     """研究结果
 
-    包含完整的报告数据：事件列表、关系列表、章节结构、引导摘要。
+    包含完整的报告数据：事件列表、关系列表、章节结构、引导摘要、AI 洞察。
     """
 
     query: str
@@ -51,6 +52,7 @@ class ResearchResult:
     events: list[ExtractedEvent]
     relations: list[AnalyzedRelation]
     chapters: list[ChapterOutline]
+    insight: GeneratedInsight | None = None
 
     def to_dict(self) -> dict:
         """转为字典格式（用于组装 Report JSON）"""
@@ -60,6 +62,7 @@ class ResearchResult:
             "events": [e.to_dict() for e in self.events],
             "relations": [r.to_dict() for r in self.relations],
             "chapters": [c.to_dict() for c in self.chapters],
+            "insight": self.insight.to_dict() if self.insight else None,
         }
 
 
@@ -123,6 +126,7 @@ class ResearchService:
                 events=[],
                 relations=[],
                 chapters=[],
+                insight=None,
             )
 
         # Step 2: 提取事件
@@ -139,6 +143,7 @@ class ResearchService:
                 events=[],
                 relations=[],
                 chapters=[],
+                insight=None,
             )
 
         # Step 3: 分析关系
@@ -155,15 +160,23 @@ class ResearchService:
             logger.warning("章节组织失败（非致命）: %s", e)
             chapters = []
 
-        # Step 5: 生成引导摘要
+        # Step 5: 生成洞察（非致命）
+        try:
+            insight = await self._generate_insight(query, events, relations)
+        except Exception as e:
+            logger.warning("洞察生成失败（非致命）: %s", e)
+            insight = None
+
+        # Step 6: 生成引导摘要
         summary = self._generate_summary(query, events, chapters)
 
         logger.info(
-            "研究流程完成: query='%s', 事件=%d, 关系=%d, 章节=%d",
+            "研究流程完成: query='%s', 事件=%d, 关系=%d, 章节=%d, 洞察=%s",
             query,
             len(events),
             len(relations),
             len(chapters),
+            "有" if insight else "无",
         )
 
         return ResearchResult(
@@ -172,6 +185,7 @@ class ResearchService:
             events=events,
             relations=relations,
             chapters=chapters,
+            insight=insight,
         )
 
     async def _search(self, query: str, limit: int) -> list[SearchResult]:
@@ -207,6 +221,16 @@ class ResearchService:
         """Step 4: 用 DeepSeek 组织章节"""
         logger.info("Step 4: 组织章节")
         return await self.ai_service.organize_chapters(query, events, relations)
+
+    async def _generate_insight(
+        self,
+        query: str,
+        events: list[ExtractedEvent],
+        relations: list[AnalyzedRelation],
+    ) -> GeneratedInsight:
+        """Step 5: 用 DeepSeek 生成洞察"""
+        logger.info("Step 5: 生成洞察")
+        return await self.ai_service.generate_insight(query, events, relations)
 
     def _generate_summary(
         self,
