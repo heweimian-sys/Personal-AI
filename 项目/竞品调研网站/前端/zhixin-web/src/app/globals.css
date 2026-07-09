@@ -690,17 +690,19 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: 1px;
   margin-bottom: 28px;
   padding-bottom: 14px;
-  border-bottom: 2px solid var(--ink-deep);
+  border-bottom: 1px solid var(--paper-dark);
   color: var(--ink-deep);
+  position: relative;
 }
 
 .chapter-title::after {
   content: '';
-  display: block;
+  position: absolute;
+  bottom: -1px;
+  left: 0;
   width: 48px;
   height: 2px;
   background: var(--jade);
-  margin-top: 12px;
 }
 
 /* 事件卡片 */
@@ -709,21 +711,30 @@ a { color: inherit; text-decoration: none; }
   padding: 24px;
   background: var(--paper-warm);
   border: 1px solid var(--paper-dark);
+  border-left: 3px solid var(--jade);
   border-radius: var(--radius-lg);
   box-shadow: 0 2px 12px var(--shadow-soft);
-  transition: box-shadow 0.3s, border-color 0.3s;
+  transition: box-shadow 0.3s, border-color 0.3s, transform 0.3s;
 }
 
 .event-card:hover {
-  box-shadow: 0 2px 20px var(--shadow-soft);
+  box-shadow: 0 4px 20px var(--shadow-soft);
   border-color: var(--sepia);
+  border-left-color: var(--jade-light);
+  transform: translateY(-1px);
 }
 
 .event-date {
+  display: inline-block;
   font-family: var(--font-latin);
-  font-size: 13px;
-  color: var(--sepia);
-  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--jade);
+  background: var(--jade-bg);
+  padding: 2px 10px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
 }
 
 .event-title {
@@ -878,8 +889,8 @@ a { color: inherit; text-decoration: none; }
 
 /* 洞察总结 */
 .insight-section {
-  margin-top: 56px;
-  padding: 48px;
+  margin-top: 48px;
+  padding: 36px;
   background: var(--paper-warm);
   border: 1px solid var(--paper-dark);
   border-radius: var(--radius-lg);
@@ -1035,8 +1046,12 @@ a { color: inherit; text-decoration: none; }
   position: sticky;
   top: 32px;
   height: fit-content;
-  padding: 24px 16px 16px 0;
+  padding: 24px 20px;
   z-index: 1;
+  background: var(--paper-warm);
+  border: 1px solid var(--paper-dark);
+  border-radius: var(--radius-lg);
+  margin: 16px 16px 0 0;
 }
 
 .toc-section {
@@ -1104,16 +1119,176 @@ a { color: inherit; text-decoration: none; }
   color: var(--jade);
 }
 
-/* 加载状态 — 水墨滴落 */
+/* 加载状态 — 多步骤进度 */
 .loading-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 24px;
+  padding: 48px 24px;
+  background: linear-gradient(180deg, var(--paper) 0%, var(--paper-warm) 100%);
 }
 
+.loading-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.loading-brand-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--crimson);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--paper);
+  transform: rotate(-3deg);
+  box-shadow: 1px 1px 3px rgba(139, 58, 58, 0.3);
+}
+
+.loading-brand-text {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  color: var(--ink-deep);
+}
+
+.loading-query {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink-deep);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.loading-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 420px;
+}
+
+.loading-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 0;
+  position: relative;
+}
+
+.loading-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 40px;
+  bottom: -8px;
+  width: 1px;
+  background: var(--paper-dark);
+}
+
+.loading-step.done:not(:last-child)::after {
+  background: var(--jade);
+  opacity: 0.4;
+}
+
+.loading-step-indicator {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid var(--paper-dark);
+  background: var(--paper);
+  transition: all 0.3s;
+}
+
+.loading-step.done .loading-step-indicator {
+  background: var(--jade);
+  border-color: var(--jade);
+}
+
+.loading-step.active .loading-step-indicator {
+  border-color: var(--jade);
+  background: var(--jade-bg);
+}
+
+.loading-step-check {
+  color: var(--paper);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.loading-step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--jade);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.7); opacity: 0.5; }
+}
+
+.loading-step-num {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sepia);
+}
+
+.loading-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 4px;
+}
+
+.loading-step-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-deep);
+  transition: color 0.3s;
+}
+
+.loading-step.pending .loading-step-label {
+  color: var(--sepia);
+  opacity: 0.5;
+}
+
+.loading-step.active .loading-step-label {
+  color: var(--jade);
+}
+
+.loading-step-desc {
+  font-size: 12px;
+  color: var(--ink-brush);
+  opacity: 0.6;
+}
+
+.loading-step.pending .loading-step-desc {
+  opacity: 0.3;
+}
+
+.loading-hint {
+  font-size: 12px;
+  color: var(--sepia);
+  opacity: 0.5;
+  letter-spacing: 1px;
+  margin-top: 8px;
+}
+
+/* 保留旧 spinner 用于 Suspense fallback */
 .loading-spinner {
   width: 14px;
   height: 14px;
