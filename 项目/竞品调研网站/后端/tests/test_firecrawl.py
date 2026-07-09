@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — Firecrawl 搜索服务测试
+知行·认知加速器 — Firecrawl 搜索服务测试
 
 使用 unittest.mock 直接 mock httpx.AsyncClient，
 确保测试的是真实的 FirecrawlSearchService.search() 代码逻辑。

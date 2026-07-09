@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — 配置管理
+知行·认知加速器 — 配置管理
 
 使用 pydantic-settings 从环境变量读取配置。
 .env 文件存放敏感信息，不提交到 GitHub（已在 .gitignore 中）。
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     )
 
     # 应用配置
-    APP_NAME: str = "知信"
+    APP_NAME: str = "知行"
     DEBUG: bool = True
 
     # 数据库（SQLite，文件存储在 data/ 目录）

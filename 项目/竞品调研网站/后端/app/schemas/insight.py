@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — AI 洞察 Schema
+知行·认知加速器 — AI 洞察 Schema
 """
 from __future__ import annotations
 

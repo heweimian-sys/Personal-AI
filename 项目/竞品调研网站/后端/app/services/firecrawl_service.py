@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — Firecrawl 搜索服务
+知行·认知加速器 — Firecrawl 搜索服务
 
 封装自部署 Firecrawl 的搜索 API，提供统一的搜索接口。
 Firecrawl 搜索 + 爬取：一次调用返回搜索结果及其 Markdown 内容。

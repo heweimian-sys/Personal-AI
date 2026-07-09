@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — Pydantic Schema 汇总导出
+知行·认知加速器 — Pydantic Schema 汇总导出
 """
 from app.schemas.topic import TopicCreate, TopicResponse
 from app.schemas.event import Source, EventCreate, EventResponse

@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — 关系分析和章节组织测试（Task 5/6）
+知行·认知加速器 — 关系分析和章节组织测试（Task 5/6）
 """
 from __future__ import annotations
 

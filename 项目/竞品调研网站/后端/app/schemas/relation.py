@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — 关联关系 Schema
+知行·认知加速器 — 关联关系 Schema
 """
 from __future__ import annotations
 

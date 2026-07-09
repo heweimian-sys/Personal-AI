@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — DeepSeek AI 服务
+知行·认知加速器 — DeepSeek AI 服务
 
 封装 DeepSeek API（通过 OpenAI SDK 兼容接口调用），
 提供 AI 事件提取、关系分析、洞察生成等能力。

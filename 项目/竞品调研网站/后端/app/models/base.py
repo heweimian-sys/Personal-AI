@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — 模型基类
+知行·认知加速器 — 模型基类
 
 Base：所有 SQLAlchemy 模型的基类（DeclarativeBase）
 TimestampMixin：通用时间戳字段（created_at, updated_at）

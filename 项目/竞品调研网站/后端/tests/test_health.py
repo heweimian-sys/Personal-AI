@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — 健康检查测试
+知行·认知加速器 — 健康检查测试
 
 验证应用启动、数据库初始化、基础接口可用。
 """
@@ -13,7 +13,7 @@ async def test_health_check(client):
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert data["app"] == "知信"
+    assert data["app"] == "知行"
     assert data["version"] == "0.1.0"
 
 
@@ -23,7 +23,7 @@ async def test_root_endpoint(client):
     response = await client.get("/")
     assert response.status_code == 200
     data = response.json()
-    assert data["name"] == "知信"
+    assert data["name"] == "知行"
     assert "docs" in data
     assert "health" in data
 

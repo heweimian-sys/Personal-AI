@@ -11,13 +11,17 @@ const SUGGESTIONS = [
   '美食文化',
 ];
 
+/** 时间范围选项 */
+const TIME_RANGES = ['最近一天', '最近一周', '最近一月', '最近一年'];
+
 /**
- * 搜索入口页
- * 居中搜索框 + 推荐标签，输入关键词后跳转到 /report?q=xxx
+ * 搜索入口页 — 知行 · 信息追踪平台
+ * 装饰双框搜索盒 + 时间范围 + 推荐标签
  */
 export default function SearchPage() {
   const router = useRouter();
   const [query, setQuery] = useState('');
+  const [activeRange, setActiveRange] = useState('最近一月');
 
   /** 提交搜索 */
   const handleSubmit = (e: FormEvent) => {
@@ -35,35 +39,48 @@ export default function SearchPage() {
 
   return (
     <main className="search-page">
-      {/* 背景装饰 */}
-      <div className="search-hero" />
+      <div className="search-hero-bg" />
 
       <div className="search-content">
         {/* 标题 */}
-        <h1 className="search-title">
-          让调研<br />像呼吸一样自然
+        <h1 className="search-hero-title">
+          知<span className="accent">·</span>行
         </h1>
-        <p className="search-subtitle">
-          知信帮你把碎片信息变成可阅读的深度认知
+        <p className="search-hero-subtitle">
+          消除信息差 · 从知道到做到
         </p>
 
-        {/* 搜索框 */}
+        {/* 搜索框 — 装饰双框 */}
         <form onSubmit={handleSubmit}>
-          <div className="search-box">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="输入关键词，开始深度调研..."
-              autoFocus
-            />
-            <button
-              type="submit"
-              className="search-btn"
-              disabled={!query.trim()}
-            >
-              检索
-            </button>
+          <div className="search-box-wrapper">
+            <div className="search-input-group">
+              <input
+                type="text"
+                className="search-input"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="输入关键词，如：AI 行业趋势 / 深圳经济政策 / 竞品动态..."
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="search-btn"
+                disabled={!query.trim()}
+              >
+                搜 索
+              </button>
+            </div>
+            <div className="time-range-group">
+              {TIME_RANGES.map((range) => (
+                <span
+                  key={range}
+                  className={`time-chip ${activeRange === range ? 'active' : ''}`}
+                  onClick={() => setActiveRange(range)}
+                >
+                  {range}
+                </span>
+              ))}
+            </div>
           </div>
         </form>
 

@@ -18,8 +18,8 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "知信 · 认知加速器",
-  description: "信息有，但脑子进不去。知信帮你把碎片信息变成可阅读的深度认知。",
+  title: "知行 · 信息追踪平台",
+  description: "消除信息差 · 从知道到做到。知行帮你把碎片信息变成可阅读的深度认知。",
 };
 
 export default function RootLayout({

@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — FastAPI 应用入口
+知行·认知加速器 — FastAPI 应用入口
 
 启动方式：
     cd 后端
@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
 # 创建 FastAPI 应用
 app = FastAPI(
     title=settings.APP_NAME,
-    description="知信·认知加速器 — 让信息像好文章一样自然流入大脑",
+    description="知行·认知加速器 — 让信息像好文章一样自然流入大脑",
     version="0.1.0",
     lifespan=lifespan,
 )

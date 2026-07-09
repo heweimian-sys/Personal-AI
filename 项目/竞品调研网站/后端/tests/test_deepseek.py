@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — DeepSeek AI 服务测试
+知行·认知加速器 — DeepSeek AI 服务测试
 
 使用 unittest.mock 模拟 OpenAI SDK 的 AsyncOpenAI 客户端，
 无需真实 API Key 即可测试所有逻辑。

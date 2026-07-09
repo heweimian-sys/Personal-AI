@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — Tavily 搜索服务测试
+知行·认知加速器 — Tavily 搜索服务测试
 
 测试 TavilySearchService 的完整逻辑：
 - 正常搜索返回结果

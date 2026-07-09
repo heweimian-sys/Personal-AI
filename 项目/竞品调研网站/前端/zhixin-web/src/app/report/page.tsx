@@ -96,8 +96,8 @@ function ReportContent() {
       <aside className="sidebar">
         {/* Logo */}
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">Z</div>
-          <span className="sidebar-logo-text">知信</span>
+          <div className="sidebar-logo-icon">知</div>
+          <span className="sidebar-logo-text">知<span className="dot">·</span>行</span>
         </div>
 
         {/* 导航 */}
@@ -136,7 +136,7 @@ function ReportContent() {
           <div className="report-header">
             <h1 className="report-title">{result.query}</h1>
             <div className="report-meta">
-              <span className="section-eyebrow">知信研究团队</span>
+              <span className="section-eyebrow">知行研究团队</span>
               <span className="meta-sep" />
               <span className="section-eyebrow">{new Date().toISOString().split('T')[0]}</span>
               <span className="meta-sep" />
@@ -268,7 +268,7 @@ function ReportContent() {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `知信_${result.query}_报告.json`;
+                a.download = `知行_${result.query}_报告.json`;
                 a.click();
                 URL.revokeObjectURL(url);
               }}
@@ -319,7 +319,7 @@ function ReportContent() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `知信_${result.query}_报告.json`;
+            a.download = `知行_${result.query}_报告.json`;
             a.click();
             URL.revokeObjectURL(url);
           }}>
@@ -372,7 +372,7 @@ function InsightCard({ insight }: { insight: Insight }) {
 
       {insight.judgments.length > 0 && (
         <div className="insight-judgments" style={{ marginBottom: '24px' }}>
-          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-slate-blue)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>关键判断</p>
+          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-brush)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>关键判断</p>
           {insight.judgments.map((judgment, ji) => (
             <div key={ji} className="insight-judgment">
               <span className="insight-judgment-bullet">◆</span>
@@ -384,7 +384,7 @@ function InsightCard({ insight }: { insight: Insight }) {
 
       {Object.keys(insight.suggestions).length > 0 && (
         <div>
-          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-slate-blue)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>行动建议</p>
+          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-brush)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>行动建议</p>
           <div className="insight-suggestions">
             {Object.entries(insight.suggestions).map(([role, suggestions]) => (
               <div key={role} className="insight-suggestion-group">

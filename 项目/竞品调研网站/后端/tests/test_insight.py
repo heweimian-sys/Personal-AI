@@ -1,5 +1,5 @@
 """
-知信·认知加速器 — AI 洞察生成测试（Task 12）
+知行·认知加速器 — AI 洞察生成测试（Task 12）
 
 测试覆盖：
 1. GeneratedInsight 数据类（创建、默认值、to_dict）
