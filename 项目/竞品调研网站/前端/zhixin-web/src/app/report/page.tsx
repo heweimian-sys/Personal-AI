@@ -2,7 +2,19 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ExternalLink, TrendingDown, Download, Bookmark } from 'lucide-react';
+import {
+  ArrowLeft,
+  Download,
+  Bookmark,
+  Home,
+  FileText,
+  Search,
+  TrendingUp,
+  MessageSquare,
+  ExternalLink,
+  ChevronDown,
+  Share2,
+} from 'lucide-react';
 import { research } from '@/lib/api';
 import type { ResearchResult, EventItem, Insight } from '@/lib/types';
 
@@ -15,11 +27,6 @@ const RELATION_META: Record<string, { label: string; symbol: string }> = {
   chain: { label: '链式', symbol: '→→' },
 };
 
-/**
- * 阅读流页面
- * 从 URL 参数获取查询词，调用后端 /api/research 获取结构化研究结果
- * 以章节叙事方式呈现事件、因果关系和来源侧注
- */
 function ReportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,33 +41,24 @@ function ReportContent() {
       router.push('/');
       return;
     }
-
     let cancelled = false;
-
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
         const data = await research(query);
-        if (!cancelled) {
-          setResult(data);
-        }
+        if (!cancelled) setResult(data);
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : '未知错误';
-          setError(`调研失败：${msg}。请确认后端服务已启动。`);
+          setError(`调研失败：${msg}`);
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
-
     fetchData();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [query, router]);
 
   /** 加载中 */
@@ -80,177 +78,259 @@ function ReportContent() {
   if (error) {
     return (
       <div className="error-container">
-        <TrendingDown size={32} color="#ef4444" />
         <p className="error-text">{error}</p>
-        <button className="retry-btn" onClick={() => router.push('/')}>
-          返回搜索
-        </button>
+        <button className="retry-btn" onClick={() => router.push('/')}>返回搜索</button>
       </div>
     );
   }
 
-  /** 无数据 */
-  if (!result) {
-    return null;
-  }
+  if (!result) return null;
 
   return (
-    <>
-      {/* 顶部导航 */}
-      <nav className="report-topbar">
-        <button className="back-link" onClick={() => router.push('/')}>
-          <ArrowLeft size={16} />
-          返回搜索
-        </button>
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px' }}>
-          知信
-        </span>
-      </nav>
+    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+      {/* 背景光晕 */}
+      <div className="glow-top-right" />
+      <div className="glow-bottom-left" />
 
-      {/* 正文 */}
-      <main className="reading-container" style={{ paddingTop: '40px', paddingBottom: '120px' }}>
-        {/* 引导摘要 */}
-        <section className="summary-section">
-          <p className="summary-label">引导摘要</p>
-          <h1 className="summary-title">{result.query}</h1>
-          <div className="summary-text">{result.summary}</div>
-        </section>
+      {/* ===== 左侧边栏 ===== */}
+      <aside className="sidebar">
+        {/* Logo */}
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon">Z</div>
+          <span className="sidebar-logo-text">知信</span>
+        </div>
 
-        {/* 章节叙事 */}
-        {result.chapters.length > 0 ? (
-          result.chapters.map((chapter, ci) => (
-            <section key={ci} className="chapter-spacing">
-              <h2 className="chapter-title">
-                {ci + 1}. {chapter.title}
-              </h2>
-              {chapter.event_indices.map((evtIdx, ei) => {
-                const event = result.events[evtIdx];
-                if (!event) return null;
+        {/* 导航 */}
+        <nav className="sidebar-nav">
+          <a className="sidebar-nav-item" onClick={() => router.push('/')}>
+            <Home size={18} /> 首页
+          </a>
+          <a className="sidebar-nav-item active">
+            <FileText size={18} /> 调研报告
+          </a>
+          <a className="sidebar-nav-item">
+            <Search size={18} /> 智搜
+          </a>
+          <a className="sidebar-nav-item">
+            <TrendingUp size={18} /> 信息追踪
+          </a>
+          <a className="sidebar-nav-item">
+            <MessageSquare size={18} /> AI 对话
+          </a>
+        </nav>
 
-                // 查找与该事件相关的因果连接
-                const outgoing = result.relations.filter(
-                  (r) => r.from_event_index === evtIdx && chapter.event_indices.includes(r.to_event_index)
-                );
+        <div style={{ flex: 1 }} />
 
-                return (
-                  <div key={ei}>
-                    <EventCard event={event} />
+        {/* 用户 */}
+        <div className="sidebar-user">
+          <div className="sidebar-user-icon">U</div>
+          <span>用户</span>
+        </div>
+      </aside>
 
-                    {/* 因果连接线 */}
-                    {outgoing.map((rel, ri) => {
-                      const targetEvent = result.events[rel.to_event_index];
-                      const meta = RELATION_META[rel.type] || { label: rel.type, symbol: '?' };
-                      return (
-                        <div key={ri} className="causal-line">
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                            <path d="M12 5v14M19 12l-7 7-7-7" />
-                          </svg>
-                          <span className="causal-desc">
-                            {meta.symbol} {meta.label}：{rel.description}
-                            {targetEvent && ` → ${targetEvent.title}`}
-                          </span>
-                        </div>
-                      );
-                    })}
-
-                    {/* 来源侧注 */}
-                    {event.sources.length > 0 && (
-                      <div className="side-note">
-                        <p className="side-note-label">来源</p>
-                        {event.sources.map((src, si) => (
-                          <div key={si} className="side-note-source">
-                            <ExternalLink size={12} color="var(--color-ink-muted)" />
-                            <a href={src.url} target="_blank" rel="noopener noreferrer">
-                              {src.name}
-                            </a>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </section>
-          ))
-        ) : (
-          // 无章节时直接列出所有事件
-          <section className="chapter-spacing">
-            <h2 className="chapter-title">关键事件</h2>
-            {result.events.map((event, ei) => (
-              <div key={ei}>
-                <EventCard event={event} />
-                {event.sources.length > 0 && (
-                  <div className="side-note">
-                    <p className="side-note-label">来源</p>
-                    {event.sources.map((src, si) => (
-                      <div key={si} className="side-note-source">
-                        <ExternalLink size={12} color="var(--color-ink-muted)" />
-                        <a href={src.url} target="_blank" rel="noopener noreferrer">
-                          {src.name}
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </section>
-        )}
-
-        {/* 关系标签汇总 */}
-        {result.relations.length > 0 && (
-          <section className="chapter-spacing" style={{ marginTop: '40px' }}>
-            <p className="summary-label">关系网络</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-              {result.relations.map((rel, ri) => {
-                const meta = RELATION_META[rel.type] || { label: rel.type, symbol: '?' };
-                const fromEvt = result.events[rel.from_event_index];
-                const toEvt = result.events[rel.to_event_index];
-                return (
-                  <span key={ri} className="relation-tag">
-                    {meta.symbol} {meta.label}
-                    {fromEvt && toEvt && `：${fromEvt.title} → ${toEvt.title}`}
-                  </span>
-                );
-              })}
+      {/* ===== 中间：阅读区 ===== */}
+      <main className="main-content">
+        {/* 阅读面板 */}
+        <div className="reading-panel">
+          {/* 标题区 */}
+          <div className="report-header">
+            <h1 className="report-title">{result.query}</h1>
+            <div className="report-meta">
+              <span className="section-eyebrow">知信研究团队</span>
+              <span className="meta-sep" />
+              <span className="section-eyebrow">{new Date().toISOString().split('T')[0]}</span>
+              <span className="meta-sep" />
+              <span className="section-eyebrow">阅读约 {Math.max(1, Math.ceil(result.events.length * 1.5))} 分钟</span>
             </div>
+          </div>
+
+          <div className="report-divider" />
+
+          {/* 引导摘要 */}
+          <section className="report-section">
+            <p className="summary-label">引导摘要</p>
+            <div className="summary-text">{result.summary}</div>
           </section>
-        )}
 
-        {/* 洞察总结 */}
-        {result.insight && result.insight.title && (
-          <InsightCard insight={result.insight} />
-        )}
+          {/* 章节叙事 */}
+          {result.chapters.length > 0 ? (
+            result.chapters.map((chapter, ci) => (
+              <section key={ci} className="chapter-block">
+                <h2 className="chapter-title">
+                  {ci + 1}. {chapter.title}
+                </h2>
 
-        {/* 操作区 */}
-        <div className="action-section">
-          <button
-            className="action-btn action-btn-primary"
-            onClick={() => {
-              const data = JSON.stringify(result, null, 2);
-              const blob = new Blob([data], { type: 'application/json' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `知信_${result.query}_报告.json`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
-          >
-            <Download size={16} />
-            导出报告
-          </button>
-          <button
-            className="action-btn action-btn-outline"
-            onClick={() => router.push('/')}
-          >
-            <Bookmark size={16} />
-            追踪此主题
-          </button>
+                {chapter.event_indices.map((evtIdx, ei) => {
+                  const event = result.events[evtIdx];
+                  if (!event) return null;
+
+                  // 同一章节内的事件间关系
+                  const outgoing = result.relations.filter(
+                    (r) => r.from_event_index === evtIdx && chapter.event_indices.includes(r.to_event_index)
+                  );
+
+                  return (
+                    <div key={ei} style={{ position: 'relative' }}>
+                      <EventCard event={event} />
+
+                      {/* 因果连接线 */}
+                      {outgoing.map((rel, ri) => {
+                        const targetEvent = result.events[rel.to_event_index];
+                        const meta = RELATION_META[rel.type] || { label: rel.type, symbol: '?' };
+                        return (
+                          <div key={ri} className="causal-line">
+                            <div className="causal-line-visual">
+                              <svg width="20" height="28" viewBox="0 0 20 28" fill="none">
+                                <line x1="10" y1="0" x2="10" y2="22" className="causal-line-stem" strokeWidth="2" />
+                                <path d="M3 18l7 7 7-7" className="causal-line-arrow" strokeWidth="2" fill="none" strokeLinecap="round" />
+                              </svg>
+                            </div>
+                            <div className="causal-line-content">
+                              <span className="relation-tag">{meta.symbol} {meta.label}</span>
+                              <span className="causal-desc">{rel.description}</span>
+                              {targetEvent && <span className="causal-target">→ {targetEvent.title}</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* 来源侧注（内嵌版） */}
+                      {event.sources.length > 0 && (
+                        <div className="side-note">
+                          <p className="side-note-label">📎 来源</p>
+                          {event.sources.map((src, si) => (
+                            <div key={si} className="side-note-source">
+                              <a href={src.url} target="_blank" rel="noopener noreferrer">
+                                {src.name} <ExternalLink size={10} style={{ display: 'inline', verticalAlign: 'middle' }} />
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </section>
+            ))
+          ) : (
+            <section className="chapter-block">
+              <h2 className="chapter-title">关键事件</h2>
+              {result.events.map((event, ei) => (
+                <div key={ei}>
+                  <EventCard event={event} />
+                  {event.sources.length > 0 && (
+                    <div className="side-note">
+                      <p className="side-note-label">📎 来源</p>
+                      {event.sources.map((src, si) => (
+                        <div key={si} className="side-note-source">
+                          <a href={src.url} target="_blank" rel="noopener noreferrer">{src.name}</a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </section>
+          )}
+
+          {/* 关系标签汇总 */}
+          {result.relations.length > 0 && (
+            <section className="report-section" style={{ marginTop: '48px' }}>
+              <p className="summary-label">关系网络</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {result.relations.map((rel, ri) => {
+                  const meta = RELATION_META[rel.type] || { label: rel.type, symbol: '?' };
+                  const fromEvt = result.events[rel.from_event_index];
+                  const toEvt = result.events[rel.to_event_index];
+                  return (
+                    <span key={ri} className="relation-tag" title={rel.description}>
+                      {meta.symbol} {meta.label}
+                      {fromEvt && toEvt && `：${fromEvt.title.slice(0, 20)}... → ${toEvt.title.slice(0, 20)}...`}
+                    </span>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* 洞察总结 */}
+          {result.insight && result.insight.title && (
+            <InsightCard insight={result.insight} />
+          )}
+
+          {/* 操作区 */}
+          <div className="action-section">
+            <button
+              className="action-btn action-btn-primary"
+              onClick={() => {
+                const data = JSON.stringify(result, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `知信_${result.query}_报告.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              <Download size={16} /> 导出报告
+            </button>
+            <button className="action-btn action-btn-outline" onClick={() => router.push('/')}>
+              <Bookmark size={16} /> 追踪此主题
+            </button>
+          </div>
         </div>
       </main>
-    </>
+
+      {/* ===== 右侧目录 ===== */}
+      <aside className="right-toc">
+        {/* 目录 */}
+        <div className="toc-section">
+          <p className="toc-heading">目录</p>
+          <div className="toc-links">
+            <a href="#summary" className="toc-link" onClick={(e) => { e.preventDefault(); document.querySelector('.summary-label')?.scrollIntoView({ behavior: 'smooth' }); }}>
+              引导摘要
+            </a>
+            {result.chapters.map((ch, ci) => (
+              <a key={ci} href={`#chapter-${ci}`} className="toc-link" onClick={(e) => {
+                e.preventDefault();
+                const els = document.querySelectorAll('.chapter-title');
+                if (els[ci]) els[ci].scrollIntoView({ behavior: 'smooth' });
+              }}>
+                {ch.title.length > 18 ? ch.title.slice(0, 18) + '...' : ch.title}
+              </a>
+            ))}
+            {result.insight?.title && (
+              <a href="#insight" className="toc-link" onClick={(e) => {
+                e.preventDefault();
+                document.querySelector('.insight-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}>
+                洞察总结
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* 操作按钮 */}
+        <div className="toc-actions">
+          <button className="toc-action-btn" onClick={() => {
+            const data = JSON.stringify(result, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `知信_${result.query}_报告.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}>
+            <Download size={14} /> 导出 JSON
+          </button>
+          <button className="toc-action-btn">
+            <Share2 size={14} /> 分享
+          </button>
+        </div>
+      </aside>
+    </div>
   );
 }
 
@@ -262,22 +342,15 @@ function EventCard({ event }: { event: EventItem }) {
       <h3 className="event-title">{event.title}</h3>
       <p className="event-summary">{event.summary}</p>
       {event.key_quote && (
-        <blockquote className="event-quote">
-          {event.key_quote}
-        </blockquote>
+        <blockquote className="event-quote">{event.key_quote}</blockquote>
       )}
-      {/* 置信度 */}
+      {/* 置信度条 */}
       <div className="confidence-bar">
         <span className="confidence-label">置信度</span>
         <div className="confidence-track">
-          <div
-            className="confidence-fill"
-            style={{ width: `${Math.round(event.confidence * 100)}%` }}
-          />
+          <div className="confidence-fill" style={{ width: `${Math.round(event.confidence * 100)}%` }} />
         </div>
-        <span className="confidence-label">
-          {Math.round(event.confidence * 100)}%
-        </span>
+        <span className="confidence-label">{Math.round(event.confidence * 100)}%</span>
       </div>
     </div>
   );
@@ -285,7 +358,6 @@ function EventCard({ event }: { event: EventItem }) {
 
 /** 洞察卡片组件 */
 function InsightCard({ insight }: { insight: Insight }) {
-  /** 角色图标映射 */
   const roleLabels: Record<string, string> = {
     '投资者': '投资者',
     '创业者': '创业者',
@@ -294,13 +366,13 @@ function InsightCard({ insight }: { insight: Insight }) {
 
   return (
     <section className="insight-section">
-      <p className="insight-label">洞察 · 第三层认知</p>
-      <h2 className="insight-title">{insight.title}</h2>
+      <p className="insight-label">💡 洞察 · 第三层认知</p>
+      <h2 className="insight-title" id="insight">{insight.title}</h2>
       {insight.body && <p className="insight-body">{insight.body}</p>}
 
-      {/* 关键判断 */}
       {insight.judgments.length > 0 && (
-        <div className="insight-judgments">
+        <div className="insight-judgments" style={{ marginBottom: '24px' }}>
+          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-slate-blue)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>关键判断</p>
           {insight.judgments.map((judgment, ji) => (
             <div key={ji} className="insight-judgment">
               <span className="insight-judgment-bullet">◆</span>
@@ -310,39 +382,36 @@ function InsightCard({ insight }: { insight: Insight }) {
         </div>
       )}
 
-      {/* 分角色建议 */}
       {Object.keys(insight.suggestions).length > 0 && (
-        <div className="insight-suggestions">
-          {Object.entries(insight.suggestions).map(([role, suggestions]) => (
-            <div key={role} className="insight-suggestion-group">
-              <p className="insight-suggestion-role">
-                {roleLabels[role] || role}
-              </p>
-              {suggestions.map((suggestion, si) => (
-                <div key={si} className="insight-suggestion-item">
-                  <span className="insight-suggestion-arrow">→</span>
-                  <span>{suggestion}</span>
-                </div>
-              ))}
-            </div>
-          ))}
+        <div>
+          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-slate-blue)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>行动建议</p>
+          <div className="insight-suggestions">
+            {Object.entries(insight.suggestions).map(([role, suggestions]) => (
+              <div key={role} className="insight-suggestion-group">
+                <p className="insight-suggestion-role">{roleLabels[role] || role}</p>
+                {suggestions.map((suggestion, si) => (
+                  <div key={si} className="insight-suggestion-item">
+                    <span className="insight-suggestion-arrow">→</span>
+                    <span>{suggestion}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </section>
   );
 }
 
-/** 报告页（包裹 Suspense，因为 useSearchParams 需要） */
 export default function ReportPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="loading-container">
-          <div className="loading-spinner" />
-          <p className="loading-text">加载中...</p>
-        </div>
-      }
-    >
+    <Suspense fallback={
+      <div className="loading-container">
+        <div className="loading-spinner" />
+        <p className="loading-text">加载中...</p>
+      </div>
+    }>
       <ReportContent />
     </Suspense>
   );

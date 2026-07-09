@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Noto_Serif_SC, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 
-/** UI 字体 — Inter（简洁现代） */
-const inter = Inter({
-  subsets: ["latin"],
+/** UI 字体 — Noto Serif SC（思源宋体，中文衬线） */
+const notoSerifSC = Noto_Serif_SC({
+  weight: ["400", "600", "700"],
   variable: "--font-ui",
+  display: "swap",
 });
 
-/** 标题字体 — Playfair Display（阅读感） */
-const playfair = Playfair_Display({
+/** 标题字体 — Cormorant Garamond（优雅衬线，阅读感） */
+const cormorant = Cormorant_Garamond({
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
   variable: "--font-display",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body className={`${inter.variable} ${playfair.variable}`}>
+      <body className={`${notoSerifSC.variable} ${cormorant.variable}`}>
         {children}
       </body>
     </html>
