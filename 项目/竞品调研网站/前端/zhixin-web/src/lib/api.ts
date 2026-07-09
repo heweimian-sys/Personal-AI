@@ -11,10 +11,10 @@ import { MOCK_REPORT } from './mock';
 /** 后端 API 基础地址（支持环境变量覆盖） */
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-/** axios 实例（120 秒超时，适应 AI 分析耗时） */
+/** axios 实例（5 分钟超时，适应 AI 多步分析耗时） */
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 120000,
+  timeout: 300000,
   headers: { 'Content-Type': 'application/json' },
 });
 

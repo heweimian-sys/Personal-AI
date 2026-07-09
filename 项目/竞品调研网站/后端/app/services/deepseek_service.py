@@ -203,6 +203,7 @@ class DeepSeekService:
             self._client = AsyncOpenAI(
                 api_key=self.api_key,
                 base_url=self.base_url,
+                timeout=300.0,  # 5 分钟超时（AI 处理复杂任务需要时间）
             )
         return self._client
 
