@@ -29,10 +29,18 @@ class Settings(BaseSettings):
     FIRECRAWL_API_URL: str = "http://localhost:3002/v1"
     FIRECRAWL_API_KEY: str = ""
 
+    # Tavily 搜索服务（免费，无需自部署）
+    # 注册：https://tavily.com
+    TAVILY_API_KEY: str = ""
+
     # DeepSeek AI 服务
     DEEPSEEK_API_KEY: str = ""
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com/v1"
     DEEPSEEK_MODEL: str = "deepseek-chat"
+
+    # 访问密码（保护 API 不被滥用）
+    # 留空 = 本地开发模式，跳过认证
+    ACCESS_PASSWORD: str = ""
 
     # CORS（前端地址，逗号分隔多个）
     CORS_ORIGINS: str = "http://localhost:3000"

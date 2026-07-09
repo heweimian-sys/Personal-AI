@@ -12,6 +12,7 @@ __pycache__/
 dist/
 build/
 *.egg
+.venv/
 
 # Environment
 .env
@@ -49,3 +50,4 @@ yarn-error.log*
 # Build
 dist/
 .cache/
+*.tsbuildinfo

@@ -13,10 +13,11 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from app.core.auth import verify_token
 from app.core.config import settings
 from app.core.db import init_db
 from app.services.research_service import ResearchService, ResearchError
@@ -83,7 +84,7 @@ class ResearchRequest(BaseModel):
 
 
 @app.post("/api/research")
-async def research(req: ResearchRequest):
+async def research(req: ResearchRequest, _=Depends(verify_token)):
     """研究接口：输入关键词，返回带因果脉络的完整报告
 
     流程：搜索 → 提取事件 → 分析关系 → 组织章节 → 生成摘要

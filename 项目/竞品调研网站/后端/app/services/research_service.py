@@ -22,7 +22,11 @@ import logging
 from dataclasses import dataclass
 
 from app.core.config import settings
-from app.services.firecrawl_service import FirecrawlSearchService, SearchResult
+from app.services.firecrawl_service import (
+    FirecrawlSearchService,
+    TavilySearchService,
+    SearchResult,
+)
 from app.services.deepseek_service import (
     DeepSeekService,
     ExtractedEvent,
@@ -78,16 +82,25 @@ class ResearchService:
 
     def __init__(
         self,
-        search_service: FirecrawlSearchService | None = None,
+        search_service: FirecrawlSearchService | TavilySearchService | None = None,
         ai_service: DeepSeekService | None = None,
     ) -> None:
         """初始化研究服务
 
         Args:
-            search_service: Firecrawl 搜索服务，默认自动创建
+            search_service: 搜索服务，默认自动选择
+                - 如果配置了 Tavily API Key，优先用 Tavily
+                - 否则用 Firecrawl（需自部署）
             ai_service: DeepSeek AI 服务，默认自动创建
         """
-        self.search_service = search_service or FirecrawlSearchService()
+        if search_service is None:
+            if settings.TAVILY_API_KEY:
+                search_service = TavilySearchService()
+                logger.info("使用 Tavily 搜索服务")
+            else:
+                search_service = FirecrawlSearchService()
+                logger.info("使用 Firecrawl 搜索服务")
+        self.search_service = search_service
         self.ai_service = ai_service or DeepSeekService()
 
     async def research(
@@ -189,21 +202,38 @@ class ResearchService:
         )
 
     async def _search(self, query: str, limit: int) -> list[SearchResult]:
-        """Step 1: 调用 Firecrawl 搜索
+        """Step 1: 搜索互联网信息
 
-        如果 Firecrawl 服务不可用，自动降级到预设搜索结果，
-        让 AI 处理流程继续运行（方便本地开发和演示）。
+        搜索优先级：
+        1. Tavily（免费，无需自部署）
+        2. Firecrawl（需自部署）
+        3. 兜底预设数据（保证流程能跑通）
         """
         logger.info("Step 1: 搜索 '%s'", query)
+
+        # 尝试主搜索服务
         try:
             results = await self.search_service.search(query, limit=limit)
             if results:
+                logger.info("搜索成功: 返回 %d 条结果", len(results))
                 return results
-            logger.warning("搜索结果为空，使用兜底搜索数据")
+            logger.warning("搜索服务返回空结果")
         except Exception as e:
-            logger.warning("Firecrawl 搜索失败，使用兜底搜索数据: %s", e)
+            logger.warning("主搜索服务失败: %s", e)
 
-        # 兜底：返回预设搜索结果（基于查询关键词生成）
+        # 如果主服务是 Tavily，尝试降级到 Firecrawl
+        if isinstance(self.search_service, TavilySearchService):
+            try:
+                logger.info("Tavily 失败，尝试降级到 Firecrawl")
+                fallback = FirecrawlSearchService()
+                results = await fallback.search(query, limit=limit)
+                if results:
+                    return results
+            except Exception as e2:
+                logger.warning("Firecrawl 也失败: %s", e2)
+
+        # 最终兜底：预设数据
+        logger.warning("所有搜索服务均不可用，使用兜底数据")
         return _fallback_search_results(query)
 
     async def _extract_events(
