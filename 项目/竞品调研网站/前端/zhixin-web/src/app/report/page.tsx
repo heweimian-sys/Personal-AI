@@ -13,7 +13,7 @@ import {
   Code,
 } from 'lucide-react';
 import { research } from '@/lib/api';
-import type { ResearchResult, EventItem, Insight } from '@/lib/types';
+import type { ResearchResult, EventItem, Insight, QueryProfile } from '@/lib/types';
 
 /** 关系类型 → 中文标签 + 符号 */
 const RELATION_META: Record<string, { label: string; symbol: string }> = {
@@ -27,7 +27,7 @@ const RELATION_META: Record<string, { label: string; symbol: string }> = {
 /** 加载步骤定义 */
 const LOADING_STEPS = [
   { label: '搜索全网信息', desc: '抓取多个来源的最新内容' },
-  { label: '提取关键事件', desc: 'AI 识别重要事件和时间节点' },
+  { label: '提取关键线索', desc: 'AI 识别重要事件和时间节点' },
   { label: '分析因果脉络', desc: '梳理事件间的关联关系' },
   { label: '生成深度报告', desc: '组织章节、生成洞察和建议' },
 ];
@@ -279,10 +279,25 @@ function ReportContent() {
               <span className="meta-sep" />
               <span className="section-eyebrow">阅读约 {Math.max(1, Math.ceil(result.events.length * 1.5))} 分钟</span>
             </div>
+            {result.query_profile && (
+              <div className="report-profile-tags">
+                <span className="profile-tag">
+                  探索类型：{result.query_profile.display_type}
+                </span>
+                <span className="profile-tag profile-tag-focus">
+                  探索角度：{result.query_profile.analysis_focus}
+                </span>
+              </div>
+            )}
             {/* 可信度提示 */}
             <p className="report-disclaimer">
               本报告由 AI 基于公开搜索结果生成，请结合原始来源核验重要结论。
             </p>
+            {result.warning && (
+              <div className="report-warning">
+                ⚠ {result.warning}
+              </div>
+            )}
           </div>
 
           <div className="report-divider" />
@@ -352,7 +367,7 @@ function ReportContent() {
             ))
           ) : (
             <section className="chapter-block">
-              <h2 className="chapter-title">关键事件</h2>
+              <h2 className="chapter-title">关键线索</h2>
               {result.events.map((event, ei) => (
                 <div key={ei}>
                   <EventCard event={event} />

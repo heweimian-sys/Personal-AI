@@ -45,6 +45,19 @@ export interface Insight {
   suggestions: Record<string, string[]>;
 }
 
+/** 查询画像 — 描述查询的分类与重写信息 */
+export interface QueryProfile {
+  original_query: string;
+  topic_type: string;
+  template: string;
+  rewritten_query: string;
+  analysis_focus: string;
+  tone: string;
+  display_type: string;
+  confidence: number;
+  classified_by: string;
+}
+
 /** 研究结果 */
 export interface ResearchResult {
   query: string;
@@ -53,6 +66,9 @@ export interface ResearchResult {
   relations: Relation[];
   chapters: Chapter[];
   insight: Insight | null;
+  query_profile?: QueryProfile;
+  source_status?: 'real' | 'fallback' | 'mock';
+  warning?: string | null;
 }
 
 /** 研究请求 */

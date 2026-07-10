@@ -1438,6 +1438,42 @@ a { color: inherit; text-decoration: none; }
   opacity: 0.8;
 }
 
+/* 探索类型标签 */
+.report-profile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.profile-tag {
+  font-size: 12px;
+  color: var(--ink-brush);
+  opacity: 0.7;
+  padding: 4px 12px;
+  background: var(--paper);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--paper-dark);
+}
+
+.profile-tag-focus {
+  color: var(--jade);
+  border-color: var(--jade-light);
+  background: var(--jade-bg);
+}
+
+/* fallback 警告 */
+.report-warning {
+  margin-top: 8px;
+  padding: 10px 16px;
+  background: rgba(184, 134, 11, 0.1);
+  border: 1px solid rgba(184, 134, 11, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: #8a6d1f;
+  line-height: 1.6;
+}
+
 /* 响应式 */
 @media (max-width: 1024px) {
   .sidebar { display: none; }

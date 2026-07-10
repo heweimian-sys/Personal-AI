@@ -149,11 +149,15 @@ async def test_research_search_called_with_correct_params():
 
     await service.research("AI行业", search_limit=5, max_events=3)
 
-    service.search_service.search.assert_called_once_with("AI行业", limit=5)
+    # 新架构：搜索使用改写后的查询词（包含原始关键词）
+    service.search_service.search.assert_called_once()
+    call_args = service.search_service.search.call_args
+    assert call_args.kwargs.get("limit") == 5
+    assert "AI行业" in call_args.args[0]
     service.ai_service.extract_events.assert_called_once()
-    # 验证 max_events 传递
+    # 验证 max_events 传递（新架构: extract_events(query, results, max_events, query_profile)）
     call_args = service.ai_service.extract_events.call_args
-    assert call_args.kwargs.get("max_events") or call_args.args[-1] == 3
+    assert call_args.args[2] == 3  # max_events 是第3个位置参数
 
 
 @pytest.mark.asyncio

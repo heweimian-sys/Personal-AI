@@ -317,8 +317,12 @@ class TestResearchServiceInsight:
             assert result.insight.title == "测试洞察"
             assert result.insight.judgments == ["判断1"]
 
-            # 验证 generate_insight 被调用
-            mock_insight.assert_called_once_with("AI行业", events, relations)
+            # 验证 generate_insight 被调用（新架构含 query_profile 参数）
+            mock_insight.assert_called_once()
+            call_args = mock_insight.call_args
+            assert call_args.args[0] == "AI行业"
+            assert call_args.args[1] == events
+            assert call_args.args[2] == relations
 
     @pytest.mark.asyncio
     async def test_research_insight_failure_non_fatal(self):
@@ -394,12 +398,17 @@ class TestResearchServiceInsight:
 
     @pytest.mark.asyncio
     async def test_research_empty_search_insight_none(self):
-        """测试搜索为空时洞察为 None"""
+        """测试搜索为空且兜底也为空时洞察为 None"""
         service = ResearchService()
 
         with patch.object(
             service.search_service, "search", new_callable=AsyncMock
-        ) as mock_search:
+        ) as mock_search, patch(
+            "app.services.research_service._fallback_search_results", return_value=[]
+        ), patch(
+            "app.services.research_service.FirecrawlSearchService"
+        ) as MockFC:
+            MockFC.return_value.search = AsyncMock(return_value=[])
             mock_search.return_value = []
 
             result = await service.research("不存在的关键词")
