@@ -1,0 +1,230 @@
+/* ============================================
+   知行 · 中文化与交互增强层
+   目标：保留参考站的排版张力，但界面语言回到中文；增加色彩、鼠标反馈和点击水波纹。
+   ============================================ */
+
+:root {
+  --zhixing-yellow: #facb0e;
+  --zhixing-pink: #f06ba8;
+  --zhixing-cyan: #78bae6;
+  --zhixing-purple: #8c7cf0;
+  --zhixing-green: #70d9a5;
+}
+
+.search-page {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(250, 203, 14, 0.34), transparent 28%),
+    radial-gradient(circle at 78% 18%, rgba(240, 107, 168, 0.26), transparent 30%),
+    radial-gradient(circle at 58% 72%, rgba(120, 186, 230, 0.28), transparent 32%),
+    linear-gradient(rgba(29,29,29,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29,29,29,0.04) 1px, transparent 1px),
+    var(--paper);
+  background-size: auto, auto, auto, 8.333vw 8.333vw, 8.333vw 8.333vw, auto;
+}
+
+.search-page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.32), transparent 18%),
+    linear-gradient(120deg, transparent, rgba(255,255,255,0.16), transparent);
+  mix-blend-mode: soft-light;
+  opacity: 0.65;
+}
+
+.search-content,
+.brand-bar,
+.how-it-works,
+.search-footer {
+  position: relative;
+  z-index: 2;
+}
+
+.brand-name,
+.brand-nav,
+.hero-kicker,
+.suggestion-label,
+.audience-label,
+.summary-label,
+.section-eyebrow,
+.report-kicker,
+.toc-heading,
+.insight-label,
+.footer-text {
+  text-transform: none;
+  letter-spacing: 0.08em;
+}
+
+.search-hero-title,
+.report-title,
+.chapter-title,
+.event-title,
+.insight-title,
+.step-title {
+  text-transform: none;
+  letter-spacing: -0.09em;
+}
+
+.search-hero-title {
+  max-width: 8em;
+  font-weight: 600;
+}
+
+.search-hero-title::selection,
+.report-title::selection {
+  background: var(--zhixing-yellow);
+  color: var(--ink-deep);
+}
+
+.hero-kicker {
+  display: inline-flex;
+  width: max-content;
+  border: 1px solid var(--ink-deep);
+  border-radius: 999px;
+  padding: 0.45em 0.75em;
+  background: rgba(250, 203, 14, 0.22);
+  color: var(--ink-deep);
+}
+
+.search-hero-subtitle {
+  background: linear-gradient(90deg, var(--ink-deep), #7042d9, #c24481);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.suggestion-tag:nth-child(5n + 1) { background: rgba(250, 203, 14, 0.22); }
+.suggestion-tag:nth-child(5n + 2) { background: rgba(240, 107, 168, 0.18); }
+.suggestion-tag:nth-child(5n + 3) { background: rgba(120, 186, 230, 0.20); }
+.suggestion-tag:nth-child(5n + 4) { background: rgba(140, 124, 240, 0.16); }
+.suggestion-tag:nth-child(5n + 5) { background: rgba(112, 217, 165, 0.18); }
+
+.suggestion-tag {
+  position: relative;
+  overflow: hidden;
+}
+
+.suggestion-tag::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  opacity: 0;
+  background: linear-gradient(120deg, var(--zhixing-yellow), var(--zhixing-pink), var(--zhixing-cyan));
+  transition: opacity 0.25s ease;
+  z-index: -1;
+}
+
+.suggestion-tag:hover::before {
+  opacity: 1;
+}
+
+.step-item:nth-child(1) { background: rgba(250, 203, 14, 0.16); }
+.step-item:nth-child(3) { background: rgba(240, 107, 168, 0.12); }
+.step-item:nth-child(5) { background: rgba(120, 186, 230, 0.14); }
+.step-item:nth-child(7) { background: rgba(112, 217, 165, 0.14); }
+
+.step-item:hover {
+  transform: translateY(-4px);
+  transition: transform 0.28s ease, background 0.28s ease;
+}
+
+.click-ripple {
+  position: fixed;
+  z-index: 9999;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(29, 29, 29, 0.45);
+  background: radial-gradient(circle, rgba(250,203,14,0.5), rgba(240,107,168,0.18), transparent 68%);
+  animation: zhixing-ripple 1.05s ease-out forwards;
+}
+
+@keyframes zhixing-ripple {
+  0% {
+    opacity: 0.95;
+    width: 12px;
+    height: 12px;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    width: 220px;
+    height: 220px;
+    filter: blur(6px);
+  }
+}
+
+.cursor-info {
+  position: fixed;
+  z-index: 10000;
+  max-width: 260px;
+  padding: 10px 12px;
+  border: 1px solid var(--ink-deep);
+  border-radius: 14px;
+  background: rgba(29, 29, 29, 0.92);
+  color: var(--paper);
+  font-size: 12px;
+  line-height: 1.55;
+  pointer-events: none;
+  box-shadow: 0 16px 40px rgba(29,29,29,0.18);
+  backdrop-filter: blur(8px);
+}
+
+.report-header,
+.summary-text,
+.event-card,
+.insight-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.report-header::before,
+.summary-text::before,
+.insight-section::before {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  right: -100px;
+  top: -120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(250,203,14,0.28), rgba(240,107,168,0.14), transparent 72%);
+  pointer-events: none;
+}
+
+.profile-tag:nth-child(1),
+.relation-tag:nth-child(3n + 1) { background: rgba(250, 203, 14, 0.22); }
+.profile-tag:nth-child(2),
+.relation-tag:nth-child(3n + 2) { background: rgba(120, 186, 230, 0.20); }
+.relation-tag:nth-child(3n + 3) { background: rgba(240, 107, 168, 0.18); }
+
+.profile-tag-focus {
+  background: var(--ink-deep) !important;
+}
+
+.event-card:hover {
+  background: linear-gradient(90deg, rgba(250,203,14,0.10), rgba(120,186,230,0.08), transparent);
+}
+
+.insight-section {
+  background:
+    radial-gradient(circle at 85% 10%, rgba(250,203,14,0.28), transparent 24%),
+    radial-gradient(circle at 12% 80%, rgba(120,186,230,0.18), transparent 28%),
+    var(--ink-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .click-ripple,
+  .step-item:hover,
+  .suggestion-tag,
+  .suggestion-tag::before {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+}

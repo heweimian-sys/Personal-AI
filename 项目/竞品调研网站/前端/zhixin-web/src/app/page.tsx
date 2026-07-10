@@ -3,21 +3,13 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
-const SUGGESTIONS = [
-  { text: '你好', desc: '日常词语', type: 'daily_word' },
-  { text: '月亮', desc: '抽象概念', type: 'abstract_concept' },
-  { text: '唐朝', desc: '历史主题', type: 'history' },
-  { text: '地中海', desc: '地理空间', type: 'geography' },
-  { text: '内卷', desc: '社会现象', type: 'social_phenomenon' },
-  { text: 'AI Agent 工具市场', desc: '科技商业', type: 'tech_business' },
-  { text: '为什么年轻人焦虑？', desc: '问题研究', type: 'question' },
-];
+const SUGGESTIONS = ['你好', '月亮', '唐朝', '内卷', 'AI Agent'];
 
-const STEPS = [
-  { num: '01', title: 'SEARCH', cn: '搜索', desc: '输入任意主题，全网抓取信息' },
-  { num: '02', title: 'DECODE', cn: '拆解', desc: 'AI 提取关键线索和知识节点' },
-  { num: '03', title: 'CONNECT', cn: '连接', desc: '梳理因果脉络和关联关系' },
-  { num: '04', title: 'INSIGHT', cn: '洞察', desc: '生成行动建议和深度判断' },
+const MODES = [
+  { num: '01', title: '探索', desc: '发现一个词背后的世界' },
+  { num: '02', title: '分析', desc: '拆解一个产品、行业、趋势' },
+  { num: '03', title: '创造', desc: '生成内容、文章、选题' },
+  { num: '04', title: '行动', desc: '把想法变成计划' },
 ];
 
 export default function SearchPage() {
@@ -37,95 +29,97 @@ export default function SearchPage() {
 
   return (
     <main className="home-page">
-      {/* ── 顶部导航栏 ── */}
-      <header className="home-topbar">
-        <div className="topbar-brand">
-          <span className="brand-mark">知</span>
-          <span className="brand-name">ZHI XING.</span>
+      {/* 背景柔光 */}
+      <div className="home-bg-glow home-bg-glow-1" />
+      <div className="home-bg-glow home-bg-glow-2" />
+
+      {/* 顶部导航 */}
+      <header className="home-header">
+        <div className="home-logo">
+          <span className="logo-mark">知</span>
+          <span className="logo-text">知行</span>
         </div>
-        <nav className="topbar-nav">
-          <a className="topbar-link" href="#hero">MANIFESTO</a>
-          <a className="topbar-link" href="#suggestions">EXAMPLES</a>
-          <a
-            className="topbar-link topbar-link-accent"
-            onClick={() => (document.querySelector('.search-input') as HTMLInputElement)?.focus()}
-          >
-            START →
-          </a>
+        <nav className="home-nav">
+          <a className="nav-link" onClick={() => router.push('/')}>探索</a>
+          <a className="nav-link">记录</a>
+          <a className="nav-link">关于</a>
         </nav>
       </header>
 
-      {/* ── Hero 大标题 ── */}
-      <section className="home-hero" id="hero">
+      {/* Hero 主视觉 */}
+      <section className="home-hero">
         <h1 className="hero-title">
-          A DIFFERENT<br />
-          WAY TO<br />
-          UNDERSTAND<br />
-          <span className="hero-accent">ANYTHING.</span>
+          <span className="hero-title-line">给我一个词</span>
+          <span className="hero-title-line">我带你看见</span>
+          <span className="hero-title-line hero-title-accent">它背后的世界</span>
         </h1>
         <p className="hero-subtitle">
-          给我一个词，我帮你看到它背后的世界。
+          <span>探索一个概念</span>·<span>理解一个行业</span>·<span>发现一个问题的新视角</span>
         </p>
-      </section>
 
-      {/* ── 搜索区 ── */}
-      <section className="home-search">
-        <form onSubmit={handleSubmit} className="search-form">
-          <div className="search-line">
-            <span className="search-prefix">INPUT_</span>
-            <input
-              type="text"
-              className="search-input"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="输入任意词语、问题、人物、地点或现象..."
-              autoFocus
-            />
-            <button
-              type="submit"
-              className="search-btn"
-              disabled={!query.trim()}
-            >
-              EXPLORE →
-            </button>
+        {/* 搜索框 */}
+        <div className="search-area">
+          <form onSubmit={handleSubmit}>
+            <div className="search-box">
+              <span className="search-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" />
+                  <line x1="14" y1="14" x2="18" y2="18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                className="search-input"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="你想了解什么？"
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="search-btn"
+                disabled={!query.trim()}
+              >
+                开始探索 →
+              </button>
+            </div>
+          </form>
+
+          {/* 推荐探索词 */}
+          <div className="suggestions">
+            {SUGGESTIONS.map((word) => (
+              <span
+                key={word}
+                className="suggestion-chip"
+                onClick={() => handleSuggestion(word)}
+              >
+                {word}
+              </span>
+            ))}
           </div>
-        </form>
+        </div>
       </section>
 
-      {/* ── 流程步骤 ── */}
-      <section className="home-process">
-        {STEPS.map((step) => (
-          <div key={step.num} className="process-item">
-            <span className="process-num">{step.num}</span>
-            <span className="process-title">{step.title}</span>
-            <span className="process-cn">{step.cn}</span>
-            <span className="process-desc">{step.desc}</span>
+      {/* 底部四入口 */}
+      <section className="home-modes">
+        {MODES.map((mode) => (
+          <div
+            key={mode.num}
+            className="mode-card"
+            onClick={() => (document.querySelector('.search-input') as HTMLInputElement)?.focus()}
+          >
+            <p className="mode-num">{mode.num}</p>
+            <h3 className="mode-title">{mode.title}</h3>
+            <p className="mode-desc">{mode.desc}</p>
+            <span className="mode-arrow">↓</span>
           </div>
         ))}
       </section>
 
-      {/* ── 推荐探索 ── */}
-      <section className="home-suggestions" id="suggestions">
-        <p className="suggestions-label">RECENT EXPLORATIONS / 推荐探索</p>
-        <div className="suggestions-grid">
-          {SUGGESTIONS.map((item) => (
-            <div
-              key={item.text}
-              className="suggestion-item"
-              onClick={() => handleSuggestion(item.text)}
-            >
-              <span className="suggestion-dot" data-type={item.type} />
-              <span className="suggestion-text">{item.text}</span>
-              <span className="suggestion-type">{item.desc}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── 底部 ── */}
+      {/* 页脚 */}
       <footer className="home-footer">
-        <span className="footer-label">ZHI XING · COGNITIVE EXPLORATION STUDIO</span>
-        <span className="footer-copy">© 2026</span>
+        <span className="footer-text">知行 — 一个帮助人理解世界、连接知识、产生行动的 AI 探索平台</span>
+        <span className="footer-text">© 2026</span>
       </footer>
     </main>
   );
