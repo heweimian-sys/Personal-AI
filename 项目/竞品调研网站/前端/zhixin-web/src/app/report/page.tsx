@@ -13,15 +13,15 @@ import {
   Code,
 } from 'lucide-react';
 import { research } from '@/lib/api';
-import type { ResearchResult, EventItem, Insight, QueryProfile } from '@/lib/types';
+import type { ResearchResult, EventItem, Insight, QueryProfile, Relation } from '@/lib/types';
 
-/** 关系类型 → 中文标签 + 符号 */
-const RELATION_META: Record<string, { label: string; symbol: string }> = {
-  causal: { label: '因果', symbol: '→' },
-  competitive: { label: '竞争', symbol: '↔' },
-  contains: { label: '包含', symbol: '⊂' },
-  dependency: { label: '依赖', symbol: '⇢' },
-  chain: { label: '链式', symbol: '→→' },
+/** 关系类型 → 中文标签 + 符号 + 颜色 */
+const RELATION_META: Record<string, { label: string; symbol: string; color: string }> = {
+  causal:      { label: '因果', symbol: '→',   color: '#B89968' },
+  competitive: { label: '竞争', symbol: '↔',   color: '#C17A4B' },
+  contains:    { label: '包含', symbol: '⊂',   color: '#7B9EA8' },
+  dependency:  { label: '依赖', symbol: '⇢',   color: '#7A8B6F' },
+  chain:       { label: '链式', symbol: '→→', color: '#D4A847' },
 };
 
 /** AI 思考过程步骤 */
@@ -31,6 +31,93 @@ const LOADING_STEPS = [
   { label: '正在寻找隐藏关联', desc: '梳理事件间的因果脉络' },
   { label: '正在形成新的视角', desc: '组织章节、生成洞察和建议' },
 ];
+
+/* ============================================
+   知识图谱组件 — SVG 节点+连线
+   ============================================ */
+function KnowledgeGraph({ events, relations }: { events: EventItem[]; relations: Relation[] }) {
+  if (events.length === 0) return null;
+
+  // 简单的圆形布局
+  const centerX = 300;
+  const centerY = 140;
+  const radius = 90;
+
+  const nodes = events.map((evt, i) => {
+    const angle = (i / events.length) * Math.PI * 2 - Math.PI / 2;
+    const r = events.length === 1 ? 0 : radius;
+    return {
+      id: i,
+      x: centerX + Math.cos(angle) * r,
+      y: centerY + Math.sin(angle) * r,
+      label: evt.title.length > 8 ? evt.title.slice(0, 7) + '…' : evt.title,
+      fullLabel: evt.title,
+      confidence: evt.confidence,
+    };
+  });
+
+  return (
+    <div className="graph-container">
+      <svg viewBox="0 0 600 280" preserveAspectRatio="xMidYMid meet">
+        {/* 连接线 */}
+        {relations.map((rel, i) => {
+          const from = nodes[rel.from_event_index];
+          const to = nodes[rel.to_event_index];
+          if (!from || !to) return null;
+          const meta = RELATION_META[rel.type] || { color: '#8B8378' };
+          const isDashed = rel.confidence < 0.6;
+          return (
+            <line
+              key={`line-${i}`}
+              x1={from.x} y1={from.y}
+              x2={to.x} y2={to.y}
+              stroke={meta.color}
+              strokeWidth={1.5}
+              opacity={0.4}
+              strokeDasharray={isDashed ? '4,3' : undefined}
+            >
+              <title>{`${from.fullLabel} ${meta.symbol} ${to.fullLabel}`}</title>
+            </line>
+          );
+        })}
+
+        {/* 节点 */}
+        {nodes.map((node) => (
+          <g key={`node-${node.id}`}>
+            {/* 外环（hover 区域） */}
+            <circle
+              cx={node.x} cy={node.y}
+              r={Math.max(8, 10 + node.confidence * 8)}
+              fill="none"
+              stroke="rgba(23,23,23,0.06)"
+              strokeWidth={8}
+            />
+            {/* 实心节点 */}
+            <circle
+              cx={node.x} cy={node.y}
+              r={Math.max(5, 6 + node.confidence * 6)}
+              fill={node.id === 0 ? '#171717' : '#B89968'}
+              opacity={0.85}
+            >
+              <title>{node.fullLabel}</title>
+            </circle>
+            {/* 标签 */}
+            <text
+              x={node.x}
+              y={node.y + Math.max(5, 6 + node.confidence * 6) + 14}
+              textAnchor="middle"
+              fontSize="10"
+              fill="rgba(23,23,23,0.5)"
+              fontFamily="sans-serif"
+            >
+              {node.label}
+            </text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
 
 /** 将探索记录转为 Markdown */
 function reportToMarkdown(result: ResearchResult): string {
@@ -300,6 +387,35 @@ function ReportContent() {
             <div className="summary-text">{result.summary}</div>
           </section>
 
+          {/* 知识图谱 */}
+          {result.events.length > 1 && (
+            <section className="graph-section">
+              <div className="graph-header">
+                <p className="summary-label" style={{ marginBottom: 0 }}>知识网络</p>
+                <span style={{ fontSize: '11px', color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)' }}>
+                  {result.events.length} 节点 · {result.relations.length} 连接
+                </span>
+              </div>
+              <KnowledgeGraph events={result.events} relations={result.relations} />
+              <div className="graph-legend">
+                {Object.entries(RELATION_META).map(([key, meta]) => {
+                  const count = result.relations.filter(r => r.type === key).length;
+                  if (count === 0) return null;
+                  return (
+                    <div key={key} className="graph-legend-item">
+                      <span className="graph-legend-line" style={{ background: meta.color }} />
+                      {meta.symbol} {meta.label}（{count}）
+                    </div>
+                  );
+                })}
+                <div className="graph-legend-item">
+                  <span className="graph-legend-line" style={{ background: '#8B8378', opacity: 0.5, borderTop: '2px dashed #8B8378' }} />
+                  低置信度
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* 章节叙事 */}
           {result.chapters.length > 0 ? (
             result.chapters.map((chapter, ci) => (
@@ -382,38 +498,77 @@ function ReportContent() {
           {result.relations.length > 0 && (
             <section className="report-section" style={{ marginTop: '48px' }}>
               <p className="summary-label">关联世界</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {result.relations.map((rel, ri) => {
-                  const meta = RELATION_META[rel.type] || { label: rel.type, symbol: '?' };
-                  const fromEvt = result.events[rel.from_event_index];
-                  const toEvt = result.events[rel.to_event_index];
-                  return (
-                    <span key={ri} className="relation-tag" title={rel.description}>
+              {result.relations.map((rel, i) => {
+                const from = result.events[rel.from_event_index];
+                const to = result.events[rel.to_event_index];
+                const meta = RELATION_META[rel.type] || { label: rel.type, symbol: '?' };
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', borderBottom: '1px solid var(--line-soft)' }}>
+                    <span className="relation-tag" style={{ whiteSpace: 'nowrap' }}>
                       {meta.symbol} {meta.label}
-                      {fromEvt && toEvt && `：${fromEvt.title.slice(0, 16)}... → ${toEvt.title.slice(0, 16)}...`}
                     </span>
-                  );
-                })}
-              </div>
+                    <span style={{ fontSize: '14px', color: 'var(--ink-soft)' }}>
+                      {from?.title || '?'} <span style={{ color: 'var(--gold)', margin: '0 4px' }}>→</span> {to?.title || '?'}
+                    </span>
+                    <span style={{ fontSize: '13px', color: 'var(--taupe)', fontStyle: 'italic', marginLeft: 'auto' }}>
+                      {rel.description}
+                    </span>
+                  </div>
+                );
+              })}
             </section>
           )}
 
-          {/* 行动启发 */}
+          {/* 洞察 — 行动启发 */}
           {result.insight && result.insight.title && (
-            <InsightCard insight={result.insight} />
+            <section className="insight-section">
+              <p className="insight-label">行动启发</p>
+              <h3 className="insight-title">{result.insight.title}</h3>
+              {result.insight.body && (
+                <p className="insight-body">{result.insight.body}</p>
+              )}
+              {result.insight.judgments.length > 0 && (
+                <div className="insight-judgments">
+                  {result.insight.judgments.map((j, i) => (
+                    <div key={i} className="insight-judgment">
+                      <span className="insight-judgment-bullet">◆</span>
+                      <span>{j}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {Object.keys(result.insight.suggestions).length > 0 && (
+                <div className="insight-suggestions">
+                  {Object.entries(result.insight.suggestions).map(([role, items], i) => (
+                    <div key={i} className="insight-suggestion-group">
+                      <p className="insight-suggestion-role">{role}</p>
+                      {items.map((s, j) => (
+                        <div key={j} className="insight-suggestion-item">
+                          <span className="insight-suggestion-arrow">→</span>
+                          <span>{s}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
           )}
 
           {/* 操作区 */}
           <div className="action-section">
             <button className="action-btn action-btn-primary" onClick={handleCopy}>
-              {copied ? <Check size={16} /> : <Copy size={16} />}
-              {copied ? '已复制' : '复制全文'}
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied ? '已复制' : '复制 Markdown'}
             </button>
             <button className="action-btn action-btn-outline" onClick={handleExportMarkdown}>
-              <Download size={16} /> 导出
+              <Download size={14} /> 导出 .md
+            </button>
+            <button className="action-btn action-btn-outline" onClick={handleExportJSON}>
+              <Code size={14} /> 导出 .json
             </button>
             <button className="action-btn action-btn-outline" onClick={() => router.push('/')}>
-              <RotateCcw size={16} /> 重新探索
+              <RotateCcw size={14} /> 重新探索
             </button>
           </div>
         </div>
@@ -422,121 +577,74 @@ function ReportContent() {
       {/* 右侧目录 */}
       <aside className="right-toc">
         <div className="toc-section">
-          <p className="toc-heading">目录</p>
+          <p className="toc-heading">章节</p>
           <div className="toc-links">
-            <a href="#" className="toc-link" onClick={(e) => { e.preventDefault(); document.querySelector('.summary-label')?.scrollIntoView({ behavior: 'smooth' }); }}>
-              引导摘要
-            </a>
-            {result.chapters.map((ch, ci) => (
-              <a key={ci} href="#" className="toc-link" onClick={(e) => {
-                e.preventDefault();
-                const els = document.querySelectorAll('.chapter-title');
-                if (els[ci]) els[ci].scrollIntoView({ behavior: 'smooth' });
-              }}>
-                {ch.title.length > 18 ? ch.title.slice(0, 18) + '...' : ch.title}
-              </a>
-            ))}
-            {result.insight?.title && (
-              <a href="#" className="toc-link" onClick={(e) => {
-                e.preventDefault();
-                document.querySelector('.insight-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}>
-                行动启发
-              </a>
+            {result.chapters.length > 0 ? (
+              result.chapters.map((ch, i) => (
+                <button key={i} className="toc-link">{i + 1}. {ch.title}</button>
+              ))
+            ) : (
+              <>
+                <button className="toc-link">引导摘要</button>
+                <button className="toc-link">知识网络</button>
+                <button className="toc-link">关键线索</button>
+                {result.insight?.title && <button className="toc-link">行动启发</button>}
+              </>
             )}
           </div>
         </div>
-
-        <div className="toc-actions">
-          <button className="toc-action-btn toc-action-dev" onClick={handleExportJSON}>
-            <Code size={14} /> 导出 JSON
-          </button>
+        <div className="toc-section">
+          <p className="toc-heading">操作</p>
+          <div className="toc-actions">
+            <button className="toc-action-btn" onClick={handleCopy}>
+              {copied ? <Check size={12} /> : <Copy size={12} />} 复制
+            </button>
+            <button className="toc-action-btn" onClick={handleExportMarkdown}>
+              <Download size={12} /> Markdown
+            </button>
+          </div>
         </div>
       </aside>
     </div>
   );
 }
 
-/** 知识节点卡片 */
-function EventCard({ event, num }: { event: EventItem; num?: number }) {
+/** 事件卡片组件 */
+function EventCard({ event, num }: { event: EventItem; num: number }) {
   return (
     <div className="event-card">
-      {num !== undefined && (
-        <span className="event-num">{String(num).padStart(2, '0')}</span>
-      )}
+      <div className="event-num">{String(num).padStart(2, '0')}</div>
       <div className="event-body">
-        {event.date && <p className="event-date">{event.date}</p>}
+        {event.date && <span className="event-date">{event.date}</span>}
         <h3 className="event-title">{event.title}</h3>
         <p className="event-summary">{event.summary}</p>
         {event.key_quote && (
-          <blockquote className="event-quote">{event.key_quote}</blockquote>
+          <div className="event-quote">"{event.key_quote}"</div>
         )}
-        <div className="confidence-bar" title="置信度表示 AI 对该知识节点可靠性的估计">
-          <span className="confidence-label">可信度</span>
-          <div className="confidence-track">
-            <div className="confidence-fill" style={{ width: `${Math.round(event.confidence * 100)}%` }} />
+        {event.confidence > 0 && (
+          <div className="confidence-bar">
+            <span className="confidence-label">置信度</span>
+            <div className="confidence-track">
+              <div className="confidence-fill" style={{ width: `${event.confidence * 100}%` }} />
+            </div>
+            <span className="confidence-label">{Math.round(event.confidence * 100)}%</span>
           </div>
-          <span className="confidence-label">{Math.round(event.confidence * 100)}%</span>
-        </div>
+        )}
       </div>
     </div>
   );
 }
 
-/** 行动启发卡片 */
-function InsightCard({ insight }: { insight: Insight }) {
-  return (
-    <section className="insight-section">
-      <p className="insight-label">行动启发</p>
-      <h2 className="insight-title" id="insight">{insight.title}</h2>
-      {insight.body && <p className="insight-body">{insight.body}</p>}
-
-      {insight.judgments.length > 0 && (
-        <div className="insight-judgments" style={{ marginBottom: '24px' }}>
-          <p className="insight-label" style={{ color: 'var(--moss)', marginBottom: '12px' }}>
-            关键判断
-          </p>
-          {insight.judgments.map((judgment, ji) => (
-            <div key={ji} className="insight-judgment">
-              <span className="insight-judgment-bullet">●</span>
-              <span>{judgment}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {Object.keys(insight.suggestions).length > 0 && (
-        <div>
-          <p className="insight-label" style={{ color: 'var(--moss)', marginBottom: '12px' }}>
-            行动建议
-          </p>
-          <div className="insight-suggestions">
-            {Object.entries(insight.suggestions).map(([role, suggestions]) => (
-              <div key={role} className="insight-suggestion-group">
-                <p className="insight-suggestion-role">{role}</p>
-                {suggestions.map((suggestion, si) => (
-                  <div key={si} className="insight-suggestion-item">
-                    <span className="insight-suggestion-arrow">→</span>
-                    <span>{suggestion}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
-
 export default function ReportPage() {
   return (
-    <Suspense fallback={
-      <div className="loading-container">
-        <div className="loading-spinner" />
-        <p className="loading-text">加载中...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+          <div className="loading-spinner" />
+          <span className="loading-text">加载中…</span>
+        </div>
+      }
+    >
       <ReportContent />
     </Suspense>
   );
