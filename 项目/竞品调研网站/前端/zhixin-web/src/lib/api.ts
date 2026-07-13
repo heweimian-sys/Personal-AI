@@ -16,10 +16,10 @@ import { MOCK_REPORT } from './mock';
  */
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-/** axios 实例（5 分钟超时，适应 AI 多步分析耗时） */
+/** axios 实例（3 分钟超时，适应 AI 多步分析耗时） */
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 300000,
+  timeout: 180000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -38,13 +38,14 @@ export async function research(query: string): Promise<ResearchResult> {
     });
     return response.data as ResearchResult;
   } catch (err) {
-    // 后端不可用时，降级到 Mock 数据
-    if (err instanceof Error && (err.message.includes('ECONNREFUSED') || err.message.includes('Network Error'))) {
-      console.warn('[知行] 后端服务未启动，使用 Mock 数据展示。请启动后端：cd 后端 && uvicorn app.main:app --reload');
-      // 返回 Mock 数据，但替换查询词
-      return { ...MOCK_REPORT, query } as ResearchResult;
-    }
-    throw err;
+    // 后端不可用或请求失败时，降级到 Mock 数据
+    console.warn('[知行] 后端服务不可用，使用 Mock 数据展示。', err);
+    return {
+      ...MOCK_REPORT,
+      query,
+      source_status: 'mock',
+      warning: '当前为演示数据（后端服务未启动）。启动后端后可获得真实搜索结果。',
+    } as ResearchResult;
   }
 }
 
@@ -54,7 +55,7 @@ export async function research(query: string): Promise<ResearchResult> {
  */
 export async function checkHealth(): Promise<boolean> {
   try {
-    const response = await api.get('/health');
+    const response = await api.get('/api/health');
     return response.data?.status === 'ok';
   } catch {
     return false;
