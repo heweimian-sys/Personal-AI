@@ -41,7 +41,7 @@ Personal-AI/
 
 - **线上后台**：`https://wow2333.us.ci/admin`
 - **部署方式**：GitHub Actions + Cloudflare Wrangler
-- **状态**：已建立自动部署骨架，等待在 GitHub Secrets 添加 `CLOUDFLARE_API_TOKEN`
+- **状态**：GitHub Actions 自动部署已接入，KV 绑定为 `wow2333-edgetunnel`
 
 ### 知信 · 认知加速器
 

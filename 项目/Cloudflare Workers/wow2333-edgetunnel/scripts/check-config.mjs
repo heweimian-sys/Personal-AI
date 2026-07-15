@@ -12,4 +12,9 @@ if (!config.includes('keep_vars = true')) {
   process.exit(1);
 }
 
+if (!config.includes('binding = "KV"')) {
+  console.error('wrangler.toml must bind the Workers KV namespace as "KV".');
+  process.exit(1);
+}
+
 console.log("Cloudflare Worker config looks ready.");
