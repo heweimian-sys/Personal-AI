@@ -35,6 +35,14 @@ Personal-AI/
 
 ## 当前项目
 
+### wow2333 Edgetunnel Worker
+
+基于 `cmliu/edgetunnel` 的 Cloudflare Worker 节点后台项目。代码放在 `项目/Cloudflare Workers/wow2333-edgetunnel/`，通过 GitHub Actions 自动同步上游 `_worker.js` 并部署到 `bold-poetry-bb94`。
+
+- **线上后台**：`https://wow2333.us.ci/admin`
+- **部署方式**：GitHub Actions + Cloudflare Wrangler
+- **状态**：已建立自动部署骨架，等待补充 Cloudflare KV Namespace ID 和 GitHub Secrets
+
 ### 知信 · 认知加速器
 
 一个让信息像好文章一样自然流入大脑的阅读式信息流平台。输入关键词，系统生成带因果脉络的结构化深度分析，以章节式阅读体验展示，最终输出趋势判断和行动建议。

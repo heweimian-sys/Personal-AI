@@ -1,0 +1,10 @@
+name = "bold-poetry-bb94"
+main = "_worker.js"
+compatibility_date = "2025-11-04"
+keep_vars = true
+
+# This Worker stores admin-panel settings in Cloudflare KV.
+# Replace the placeholder before enabling automatic deployment.
+[[kv_namespaces]]
+binding = "KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

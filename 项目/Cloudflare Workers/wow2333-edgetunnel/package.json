@@ -1,0 +1,13 @@
+{
+  "name": "wow2333-edgetunnel-worker",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Cloudflare Worker deployment wrapper for wow2333.us.ci based on cmliu/edgetunnel.",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "check:config": "node scripts/check-config.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.24.3"
+  }
+}
