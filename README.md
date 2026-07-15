@@ -41,7 +41,7 @@ Personal-AI/
 
 - **线上后台**：`https://wow2333.us.ci/admin`
 - **部署方式**：GitHub Actions + Cloudflare Wrangler
-- **状态**：已建立自动部署骨架，等待补充 Cloudflare KV Namespace ID 和 GitHub Secrets
+- **状态**：已建立自动部署骨架，等待补充 Cloudflare KV Namespace ID 和 `CLOUDFLARE_API_TOKEN`
 
 ### 知信 · 认知加速器
 

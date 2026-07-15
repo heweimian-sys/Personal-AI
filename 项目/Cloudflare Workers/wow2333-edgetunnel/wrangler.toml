@@ -1,5 +1,6 @@
 name = "bold-poetry-bb94"
 main = "_worker.js"
+account_id = "bce51bb1789dc3f9996d751ddac0591e"
 compatibility_date = "2025-11-04"
 keep_vars = true
 

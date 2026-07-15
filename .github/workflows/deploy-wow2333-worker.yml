@@ -63,6 +63,6 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: bce51bb1789dc3f9996d751ddac0591e
           workingDirectory: "项目/Cloudflare Workers/wow2333-edgetunnel"
           command: deploy
