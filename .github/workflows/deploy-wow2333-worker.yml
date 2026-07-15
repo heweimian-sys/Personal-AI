@@ -50,13 +50,8 @@ jobs:
         if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         working-directory: "项目/Cloudflare Workers/wow2333-edgetunnel"
         run: |
-          if grep -q "REPLACE_WITH_KV_NAMESPACE_ID" wrangler.toml; then
-            echo "::notice::Fill the Cloudflare KV namespace id in wrangler.toml before deployment can run."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          else
-            node scripts/check-config.mjs
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          fi
+          node scripts/check-config.mjs
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Deploy to Cloudflare
         if: (github.event_name != 'schedule' || steps.sync.outputs.changed == 'true') && steps.config.outputs.ready == 'true'
