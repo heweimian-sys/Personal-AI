@@ -57,6 +57,15 @@ Personal-AI/
 - **状态**：v5 方案确定，代码开发中
 - **详情**：[项目说明.md](./项目/竞品调研网站/项目说明.md)
 
+
+### 新人网站部署 SOP
+
+面向新人学习网站上线的 Cloudflare Pages + D1 部署说明，包含静态网站版和飞书文档版。
+
+- **线上网站**：https://website-deploy-sop.pages.dev/
+- **飞书文档**：https://shengcaiyoushu01.feishu.cn/docx/CIVAdh1ViopZOBxwmiAc2M8pnhf
+- **仓库目录**：`项目/新人网站部署SOP/`
+
 ## 技术栈
 
 | 领域 | 技术 |
@@ -74,3 +83,4 @@ Personal-AI/
 ---
 
 *本仓库为个人学习用途，持续更新中。*
+
