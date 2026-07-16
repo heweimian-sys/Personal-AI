@@ -1,0 +1,23 @@
+name: Deploy Voyage Coach Training PPT
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "项目/8月航海教练培训PPT/**"
+      - ".github/workflows/deploy-voyage-coach-training.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: pages deploy "项目/8月航海教练培训PPT" --project-name august-voyage-coach-training --branch main

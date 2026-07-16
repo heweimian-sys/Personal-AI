@@ -66,6 +66,14 @@ Personal-AI/
 - **飞书文档**：https://shengcaiyoushu01.feishu.cn/docx/CIVAdh1ViopZOBxwmiAc2M8pnhf
 - **仓库目录**：`项目/新人网站部署SOP/`
 
+### 8月航海教练培训 PPT
+
+8 月大航海教练培训的全屏底图版 HTML 幻灯片，使用航海、灯塔、AI 数据海洋视觉作为主背景。
+
+- **线上网站**：https://august-voyage-coach-training.pages.dev/
+- **部署方式**：Cloudflare Pages + GitHub Actions
+- **仓库目录**：`项目/8月航海教练培训PPT/`
+
 ## 技术栈
 
 | 领域 | 技术 |
