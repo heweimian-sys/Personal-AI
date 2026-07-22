@@ -1232,6 +1232,36 @@ GitHub 仓库：【填你的仓库地址】
 (function() {
   let editMode = false;
   let mosaicMode = false;
+
+  // === 嵌入的批注和马赛克数据（从 localStorage 导出，部署后所有人可见）===
+  // 优先级：localStorage > EMBEDDED_DATA（编辑后保存到本地，覆盖嵌入数据）
+  const EMBEDDED_DATA = {
+    "annot-shot-1":[{"num":1,"x":91.6589,"y":1.44171,"w":3.90187,"h":6.19786},{"num":2,"x":74.5911,"y":23.7882,"w":20.8411,"h":4.27558}],
+    "annot-shot-2":[{"num":1,"x":52.278,"y":62.553,"w":23.0607,"h":4.51586}],
+    "annot-shot-3":[{"num":1,"x":9.05374,"y":60.8318,"w":36.3785,"h":5.47225}],
+    "annot-shot-4":[{"num":1,"x":15.3622,"y":36.454,"w":57.7571,"h":7.02009}],
+    "annot-shot-5":[{"num":1,"x":6.68219,"y":45.4896,"w":88.2477,"h":14.5724}],
+    "annot-shot-6":[{"num":1,"x":7.38317,"y":85.6923,"w":38.5982,"h":10.0104}],
+    "annot-shot-7":[{"num":1,"x":3.64486,"y":53.6851,"w":42.3364,"h":5.72494},{"num":2,"x":7.96729,"y":72.8968,"w":37.7804,"h":8}],
+    "annot-shot-8":[{"num":1,"x":10.771,"y":4.18832,"w":40.3505,"h":3.44988},{"num":2,"x":10.3037,"y":10.9377,"w":15,"h":8}],
+    "annot-shot-9":[{"num":1,"x":16.4953,"y":37.6448,"w":26.7991,"h":10.3829}],
+    "annot-shot-11":[{"num":1,"x":35.1869,"y":13.4923,"w":15,"h":8}],
+    "annot-shot-12":[{"num":1,"x":34.6028,"y":2.01438,"w":15,"h":8},{"num":2,"x":76.1916,"y":15.3361,"w":20.1402,"h":27.0852}],
+    "annot-shot-13":[{"num":1,"x":68.3645,"y":66.0052,"w":24.5794,"h":12.2973}],
+    "annot-shot-14":[{"num":1,"x":1.89252,"y":33.6196,"w":16.6355,"h":10.1251}],
+    "annot-shot-15":[{"num":1,"x":8.66824,"y":68.6132,"w":75.6308,"h":14.6115}],
+    "annot-shot-16":[{"num":1,"x":40.7944,"y":2.16791,"w":15,"h":8}],
+    "annot-shot-17":[{"num":1,"x":0,"y":0.584402,"w":49.1121,"h":11.778},{"num":2,"x":6.33177,"y":51.9886,"w":79.486,"h":18.3895}],
+    "annot-shot-18":[{"num":1,"x":2.94392,"y":12.9322,"w":15,"h":8},{"num":2,"x":78.1776,"y":12.885,"w":15,"h":8}],
+    "mosaic-shot-1":[{"x":2.16121,"y":63.0749,"w":20.1168,"h":5.75258},{"x":0.292027,"y":79.7747,"w":26.8925,"h":5},{"x":1.5771,"y":90.8834,"w":29.229,"h":7.31444}],
+    "mosaic-shot-2":[{"x":2.39486,"y":65.7969,"w":23.6215,"h":5.03173},{"x":2.04439,"y":79.0126,"w":21.7524,"h":5},{"x":1.22662,"y":93.4064,"w":29.229,"h":5}],
+    "mosaic-shot-3":[{"x":14.5443,"y":3.95749,"w":28.7616,"h":5}],
+    "mosaic-shot-6":[{"x":11.5888,"y":2.5468,"w":28.0607,"h":5.55399}],
+    "mosaic-shot-7":[{"x":12.9907,"y":3.00182,"w":26.0748,"h":5}],
+    "mosaic-shot-9":[],
+    "mosaic-shot-11":[{"x":40.4439,"y":4.24679,"w":27.1262,"h":5}],
+    "mosaic-shot-18":[{"x":48.1542,"y":3.10945,"w":25.4907,"h":5}]
+  };
   
   // 创建工具栏
   const toolbar = document.createElement('div');
@@ -1463,7 +1493,12 @@ GitHub 仓库：【填你的仓库地址】
   }
   
   function loadAnnotations(frame) {
-    const saved = localStorage.getItem('annot-' + frame.dataset.shotId);
+    const key = 'annot-' + frame.dataset.shotId;
+    // 优先使用 localStorage（用户编辑后的数据），否则用嵌入数据
+    let saved = localStorage.getItem(key);
+    if (!saved && EMBEDDED_DATA[key]) {
+      saved = JSON.stringify(EMBEDDED_DATA[key]);
+    }
     if (!saved) return;
     const data = JSON.parse(saved);
     data.forEach(d => {
@@ -1636,7 +1671,12 @@ GitHub 仓库：【填你的仓库地址】
   }
   
   function loadMosaics(frame) {
-    const saved = localStorage.getItem('mosaic-' + frame.dataset.shotId);
+    const key = 'mosaic-' + frame.dataset.shotId;
+    // 优先使用 localStorage（用户编辑后的数据），否则用嵌入数据
+    let saved = localStorage.getItem(key);
+    if (!saved && EMBEDDED_DATA[key]) {
+      saved = JSON.stringify(EMBEDDED_DATA[key]);
+    }
     if (!saved) return;
     const data = JSON.parse(saved);
     data.forEach(d => {
