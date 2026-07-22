@@ -1,560 +1,1650 @@
-﻿<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI 开发工作流 SOP</title>
-  <meta name="description" content="AI 开发工作流 SOP：从建库到维护，自用与新手参考版，所有指令可直接复制。">
-  <style>
-    :root{
-      --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif;
-      --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
-      --text-primary:#202124;
-      --text-secondary:#5f6368;
-      --text-muted:#8a8f98;
-      --text-accent:#1a73e8;
-      --text-success:#137333;
-      --text-warning:#a05a00;
-      --text-danger:#b3261e;
-      --surface-0:#f7f7f5;
-      --surface-1:#ffffff;
-      --surface-2:#f1f4f8;
-      --border:#e5e7eb;
-      --border-strong:#cfd4dc;
-      --border-stronger:#9aa0a6;
-      --border-accent:#1a73e8;
-      --bg-accent:#e8f0fe;
-      --bg-success:#e6f4ea;
-      --bg-warning:#fef7e0;
-      --bg-danger:#fce8e6;
-      --radius:10px;
-    }
-    html{background:var(--surface-0);min-height:100%;}
-    body{min-height:100vh;background:var(--surface-0);}
-    main{width:min(980px,calc(100% - 32px));margin:0 auto;padding:28px 0 56px;}
-    @media(max-width:680px){main{width:min(100% - 22px,980px);padding-top:18px}}
-  </style></head>
-<body>
-<main>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新人 AI 工作 SOP：网站部署上线（新版 Cloudflare）</title>
+<meta name="description" content="面向新人的 AI 协同网站部署 SOP，覆盖新版 Cloudflare Pages、D1、API Token、界面语言设置、维护和排错。">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans);color:var(--text-primary)}
-.wrap{padding:1.5rem 0}
-.ver-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.ver{font-size:11px;color:var(--text-muted)}
-.repo-links{display:flex;gap:8px}
-.repo-link{font-size:11px;color:var(--text-accent);text-decoration:none;border:0.5px solid var(--border-accent);border-radius:var(--radius);padding:2px 8px}
-h2{font-size:18px;font-weight:500;margin-bottom:4px}
-.sub{font-size:13px;color:var(--text-secondary);margin-bottom:1.25rem}
-.banner{background:var(--surface-1);border:0.5px solid var(--border);border-left:3px solid var(--border-accent);border-radius:0 var(--radius) var(--radius) 0;padding:.875rem 1.25rem;margin-bottom:1.5rem}
-.banner p{font-size:14px;color:var(--text-primary);line-height:1.9}
-.top-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.5rem}
-.nb{padding:6px 13px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
-.nb.active{background:var(--surface-1);color:var(--text-primary);border-color:var(--border-stronger);font-weight:500}
-.pg{display:none}.pg.active{display:block}
-.sec{margin-bottom:1.5rem}
-.sl{font-size:11px;font-weight:500;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
-.card{background:var(--surface-1);border:0.5px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:8px}
-.ct{font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:6px}
-.cb{font-size:13px;color:var(--text-secondary);line-height:1.7}
-.cmd{background:var(--surface-0);border:0.5px solid var(--border);border-radius:var(--radius);padding:.75rem 1rem;margin-top:8px;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);line-height:1.9;white-space:pre-wrap;position:relative;padding-right:60px}
-.cpb{position:absolute;top:8px;right:8px;background:transparent;border:0.5px solid var(--border-strong);border-radius:var(--radius);padding:3px 8px;font-size:11px;color:var(--text-secondary);cursor:pointer}
-.cpb:hover{background:var(--surface-2)}
-.cl{list-style:none;margin-top:6px}
-.cl li{font-size:13px;color:var(--text-secondary);padding:5px 0;border-bottom:0.5px solid var(--border);display:flex;gap:8px;align-items:flex-start;line-height:1.6}
-.cl li:last-child{border-bottom:none}
-.cl li::before{content:"○";color:var(--text-muted);flex-shrink:0}
-.sr{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)}
-.sr:last-child{border-bottom:none}
-.sn{width:22px;height:22px;border-radius:50%;background:var(--surface-0);border:0.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;color:var(--text-secondary);margin-top:1px}
-.sc{font-size:13px;color:var(--text-secondary);line-height:1.65;flex:1}
-.sc strong{color:var(--text-primary)}
-.tag{display:inline-block;padding:2px 8px;border-radius:var(--radius);font-size:11px;font-weight:500;margin:2px 3px 2px 0}
-.tb{background:var(--bg-accent);color:var(--text-accent)}
-.tg{background:var(--bg-success);color:var(--text-success)}
-.tr{background:var(--bg-danger);color:var(--text-danger)}
-.hl{background:var(--bg-warning);color:var(--text-warning);padding:1px 5px;border-radius:4px;font-size:12px}
-.tree{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);line-height:1.9;background:var(--surface-0);border:0.5px solid var(--border);border-radius:var(--radius);padding:.75rem 1rem;margin-top:8px}
-.tree .hl-l{color:var(--text-accent)}
-.nb2{display:inline-block;padding:1px 6px;border-radius:var(--radius);font-size:10px;font-weight:500;background:var(--bg-success);color:var(--text-success);margin-left:6px;vertical-align:middle}
-.why{background:var(--surface-0);border:0.5px solid var(--border);border-radius:var(--radius);padding:.625rem 1rem;margin-top:8px;font-size:12px;color:var(--text-muted);line-height:1.7}
-.why::before{content:"💡 为什么这样做：";font-weight:500;color:var(--text-secondary);display:block;margin-bottom:3px}
-.tbl{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
-.tbl th{text-align:left;padding:6px 10px;background:var(--surface-0);color:var(--text-secondary);font-weight:500;border-bottom:0.5px solid var(--border)}
-.tbl td{padding:6px 10px;border-bottom:0.5px solid var(--border);color:var(--text-secondary)}
-.tbl tr:last-child td{border-bottom:none}
-</style>
 
-<div class="wrap">
-<div class="ver-row">
-  <span class="ver">AI 开发工作流 v2.1</span>
-  <div class="repo-links">
-    <a class="repo-link" href="https://github.com/heweimian-sys/Work-AI" target="_blank">工作仓库</a>
-    <a class="repo-link" href="https://github.com/heweimian-sys/Personal-AI" target="_blank">个人仓库</a>
+/* ========================================
+   Refero DESIGN.md tokens -> theme layer
+   ======================================== */
+@layer theme {
+  :root {
+    color-scheme: light;
+    --color-primary: #1c5d5f;
+    --color-primary-hover: #174d4f;
+    --color-primary-soft: #d7ece7;
+    --color-ink: #153032;
+    --color-text: #284144;
+    --color-muted: #687a7b;
+    --color-border: #d8e2dd;
+    --color-border-strong: #bfd1ca;
+    --color-page: #f4f0e8;
+    --color-surface: #fffdf8;
+    --color-surface-mint: #e8f4ee;
+    --color-surface-blush: #f7e6df;
+    --color-surface-blue: #e6eef2;
+    --color-error: #b74a3b;
+    --color-warning: #8a6835;
+    --color-success: #1c5d5f;
+    --color-annot: #e85d3a;
+    --font-serif: "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, "Times New Roman", serif;
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Courier New", monospace;
+    --text-display-size: 64px;
+    --text-display-lh: 68px;
+    --text-headline-lg-size: 34px;
+    --text-headline-lg-lh: 40px;
+    --text-headline-md-size: 21px;
+    --text-headline-md-lh: 30px;
+    --text-body-lg-size: 18px;
+    --text-body-lg-lh: 29px;
+    --text-body-md-size: 16px;
+    --text-body-md-lh: 27px;
+    --text-body-sm-size: 14px;
+    --text-body-sm-lh: 22px;
+    --text-label-sm-size: 12px;
+    --text-label-sm-lh: 16px;
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-3: 12px;
+    --spacing-4: 16px;
+    --spacing-6: 24px;
+    --spacing-10: 40px;
+    --spacing-20: 80px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-pill: 9999px;
+    --shadow-card: 0 1px 0 rgba(28, 93, 95, 0.05);
+    --sidebar-width: 240px;
+    --content-max: 920px;
+    --page-max: 1280px;
+  }
+}
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    min-height: 100vh;
+    background:
+      linear-gradient(180deg, rgba(232, 244, 238, 0.86) 0, rgba(244, 240, 232, 0) 360px),
+      var(--color-page);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-body-md-size);
+    line-height: var(--text-body-md-lh);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: inherit; }
+  strong { color: var(--color-ink); font-weight: 650; }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    color: var(--color-primary);
+    background: rgba(28, 93, 95, 0.09);
+    border: 1px solid rgba(28, 93, 95, 0.12);
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+}
+
+@layer components {
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255, 253, 248, 0.88);
+    border-bottom: 1px solid var(--color-border);
+    backdrop-filter: blur(18px);
+    padding: var(--spacing-3) var(--spacing-10);
+  }
+  .nav-inner {
+    max-width: var(--page-max); margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    min-height: 48px; gap: var(--spacing-4);
+  }
+  .nav-brand { color: var(--color-ink); font-size: 15px; font-weight: 760; text-decoration: none; }
+  .nav-links { display: flex; align-items: center; gap: var(--spacing-2); flex-wrap: wrap; }
+  .nav-link, .nav-cta {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 40px; border-radius: var(--radius-pill);
+    padding: 0 var(--spacing-4); font-size: var(--text-body-sm-size);
+    font-weight: 650; line-height: 1; text-decoration: none;
+    transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+  }
+  .nav-link { color: var(--color-muted); border: 1px solid transparent; }
+  .nav-link:hover { color: var(--color-primary); background: var(--color-surface-mint); }
+  .nav-cta { min-width: 112px; color: #fffdf8; background: var(--color-primary); border: 1px solid var(--color-primary); }
+  .nav-cta:hover { background: var(--color-primary-hover); }
+
+  .page {
+    max-width: var(--page-max); margin: 0 auto;
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, var(--content-max));
+    gap: var(--spacing-10);
+    padding: 0 var(--spacing-10);
+  }
+  .sidebar {
+    position: sticky; top: 73px; align-self: start;
+    height: calc(100vh - 73px); overflow-y: auto;
+    padding: var(--spacing-10) 0;
+  }
+  .sidebar-label {
+    margin: 0 0 var(--spacing-3) var(--spacing-2);
+    color: var(--color-muted); font-size: var(--text-label-sm-size);
+    font-weight: 700; line-height: var(--text-label-sm-lh);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .sidebar-list { list-style: none; counter-reset: toc; display: grid; gap: var(--spacing-1); }
+  .sidebar-list li { counter-increment: toc; }
+  .sidebar-list a {
+    position: relative; display: grid;
+    grid-template-columns: 30px 1fr; align-items: start;
+    gap: var(--spacing-2); min-height: 36px;
+    border-radius: var(--radius-sm); padding: var(--spacing-2);
+    color: var(--color-muted); font-size: var(--text-body-sm-size);
+    line-height: var(--text-body-sm-lh); text-decoration: none;
+  }
+  .sidebar-list a::before {
+    content: counter(toc, decimal-leading-zero);
+    color: var(--color-primary); font-size: var(--text-label-sm-size); font-weight: 760;
+  }
+  .sidebar-list a:hover { color: var(--color-ink); background: rgba(255, 253, 248, 0.72); }
+  .sidebar-list li::before { content: none; }
+
+  .content { min-width: 0; padding: var(--spacing-10) 0 var(--spacing-20); }
+
+  .hero { position: relative; padding: 56px 0 var(--spacing-6); }
+  .hero::before {
+    content: ""; position: absolute;
+    inset: var(--spacing-10) auto auto -28px;
+    width: 96px; height: 96px; border-radius: 50%;
+    background: var(--color-surface-blush); z-index: -1;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; min-height: 32px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-mint); color: var(--color-primary);
+    padding: 0 var(--spacing-4); font-size: var(--text-label-sm-size);
+    font-weight: 760; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .hero h1 {
+    max-width: 760px; margin-top: var(--spacing-4);
+    color: var(--color-ink); font-family: var(--font-serif);
+    font-size: var(--text-display-size); font-weight: 400;
+    line-height: var(--text-display-lh);
+  }
+  .hero p {
+    max-width: 680px; margin-top: var(--spacing-4);
+    color: var(--color-muted); font-size: var(--text-body-lg-size);
+    line-height: var(--text-body-lg-lh);
+  }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: var(--spacing-3); margin-top: var(--spacing-6); }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: var(--spacing-3); margin-top: var(--spacing-6); color: var(--color-muted); font-size: var(--text-body-sm-size); }
+  .hero-meta span {
+    display: inline-flex; min-height: 32px; align-items: center;
+    border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+    background: rgba(255, 253, 248, 0.72); padding: 0 var(--spacing-3);
+  }
+
+  .flow-board {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-3); margin: 0 0 var(--spacing-10);
+  }
+  .flow-card {
+    display: flex; flex-direction: column; min-height: 176px;
+    border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    background: var(--color-surface); box-shadow: var(--shadow-card);
+    padding: var(--spacing-4); text-decoration: none;
+  }
+  .flow-card:nth-child(1) { background: var(--color-surface-mint); }
+  .flow-card:nth-child(2) { background: var(--color-surface-blue); }
+  .flow-card:nth-child(3) { background: var(--color-surface-blush); }
+  .flow-card .eyebrow { color: var(--color-primary); font-size: var(--text-label-sm-size); font-weight: 760; line-height: var(--text-label-sm-lh); letter-spacing: 0.08em; text-transform: uppercase; }
+  .flow-card h2 { margin: var(--spacing-4) 0 var(--spacing-2); color: var(--color-ink); font-family: var(--font-sans); font-size: 22px; font-weight: 760; line-height: 28px; }
+  .flow-card p { color: var(--color-muted); font-size: var(--text-body-sm-size); line-height: var(--text-body-sm-lh); }
+  .flow-card .arrow { margin-top: auto; color: var(--color-primary); font-size: var(--text-body-sm-size); font-weight: 760; }
+
+  section { scroll-margin-top: 92px; padding: var(--spacing-10) 0; border-top: 1px solid var(--color-border); }
+  section h2 { margin-bottom: var(--spacing-4); color: var(--color-ink); font-family: var(--font-serif); font-size: var(--text-headline-lg-size); font-weight: 400; line-height: var(--text-headline-lg-lh); }
+  section h3 { margin-top: var(--spacing-6); margin-bottom: var(--spacing-2); color: var(--color-ink); font-size: var(--text-headline-md-size); font-weight: 680; line-height: var(--text-headline-md-lh); }
+  section h4 { margin-top: var(--spacing-4); margin-bottom: var(--spacing-2); color: var(--color-ink); font-size: var(--text-body-sm-size); font-weight: 760; }
+  section p { margin-bottom: var(--spacing-2); }
+  section ul, section ol { margin: var(--spacing-2) 0 var(--spacing-2) 1.25rem; }
+  section li { margin-bottom: var(--spacing-1); }
+
+  .card, .callout, .prompt-box, .table-wrap {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm); box-shadow: var(--shadow-card);
+  }
+  .card { padding: var(--spacing-4); margin: var(--spacing-3) 0; }
+  .callout { margin: var(--spacing-4) 0; padding: var(--spacing-4); color: var(--color-text); font-size: var(--text-body-sm-size); line-height: var(--text-body-sm-lh); }
+  .callout.info, .callout.success { background: var(--color-surface-mint); border-color: var(--color-border-strong); }
+  .callout.warn { background: #f5ead7; border-color: #dfcfaa; color: var(--color-warning); }
+  .callout.danger { background: var(--color-surface-blush); border-color: #e6c3b8; color: #74392f; }
+
+  .prompt-box { margin: var(--spacing-4) 0; overflow: hidden; }
+  .prompt-box .label { border-bottom: 1px solid var(--color-border); background: var(--color-surface-blue); color: var(--color-primary); padding: var(--spacing-3) var(--spacing-4); font-size: var(--text-label-sm-size); font-weight: 760; line-height: var(--text-label-sm-lh); text-transform: uppercase; letter-spacing: 0.08em; }
+  .prompt-box .content { max-width: none; padding: var(--spacing-4); color: var(--color-ink); font-family: var(--font-mono); font-size: 13px; line-height: 21px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  .table-wrap { margin: var(--spacing-4) 0; overflow-x: auto; }
+  table { width: 100%; min-width: 520px; border-collapse: collapse; background: transparent; font-size: var(--text-body-sm-size); line-height: var(--text-body-sm-lh); }
+  th, td { border-bottom: 1px solid var(--color-border); padding: var(--spacing-3) var(--spacing-4); text-align: left; vertical-align: top; }
+  th { background: var(--color-surface-mint); color: var(--color-primary); font-size: var(--text-label-sm-size); font-weight: 760; letter-spacing: 0.04em; }
+  tr:last-child td { border-bottom: 0; }
+
+  .step { display: grid; grid-template-columns: 48px 1fr; gap: var(--spacing-4); margin: var(--spacing-4) 0; }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-pill); background: var(--color-primary); color: #fffdf8; font-size: var(--text-body-sm-size); font-weight: 760; }
+  .step-body { min-width: 0; padding-top: 5px; }
+
+  .status { display: inline-flex; align-items: center; min-height: 28px; border-radius: var(--radius-pill); padding: 0 var(--spacing-3); font-size: var(--text-label-sm-size); font-weight: 760; line-height: 1; }
+  .status.ok { color: var(--color-primary); background: var(--color-primary-soft); }
+  .status.warn { color: var(--color-warning); background: #f2e2c3; }
+  .status.bad { color: var(--color-error); background: var(--color-surface-blush); }
+
+  /* === 截图标注系统 === */
+  .shot-wrap { margin: var(--spacing-4) 0; }
+  .shot-frame {
+    position: relative; border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm); overflow: hidden;
+    background: var(--color-surface); box-shadow: var(--shadow-card);
+  }
+  .shot-frame img { display: block; width: 100%; }
+
+  /* 交互标注系统 */
+  .annot-toolbar {
+    position: fixed; top: 60px; right: 20px; z-index: 9999;
+    display: flex; gap: 8px; align-items: center;
+    background: var(--color-surface); border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill); padding: 6px 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .annot-toolbar button {
+    border: none; border-radius: var(--radius-pill);
+    padding: 6px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 160ms ease;
+  }
+  .annot-toolbar .btn-edit-off { background: var(--color-surface-mint); color: var(--color-primary); border: 1px solid var(--color-border); }
+  .annot-toolbar .btn-edit-on { background: var(--color-annot, #e85d3a); color: #fff; border: 1px solid var(--color-annot, #e85d3a); }
+  .annot-toolbar .btn-clear { background: transparent; color: var(--color-muted); border: 1px solid var(--color-border); font-size: 12px; }
+  .annot-toolbar .btn-clear:hover { color: var(--color-error); border-color: var(--color-error); }
+  .annot-toolbar .btn-mosaic-off { background: var(--color-surface-mint); color: var(--color-primary); border: 1px solid var(--color-border); }
+  .annot-toolbar .btn-mosaic-on { background: var(--color-primary); color: #fff; border: 1px solid var(--color-primary); }
+  .annot-toolbar .hint { font-size: 12px; color: var(--color-muted); max-width: 240px; }
+
+  .shot-frame { position: relative; }
+  .shot-frame.editing { cursor: crosshair; }
+  .shot-frame.editing img { pointer-events: none; }
+
+  .annot-box {
+    position: absolute; border: 3px solid #e85d3a;
+    border-radius: 6px; background: rgba(232,93,58,0.08);
+    cursor: move; z-index: 5;
+  }
+  .annot-box .annot-label {
+    position: absolute; top: -14px; left: -14px;
+    width: 28px; height: 28px; background: #e85d3a;
+    color: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    z-index: 6;
+  }
+  .annot-box .annot-label:hover { background: #c84a2a; }
+  .annot-box .annot-resize {
+    position: absolute; bottom: -6px; right: -6px;
+    width: 14px; height: 14px; background: #e85d3a;
+    border: 2px solid #fff; border-radius: 50%;
+    cursor: nwse-resize; z-index: 6;
+    display: none;
+  }
+  .shot-frame.editing .annot-box .annot-resize { display: block; }
+  .annot-box.readonly { cursor: default; }
+  .annot-box.readonly .annot-label { cursor: default; }
+
+  /* 马赛克区域 */
+  .mosaic-box {
+    position: absolute; border: 2px solid var(--color-primary);
+    border-radius: 4px; cursor: move; z-index: 4;
+    background-repeat: no-repeat; background-size: 100% 100%;
+    image-rendering: pixelated; -webkit-image-rendering: pixelated;
+    box-shadow: 0 0 0 1px rgba(28,93,95,0.25);
+  }
+  .mosaic-box .mosaic-label {
+    position: absolute; top: -14px; right: -14px;
+    width: 28px; height: 28px; background: var(--color-primary);
+    color: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 6;
+  }
+  .mosaic-box .mosaic-label:hover { background: var(--color-primary-hover); }
+  .mosaic-box .mosaic-resize {
+    position: absolute; bottom: -6px; right: -6px;
+    width: 14px; height: 14px; background: var(--color-primary);
+    border: 2px solid #fff; border-radius: 50%;
+    cursor: nwse-resize; z-index: 6; display: none;
+  }
+  .shot-frame.mosaic-editing .mosaic-box .mosaic-resize { display: block; }
+  .mosaic-box.readonly { cursor: default; }
+  .mosaic-box.readonly .mosaic-label { cursor: default; }
+
+  .demo-caption {
+    margin: 0 0 var(--spacing-4); color: var(--color-muted);
+    font-size: var(--text-label-sm-size); line-height: 18px; text-align: center;
+  }
+
+  .btn-primary, .btn-secondary {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 136px; min-height: 48px; border-radius: var(--radius-pill);
+    padding: 0 var(--spacing-6); font-size: var(--text-body-sm-size);
+    font-weight: 760; line-height: 1; text-decoration: none;
+    transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+  .btn-primary { color: #fffdf8; background: var(--color-primary); border: 1px solid var(--color-primary); }
+  .btn-primary:hover { background: var(--color-primary-hover); }
+  .btn-secondary { color: var(--color-primary); background: rgba(255, 253, 248, 0.76); border: 1px solid var(--color-border-strong); }
+  .btn-secondary:hover { background: var(--color-surface-mint); }
+
+  footer { border-top: 1px solid var(--color-border); background: var(--color-surface); padding: var(--spacing-10); text-align: center; }
+  footer p { color: var(--color-muted); font-size: var(--text-body-sm-size); line-height: var(--text-body-sm-lh); }
+  footer p:first-child { color: var(--color-ink); font-weight: 760; }
+}
+
+@layer utilities {
+  @media (max-width: 980px) {
+    :root { --text-display-size: 46px; --text-display-lh: 50px; --text-headline-lg-size: 30px; --text-headline-lg-lh: 36px; }
+    .nav { padding: var(--spacing-2) var(--spacing-4); }
+    .nav-inner { align-items: flex-start; flex-direction: column; }
+    .nav-links { width: 100%; overflow-x: auto; padding-bottom: var(--spacing-1); }
+    .page { display: block; padding: 0 var(--spacing-4); }
+    .flow-board { grid-template-columns: 1fr; }
+    .flow-card { min-height: 140px; }
+    .sidebar { position: static; height: auto; border-bottom: 1px solid var(--color-border); padding: var(--spacing-4) 0; }
+    .sidebar-list { display: flex; flex-wrap: nowrap; gap: var(--spacing-2); overflow-x: auto; padding-bottom: var(--spacing-2); }
+    .sidebar-list li { flex: 0 0 auto; }
+    .sidebar-list a { display: inline-flex; min-height: 34px; white-space: nowrap; grid-template-columns: none; background: rgba(255, 253, 248, 0.68); border: 1px solid var(--color-border); }
+    .sidebar-list a::before { content: none; }
+    .content { padding-top: var(--spacing-4); }
+    .hero { padding: var(--spacing-10) 0; }
+  }
+  @media (max-width: 560px) {
+    :root { --text-display-size: 38px; --text-display-lh: 42px; --text-headline-lg-size: 28px; --text-headline-lg-lh: 34px; }
+    .nav-brand { font-size: 14px; }
+    .nav-link, .nav-cta { min-height: 36px; padding: 0 var(--spacing-3); font-size: 13px; }
+    .hero-actions, .hero-actions a { width: 100%; }
+    .hero-meta span { min-height: 30px; }
+    section { padding: var(--spacing-6) 0; }
+    .step { grid-template-columns: 36px 1fr; gap: var(--spacing-3); }
+    .step-num { width: 32px; height: 32px; }
+    .prompt-box .content { font-size: 12px; }
+    footer { padding: var(--spacing-6) var(--spacing-4); }
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- Top Nav -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#top" class="nav-brand">Deploy SOP</a>
+    <div class="nav-links" aria-label="快速导航">
+      <a href="#ch4" class="nav-link">语言设置</a>
+      <a href="#ch5" class="nav-link">前端部署</a>
+      <a href="#ch7" class="nav-link">API Token</a>
+      <a href="#ch10" class="nav-cta">后续维护</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page" id="top">
+
+<!-- Sidebar TOC -->
+<aside class="sidebar">
+  <div class="sidebar-label">目录</div>
+  <ol class="sidebar-list">
+    <li><a href="#ch1">这个 SOP 是给谁用的</a></li>
+    <li><a href="#ch2">网络环境说明（重要）</a></li>
+    <li><a href="#ch3">部署前准备</a></li>
+    <li><a href="#ch4">调整界面语言为中文</a></li>
+    <li><a href="#ch5">前端部署到 Cloudflare Pages</a></li>
+    <li><a href="#ch6">后端部署到 Cloudflare D1</a></li>
+    <li><a href="#ch7">申请 Cloudflare API Token</a></li>
+    <li><a href="#ch8">部署后检查事项</a></li>
+    <li><a href="#ch9">遇到问题怎么办</a></li>
+    <li><a href="#ch10">给 AI 的提问模板</a></li>
+    <li><a href="#ch11">后续维护</a></li>
+    <li><a href="#ch12">流程总结</a></li>
+  </ol>
+</aside>
+
+<!-- Main Content -->
+<main class="content">
+
+<!-- Hero -->
+<div class="hero">
+  <span class="hero-badge">新版 Cloudflare SOP</span>
+  <h1>新人 AI 工作 SOP<br>网站部署上线</h1>
+  <p>面向使用 AI 但不懂代码的新手。基于新版 Cloudflare 中文界面制作，你负责点击操作，AI 负责技术判断。新增界面语言设置和 API Token 申请指南，让 AI 也能帮你自动部署。</p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="#ch4">开始部署</a>
+    <a class="btn-secondary" href="#ch7">申请 API Token</a>
+  </div>
+  <div class="hero-meta">
+    <span><strong>v5.0 新版 Cloudflare</strong></span>
+    <span><strong>2026-07-17</strong></span>
+    <span><strong>中文界面</strong></span>
+    <span><strong>你点 + AI 帮</strong></span>
   </div>
 </div>
-<h2>AI 开发工作流</h2>
-<p class="sub">从建库到维护 · 自用 + 新手参考版 · 所有指令可直接复制</p>
 
-<div class="banner">
-  <p>先理解，再开发；先确认，再修改；先运行，再提交；先记录，再结束。</p>
-</div>
+<section class="flow-board" aria-label="部署流程总览">
+  <a class="flow-card" href="#ch4">
+    <span class="eyebrow">Step 01</span>
+    <h2>界面设置 & 前端上线</h2>
+    <p>先设置中文界面，再把网站代码连接到 Cloudflare Pages，完成构建和发布。</p>
+    <span class="arrow">查看步骤</span>
+  </a>
+  <a class="flow-card" href="#ch6">
+    <span class="eyebrow">Step 02</span>
+    <h2>后端 D1 数据库</h2>
+    <p>创建 D1 数据库，绑定到 Pages 函数，形成 Cloudflare 内部后端链路。</p>
+    <span class="arrow">查看 D1 绑定</span>
+  </a>
+  <a class="flow-card" href="#ch7">
+    <span class="eyebrow">Step 03</span>
+    <h2>API Token & 维护</h2>
+    <p>申请 API Token 让 AI 自动部署，上线后用部署记录和 AI 提示词快速排错。</p>
+    <span class="arrow">查看 Token 指南</span>
+  </a>
+</section>
 
-<div class="top-nav">
-  <button class="nb active" onclick="go(0)">① 为什么</button>
-  <button class="nb" onclick="go(1)">② 建库</button>
-  <button class="nb" onclick="go(2)">③ 归档散落项目 <span class="nb2">必看</span></button>
-  <button class="nb" onclick="go(3)">④ 仓库规范</button>
-  <button class="nb" onclick="go(4)">⑤ 每日节奏</button>
-  <button class="nb" onclick="go(5)">⑥ Agent/Skills</button>
-  <button class="nb" onclick="go(6)">⑦ AI 协作规则</button>
-  <button class="nb" onclick="go(7)">⑧ 维护更新</button>
-</div>
-
-<!-- 页面0：为什么 -->
-<div class="pg active" id="p0">
-<div class="sec">
-  <div class="sl">没有工作流会发生什么</div>
-  <div class="card">
-    <table class="tbl">
-      <tr><th>问题</th><th>原因</th><th>解决方案</th></tr>
-      <tr><td>代码找不到</td><td>散落在桌面、聊天窗口</td><td>GitHub 统一存档</td></tr>
-      <tr><td>AI 忘记上下文</td><td>每次对话都是白板</td><td>项目文档作为唯一事实来源</td></tr>
-      <tr><td>出错没法回退</td><td>没有版本记录</td><td>Git 每次改动都有快照</td></tr>
-      <tr><td>不知道做到哪了</td><td>没有进度文档</td><td>开发计划 + 更新记录</td></tr>
-      <tr><td>无法交接</td><td>没有标准结构</td><td>README + 目录规范</td></tr>
+<!-- 1 -->
+<section id="ch1">
+  <h2>一、这个 SOP 是给谁用的</h2>
+  <p>当你已经有一个网站项目，代码已经上传到 GitHub 后，可以用这个 SOP 完成上线。本指南基于<strong>新版 Cloudflare 中文界面</strong>制作，每一步都有截图标注。</p>
+  <h3>适合的场景</h3>
+  <ul>
+    <li>纯展示类网站（官网、活动页、个人主页）</li>
+    <li>带搜索、登录等交互功能的网站</li>
+    <li>工具页、落地页上线</li>
+    <li>想让 AI 自动帮你部署到 Cloudflare（需要 API Token）</li>
+  </ul>
+  <h3>你需要准备的账号</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>账号</th><th>干什么用的</th><th>是否必须</th></tr></thead>
+      <tbody>
+        <tr><td>GitHub 账号</td><td>存放你的网站代码</td><td>必须</td></tr>
+        <tr><td>Cloudflare 账号</td><td>放你的网站，让用户能访问</td><td>必须</td></tr>
+        <tr><td>Cloudflare D1</td><td>存放后端数据，和 Pages 函数配合使用</td><td>有后端数据时必须</td></tr>
+        <tr><td>Cloudflare API Token</td><td>给 AI 的操作钥匙，让 AI 自动帮你部署</td><td>想让 AI 自动部署时需要</td></tr>
+        <tr><td>代理工具（翻墙软件）</td><td>注册和配置海外平台时需要</td><td>必须（见第二章）</td></tr>
+        <tr><td>AI 工具（如 TRAE）</td><td>遇到任何困难随时问 AI</td><td>强烈建议</td></tr>
+      </tbody>
     </table>
   </div>
-</div>
-<div class="sec">
-  <div class="sl">为什么第一步要建 GitHub 仓库</div>
-  <div class="card">
-    <div class="cb">这份 SOP 的作者是做到后面才知道 GitHub 重要性的——项目太多、代码太多，根本找不到，也没法回退。</div>
-    <div class="cb" style="margin-top:8px"><strong style="color:var(--text-primary)">正确顺序：有想法 → 先建仓库 → 再写代码。</strong></div>
-    <div class="cb" style="margin-top:6px">Git 是时光机，GitHub 是云端保险箱。不管用什么 AI 工具，所有代码最终都存这里。</div>
+  <div class="callout info">
+    <strong>核心理念</strong>：你不需要懂代码。你只需要做两件事：<strong>跟着步骤点击操作</strong>，以及<strong>遇到不确定的地方把信息发给 AI 让它帮你判断</strong>。
   </div>
-</div>
-<div class="sec">
-  <div class="sl">两个仓库的分工</div>
-  <div class="card">
-    <div class="sr"><div class="sn" style="background:var(--bg-accent)">工</div><div class="sc"><strong>工作仓库（Work-AI）</strong>——公司 AI 项目，当前：资料抓取 Agent</div></div>
-    <div class="sr"><div class="sn" style="background:var(--bg-success)">个</div><div class="sc"><strong>个人仓库（Personal-AI）</strong>——学习、实验、竞品调研网站等</div></div>
+  <div class="callout success">
+    <strong>什么是"前端"和"后端"？</strong>：简单理解——用户能看到和点击的页面叫"前端"，在背后处理数据、搜索、保存信息的程序叫"后端"。如果你的网站只有展示页面没有交互功能，那就只有前端，不需要后端。
   </div>
-  <div class="card" style="border-color:var(--border-warning)">
-    <div class="cb"><span class="hl">重要</span> 两个仓库完全独立，永远不混用。工作代码不进个人仓库，个人项目不进工作仓库。</div>
+  <div class="callout success">
+    <strong>什么是 API Token？</strong>：简单理解——API Token 就像一把钥匙，你把它交给 AI，AI 就能拿着这把钥匙帮你操作 Cloudflare（比如部署网站、管理数据库），不需要你每次都手动登录操作。详细申请方法见第七章。
   </div>
-</div>
-</div>
+</section>
 
-<!-- 页面1：建库 -->
-<div class="pg" id="p1">
-<div class="sec">
-  <div class="sl">在 GitHub 新建仓库（只做一次）</div>
-  <div class="card">
-    <ul class="cl">
-      <li>登录 GitHub，点右上角 + → New repository</li>
-      <li>填写仓库名（Work-AI 或 Personal-AI）</li>
-      <li>选择 Private（私有）</li>
-      <li><strong>不要勾选</strong> Initialize with README——让 AI 帮你初始化</li>
-      <li>点 Create repository，复制页面上的 .git 结尾地址</li>
-    </ul>
+<!-- 2 -->
+<section id="ch2">
+  <h2>二、网络环境说明（重要）</h2>
+  <div class="callout danger">
+    <strong>这是新手最容易忽略的一步</strong>：不同平台在国内的访问情况不同。不提前了解，会导致"明明操作对了但就是打不开"。
   </div>
-</div>
-<div class="sec">
-  <div class="sl">把地址给 AI，让它完成初始化</div>
-  <div class="card">
-    <div class="cmd" id="c-init">我在 GitHub 创建了一个新的空仓库，地址是：
-[粘贴你的仓库地址]
+  <h3>各平台在国内能不能打开？</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>平台</th><th>国内状态</th><th>用来干什么</th></tr></thead>
+      <tbody>
+        <tr><td>Cloudflare Pages</td><td><span class="status ok">能直接打开</span></td><td>放你的网站</td></tr>
+        <tr><td>DeepSeek</td><td><span class="status ok">能直接打开</span></td><td>AI 服务（如果你的网站用到了）</td></tr>
+        <tr><td>GitHub</td><td><span class="status warn">时好时坏</span></td><td>存代码</td></tr>
+        <tr><td>Cloudflare 操作后台</td><td><span class="status warn">建议开代理</span></td><td>配置网站部署</td></tr>
+        <tr><td>Cloudflare D1</td><td><span class="status warn">建议开代理配置</span></td><td>存放后端数据</td></tr>
+        <tr><td>Vercel</td><td><span class="status bad">打不开</span></td><td>不要用这个</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>什么时候要开代理，什么时候不用？</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>你在做什么</th><th>要开代理吗？</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>注册 GitHub / Cloudflare 账号</td><td>要开</td><td>注册时可能需要验证，不开代理可能卡住</td></tr>
+        <tr><td>在 Cloudflare 后台操作</td><td>建议开</td><td>开了更稳定，不容易加载失败</td></tr>
+        <tr><td>上传代码到 GitHub</td><td>看情况</td><td>有时候能传成功，传不上去就开代理</td></tr>
+        <tr><td><strong>别人访问你的网站</strong></td><td><strong>不用开</strong></td><td><strong>网站放在 Cloudflare 上，国内直接能打开</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout warn">
+    <strong>记住这句话</strong>：你在配置和部署的时候需要开代理，但你的用户访问网站时不需要开代理。
+  </div>
+  <h3>上传代码到 GitHub 总是失败？</h3>
+  <p>如果你在上传代码到 GitHub 时经常失败，可能是网络问题。不要自己折腾网络设置，直接问 AI：</p>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我在上传代码到 GitHub 时总是失败，提示连接超时。
+我的电脑用的是 Windows 系统，代理软件是【填你的代理软件名称，比如 Clash / V2Ray 等】。
+请帮我：
+1. 判断是不是代理没配置好
+2. 如果需要配置，请告诉我具体怎么操作（一步一步来）
+3. 配置好了之后怎么测试是否成功</div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="ch3">
+  <h2>三、部署前准备</h2>
+  <p>在开始部署前，确认以下内容：</p>
+  <ol>
+    <li>已注册并登录 Cloudflare 账号（注册时需要开代理）</li>
+    <li>已有 GitHub 账号，网站代码已经上传到 GitHub 仓库</li>
+    <li>如果你的网站有搜索、登录等交互功能，还需要准备好后端代码的 GitHub 仓库</li>
+  </ol>
+  <div class="callout info">
+    <strong>部署时需要填一些配置信息，但你不需要自己判断怎么填</strong>：Cloudflare 会问你一些问题（比如"你的项目用什么技术""构建命令是什么"），这些你不需要懂。把你的 GitHub 仓库地址发给 AI，AI 会告诉你每个空填什么。
+  </div>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我要把网站部署到 Cloudflare Pages，这是我的 GitHub 仓库地址：【填你的仓库地址】
+请你帮我看看：
+1. 这个网站是什么类型的？
+2. Cloudflare 会问我的"构建命令"应该填什么？
+3. "输出目录"应该填什么？
+4. 有没有需要提前准备的东西？
+请用大白话告诉我，我完全不懂代码。</div>
+  </div>
+</section>
+
+<!-- 4 NEW: 调整语言 -->
+<section id="ch4">
+  <h2>四、调整界面语言为中文</h2>
+  <p>Cloudflare 默认界面是英文的，对于新手来说不太友好。<strong>建议第一步就把界面改成中文</strong>，这样后续操作的每个按钮你都能看懂。</p>
+  <div class="callout info">
+    <strong>为什么要改中文？</strong>：Cloudflare 后台的按钮和菜单本来就有中文翻译，改成中文后，"Create application"会变成"创建应用程序"，"Deployments"会变成"部署"，操作起来轻松很多。本 SOP 后续所有步骤都基于中文界面进行。
+  </div>
+
+  <div class="step"><div class="step-num">1</div><div class="step-body">
+    <p><strong>登录 Cloudflare 后台</strong></p>
+    <p>打开 <code>https://dash.cloudflare.com/</code>（建议开代理），登录后进入控制台首页。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">2</div><div class="step-body">
+    <p><strong>点击右上角头像图标</strong></p>
+    <p>在页面最右上角，找到你的<strong>头像/用户图标</strong>（一个小人形图标），点击它会弹出一个下拉菜单。在菜单中找到<strong>「语言」</strong>选项。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-1">
+        <img src="assets/new-cf-user-menu.png" alt="Cloudflare 用户菜单" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">3</div><div class="step-body">
+    <p><strong>选择「语言」→「简体中文」</strong></p>
+    <p>在下拉菜单中找到<strong>「语言」</strong>选项（如果当前是英文，显示为 Language），鼠标移上去会自动展开一个子菜单，列出所有支持的语言。选择<strong>「简体中文」</strong>即可。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-2">
+        <img src="assets/new-cf-language-settings.png" alt="Cloudflare 语言设置菜单" loading="lazy">
+      </div>
+    </div>
+    <div class="callout success">
+      <strong>设置完成！</strong>：选择后界面会立刻变成中文，不需要刷新页面。从此以后，Cloudflare 的所有菜单和按钮都会显示中文，操作起来轻松多了。接下来按第五章开始部署前端。
+    </div>
+  </div></div>
+</section>
+
+<!-- 5 前端部署 -->
+<section id="ch5">
+  <h2>五、前端部署到 Cloudflare Pages</h2>
+  <p>这是核心步骤。Cloudflare Pages 是一个免费的网站托管平台，放在上面的网站国内用户可以直接访问。本章基于<strong>新版 Cloudflare 中文界面</strong>制作。</p>
+
+  <div class="step"><div class="step-num">1</div><div class="step-body">
+    <p><strong>进入 Workers 和 Pages</strong></p>
+    <p>在左侧菜单栏中，找到<strong>「计算」</strong>分类，点击展开后选择<strong>「Workers 和 Pages」</strong>。这里是你管理所有部署项目的地方。</p>
+    <div class="callout info">
+      <strong>Workers 和 Pages 是什么</strong>：就是 Cloudflare 里"管理网站"的页面。进去之后可以创建新的网站项目。新版 Cloudflare 把它放在了"计算"分类下面。
+    </div>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-3">
+        <img src="assets/new-cf-workers-pages-full.png" alt="Cloudflare 左侧菜单「计算」分类展开，显示 Workers 和 Pages 入口" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">2</div><div class="step-body">
+    <p><strong>点击「创建应用程序」</strong></p>
+    <p>在 Workers 和 Pages 页面右上角，点击蓝色的<strong>「创建应用程序」</strong>按钮。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-9">
+        <img src="assets/new-cf-workers-pages.png" alt="Workers 和 Pages 页面 - 右上角「创建应用程序」按钮位置" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">3</div><div class="step-body">
+    <p><strong>选择部署 Pages</strong></p>
+    <p>新版的创建页面标题是"Ship something new"（发布新东西），会显示多个选项。点击第一个选项<strong>「Continue with GitHub」</strong>（用 GitHub 继续），直接进入 GitHub 仓库选择流程。</p>
+    <div class="callout warn">
+      <strong>注意</strong>：如果你的界面没有看到"Continue with GitHub"选项，可以向下滚动到页面底部，找到<strong>「想要部署 Pages？开始使用」</strong>链接，点击它也可以进入 Pages 部署流程。
+    </div>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-4">
+        <img src="assets/new-cf-create-page-full.png" alt="Cloudflare 创建应用程序页面完整截图 - 包含 Continue with GitHub 和底部「想要部署 Pages？开始使用」链接" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">4</div><div class="step-body">
+    <p><strong>选择从 Git 导入</strong></p>
+    <p>进入 Pages 创建页面后，你会看到两个选项。选择上方的<strong>「导入现有 Git 存储库」</strong>卡片，点击其右侧的<strong>「开始使用」</strong>按钮。这样可以从你的 GitHub 仓库直接导入代码。以后你更新了 GitHub 上的代码，Cloudflare 会自动帮你重新部署。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-5">
+        <img src="assets/new-cf-pages-create.png" alt="Cloudflare Pages 创建页面 - 导入 Git 仓库" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">5</div><div class="step-body">
+    <p><strong>连接 GitHub 并选择仓库</strong></p>
+    <p>首次使用需要授权 Cloudflare 访问你的 GitHub。点击「连接到 Git」，按提示完成 GitHub 授权。然后在列表中选择你要部署的仓库。仓库太多可以在搜索框输入名称搜索。</p>
+    <div class="callout info">
+      <strong>找不到仓库怎么办？</strong>：如果列表里看不到你的仓库，说明 Cloudflare 还没获得该仓库的访问权限。点击页面底部的授权链接，跳转到 GitHub 设置页面，勾选目标仓库 → 保存 → 回到 Cloudflare 刷新即可。
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">6</div><div class="step-body">
+    <p><strong>填写配置信息（不知道怎么填就问 AI）</strong></p>
+    <p>选择仓库后会进入配置页面，需要填写项目名称、生产分支、构建命令、输出目录等。这里有术语你不需要自己判断怎么填。</p>
+    <div class="callout warn">
+      <strong>不要自己瞎填！</strong>：把你 GitHub 仓库地址发给 AI，AI 会告诉你每个空填什么。填错了会导致部署失败。
+    </div>
+    <div class="prompt-box">
+      <div class="label">发给 AI 的提示词</div>
+      <div class="content">我正在 Cloudflare Pages 上部署网站，现在需要填写配置信息。
+我的 GitHub 仓库是：【填你的仓库地址】
+请告诉我：
+1. "项目名称"（Project name）填什么？
+2. "生产分支"（Production branch）填什么？
+3. "构建命令"（Build command）填什么？
+4. "构建输出目录"（Build output directory）填什么？
+5. "环境变量"（Environment variables）需要填吗？填什么？
+请一个一个告诉我，用大白话说。</div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">7</div><div class="step-body">
+    <p><strong>点击「保存并部署」</strong></p>
+    <p>配置完成后，点击页面底部的<strong>「保存并部署」</strong>按钮。Cloudflare 会开始自动构建你的网站。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">8</div><div class="step-body">
+    <p><strong>等待部署完成</strong></p>
+    <p>部署过程中会显示构建过程（一堆日志，看不懂没关系）。如果部署成功，会出现成功提示，并展示一个 <code>.pages.dev</code> 网址。</p>
+    <div class="callout warn">
+      <strong>如果部署失败了</strong>：不要慌，也不要反复点击重新部署。把构建日志里红色的报错信息复制发给 AI，让 AI 帮你找原因。
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">9</div><div class="step-body">
+    <p><strong>找到正式网站地址</strong></p>
+    <p>部署成功后，在项目详情页的<strong>「部署」</strong>标签页中，可以看到你的网站地址：</p>
+    <p><code>https://你的项目名.pages.dev</code></p>
+    <p>这个地址就是正式访问地址，可以分享给任何人。</p>
+    <div class="callout info">
+      <strong>两种地址的区别</strong>：正式地址 <code>xxx.pages.dev</code> 是对外分享用的；还有一种带随机前缀的地址（比如 <code>4601e4a2.xxx.pages.dev</code>）是某次部署的预览链接，一般不用管。对外分享用正式地址。
+    </div>
+  </div></div>
+</section>
+
+<!-- 6 后端 D1 -->
+<section id="ch6">
+  <h2>六、后端部署到 Cloudflare D1</h2>
+  <div class="callout info">
+    <strong>这一版后端统一放在 Cloudflare</strong>：后端数据存储使用 Cloudflare D1，并通过 Pages 函数的绑定（Bindings）连接到当前 Pages 项目。这样前端和后端都在 Cloudflare 体系内，部署链路更短。
+  </div>
+  <p><strong>你要完成的事</strong>：先创建一个 D1 数据库，再回到当前 Pages 项目，在<strong>设置 → 函数 → 绑定</strong>中添加 D1 数据库绑定。</p>
+
+  <h3>操作步骤</h3>
+
+  <div class="step"><div class="step-num">1</div><div class="step-body">
+    <p><strong>进入 D1 数据库页面</strong></p>
+    <p>在 Cloudflare 控制台左侧菜单中，找到<strong>「存储和数据库」</strong>分类，点击<strong>「D1 SQLite 数据库」</strong>进入 D1 管理页面。这里可以看到你已有的数据库列表。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-6">
+        <img src="assets/new-cf-d1-page-full.png" alt="Cloudflare D1 数据库列表页面 - 左侧菜单「存储和数据库」分类完整展示" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">2</div><div class="step-body">
+    <p><strong>点击三点菜单 → 创建数据库</strong></p>
+    <p>在 D1 数据库页面，点击右上角的<strong>三点菜单（⋯）</strong>，在弹出的菜单中选择<strong>「创建数据库」</strong>。如果页面直接显示了「创建数据库」按钮，直接点击即可。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-14">
+        <img src="assets/new-cf-d1-create-btn.png" alt="Cloudflare D1 数据库页面 - 右上角「更多操作」按钮位置" loading="lazy">
+      </div>
+    </div>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-10">
+        <img src="assets/new-cf-d1-create-form.png" alt="Cloudflare D1 创建数据库表单 - 填写数据库名称和位置" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">3</div><div class="step-body">
+    <p><strong>填写数据库名称</strong></p>
+    <p>输入数据库名称（建议用项目名或业务名，比如 <code>zhixin-logs</code>），位置保持默认（让 Cloudflare 自动选择），点击创建。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-15">
+        <img src="assets/new-cf-d1-create-form-detail.png" alt="Cloudflare D1 创建数据库表单详情 - 输入数据库名称 zhixin-logs" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">4</div><div class="step-body">
+    <p><strong>确认数据库创建成功</strong></p>
+    <p>创建完成后，D1 数据库列表里会出现新的数据库记录。点击数据库名称进入详情页，可以看到<strong>数据库 ID</strong>，后面绑定时可能需要用到。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">5</div><div class="step-body">
+    <p><strong>回到 Pages 项目设置</strong></p>
+    <p>回到 Workers 和 Pages 列表，点击你的网站项目进入详情页。切换到<strong>「设置」</strong>标签页，找到<strong>「函数」</strong>区域下的<strong>「绑定」</strong>。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-11">
+        <img src="assets/new-cf-pages-settings.png" alt="Cloudflare Pages 项目设置页面 - 设置标签页与函数区域" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">6</div><div class="step-body">
+    <p><strong>添加 D1 数据库绑定</strong></p>
+    <p>在绑定区域点击「添加」，选择绑定类型为<strong>「D1 数据库」</strong>（不要选 KV、R2 或其他类型）。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-16">
+        <img src="assets/new-cf-pages-bindings-add.png" alt="Cloudflare Pages 绑定区域 - 已有 D1 绑定和「添加」按钮" loading="lazy">
+      </div>
+    </div>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-17">
+        <img src="assets/new-cf-pages-binding-dialog.png" alt="Cloudflare Pages 添加资源绑定对话框 - 选择 D1 数据库类型" loading="lazy">
+      </div>
+    </div>
+    <ul>
+      <li><strong>变量名</strong>：填写后端代码约定的名称（问 AI 你的代码里用的是什么名称）</li>
+      <li><strong>D1 数据库</strong>：选择刚创建的数据库</li>
+    </ul>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-12">
+        <img src="assets/new-cf-pages-bindings.png" alt="Cloudflare Pages 绑定区域 - 添加 D1 数据库绑定（变量名 DB → zhixin-logs）" loading="lazy">
+      </div>
+    </div>
+    <p>填写完成后点击「保存」。</p>
+    <div class="callout warn">
+      <strong>变量名很重要！</strong>：变量名必须和后端函数代码里读取的名称一致，否则网站功能会报错。不确定的话，把后端代码发给 AI 问它变量名是什么。
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">7</div><div class="step-body">
+    <p><strong>重新部署</strong></p>
+    <p>保存绑定配置后，需要重新部署一次 Pages 项目才能生效。在「部署」页面点击「重试部署」或推送一次代码到 GitHub 触发自动部署。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-18">
+        <img src="assets/new-cf-pages-deployments-list.png" alt="Cloudflare Pages 部署列表页面 - 部署标签页和部署记录" loading="lazy">
+      </div>
+    </div>
+    <div class="callout info">
+      <strong>怎么找到「重试部署」</strong>：在部署列表中，每条部署记录右侧都有一个<strong>「更多操作」（⋯）</strong>按钮，点击后会展开菜单，其中包含「重试部署」选项。也可以直接推送一次代码到 GitHub 来触发自动部署，效果一样。
+    </div>
+  </div></div>
+
+  <h3>绑定完成后检查</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>检查项</th><th>正确结果</th></tr></thead>
+      <tbody>
+        <tr><td>D1 数据库</td><td>Cloudflare 控制台里能看到刚创建的数据库</td></tr>
+        <tr><td>Pages 绑定</td><td>Pages 项目的「设置 → 函数 → 绑定」里已添加 D1 数据库</td></tr>
+        <tr><td>变量名</td><td>绑定变量名必须和后端函数代码里读取的名称一致</td></tr>
+        <tr><td>重新部署</td><td>保存配置后，重新部署或触发一次 Pages 构建</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 7 NEW: API Token -->
+<section id="ch7">
+  <h2>七、申请 Cloudflare API Token</h2>
+
+  <div class="callout info">
+    <strong>API Token 是什么？用大白话说</strong>：API Token 就像是给 AI 的一把钥匙。正常情况下，部署网站需要你手动登录 Cloudflare 操作。但如果你想让 AI 自动帮你部署，就需要给它一个 API Token——AI 拿着这把"钥匙"，就能直接操作你的 Cloudflare 账户，比如部署网站、管理数据库，不需要你每次都手动登录点击。<br><br>
+    <strong>简单理解：API Token = 给 AI 的 Cloudflare 操作权限</strong>
+  </div>
+
+  <div class="callout success">
+    <strong>为什么需要 API Token？</strong>：如果你经常需要更新网站，每次都手动登录 Cloudflare 操作很麻烦。有了 API Token，你可以直接告诉 AI"帮我把 GitHub 仓库的最新代码部署到 Cloudflare"，AI 就能自动完成，省时省力。它还能让 AI 帮你管理数据库、查看部署日志等。
+  </div>
+
+  <h3>申请前的准备</h3>
+  <ul>
+    <li>已登录 Cloudflare 账号</li>
+    <li>建议开代理，确保 Cloudflare 后台稳定加载</li>
+    <li>准备好一个记事本，用来保存 Token（创建后只显示一次！）</li>
+  </ul>
+
+  <h3>操作步骤</h3>
+
+  <div class="step"><div class="step-num">1</div><div class="step-body">
+    <p><strong>进入 API 令牌页面</strong></p>
+    <p>在 Cloudflare 控制台左侧菜单中，找到<strong>「帐户 API 令牌」</strong>（通常在菜单底部的「管理帐户」分类下）。也可以通过点击右上角头像 → 在菜单中找到相关入口。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-7">
+        <img src="assets/new-cf-api-tokens-full.png" alt="Cloudflare API 令牌列表页面 - 左侧菜单「管理帐户」分类完整展示" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">2</div><div class="step-body">
+    <p><strong>点击「创建令牌」</strong></p>
+    <p>在 API 令牌页面，点击右上角的<strong>「创建令牌」</strong>按钮，进入令牌配置页面。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">3</div><div class="step-body">
+    <p><strong>配置令牌信息</strong></p>
+    <p>在令牌创建页面，需要填写以下信息：</p>
+    <ul>
+      <li><strong>令牌名称</strong>：起一个你认得出的名字，比如"给 AI 部署用"</li>
+      <li><strong>权限策略</strong>：选择「自定义」（Custom）</li>
+      <li><strong>权限</strong>：选择以下权限（让 AI 能部署网站和管理数据库）：
+        <ul>
+          <li>帐户 → Cloudflare Pages → 编辑</li>
+          <li>帐户 → D1 → 编辑</li>
+        </ul>
+      </li>
+      <li><strong>范围</strong>：选择「整个帐户」（这样 AI 可以操作你帐户下的所有项目）</li>
+    </ul>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-8">
+        <img src="assets/new-cf-create-token-full.png" alt="Cloudflare 创建 API 令牌页面完整截图 - 令牌名称、权限、范围配置" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">4</div><div class="step-body">
+    <p><strong>审核令牌 → 创建</strong></p>
+    <p>配置完成后，点击页面底部的<strong>「审核令牌」</strong>按钮（新版 Cloudflare 界面的按钮名称），进入令牌摘要确认页面。确认权限设置正确后，点击<strong>「创建令牌」</strong>。</p>
+    <div class="shot-wrap">
+      <div class="shot-frame" data-shot-id="shot-13">
+        <img src="assets/new-cf-token-review.png" alt="Cloudflare 创建令牌页面底部 -「审核令牌」按钮位置" loading="lazy">
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">5</div><div class="step-body">
+    <p><strong>复制并保存 Token（最重要的一步！）</strong></p>
+    <div class="callout danger">
+      <strong>⚠️ Token 只显示这一次！</strong>：创建成功后，页面会显示一串很长的字符，这就是你的 API Token。这串字符<strong>只会显示这一次</strong>，关闭页面后就再也看不到了！请立即复制并保存到安全的地方（比如密码管理器、记事本等）。
+    </div>
+    <div class="callout info">
+      <strong>Token 长什么样？</strong>：Token 是一串以字母 <code>c</code> 开头的长字符串，类似 <code>c5f3a2b8e9d1...</code>（约40-50个字符）。如果你看到的字符串不是 <code>c</code> 开头的，可能复制错了内容。
+    </div>
+    <div class="callout warn">
+      <strong>Token 就像密码</strong>：不要把它发到公开的地方（比如微信群、论坛），任何拿到 Token 的人都能操作你的 Cloudflare 帐户。只在你信任的 AI 工具里使用。
+    </div>
+    <div class="callout info">
+      <strong>为什么这一步没有截图？</strong>：Token 创建成功页面会显示真实的 API 密钥，属于敏感信息，不适合截图保存。你实际操作到这一步时，按照上面的说明复制保存即可。
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">6</div><div class="step-body">
+    <p><strong>如何使用 API Token</strong></p>
+    <p>把 API Token 告诉 AI 助手，AI 就可以通过它帮你自动部署网站到 Cloudflare。</p>
+    <div class="prompt-box">
+      <div class="label">发给 AI 的提示词</div>
+      <div class="content">这是我的 Cloudflare API Token：【粘贴你的 Token】
+请帮我完成以下操作：
+1. 把我的 GitHub 仓库【填仓库地址】部署到 Cloudflare Pages
+2. 项目名称用：【填项目名】
+3. 部署完成后告诉我网站地址
+
+如果你需要其他信息（比如构建命令、输出目录），请先查看我的仓库代码，然后自己判断怎么填。</div>
+    </div>
+    <div class="prompt-box">
+      <div class="label">另一个场景：让 AI 更新已部署的网站</div>
+      <div class="content">我的 Cloudflare API Token 是：【粘贴你的 Token】
+我的 GitHub 仓库【填仓库地址】刚才更新了代码，
+请帮我触发 Cloudflare Pages 重新部署，部署完成后告诉我结果。</div>
+    </div>
+  </div></div>
+
+  <h3>Token 管理小贴士</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>事项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>Token 丢失了</td><td>没法找回，只能删除旧 Token 重新创建一个</td></tr>
+        <tr><td>不再需要了</td><td>回到 API 令牌页面，点击删除，立即生效</td></tr>
+        <tr><td>怀疑泄露了</td><td>立即删除该 Token，再创建一个新的</td></tr>
+        <tr><td>权限不够</td><td>删除旧 Token，创建一个权限更大的新 Token</td></tr>
+        <tr><td>可以创建多个</td><td>可以为不同用途创建不同 Token，方便管理</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 8 部署后检查 -->
+<section id="ch8">
+  <h2>八、部署后检查事项</h2>
+  <p>网站上线后，不要只看 Cloudflare 显示成功，还需要自己打开网站检查一遍。</p>
+  <h3>检查清单</h3>
+  <ol>
+    <li>打开正式网站地址，确认页面能正常打开</li>
+    <li>检查首页内容是否显示正常（文字、图片有没有错位）</li>
+    <li>检查按钮、链接、图片是否能正常点击和显示</li>
+    <li>用手机打开网站地址试试（很重要！）</li>
+    <li>如果网站有搜索功能，试试搜索能不能用</li>
+    <li>如果网站有表单，试试能不能提交</li>
+  </ol>
+  <div class="callout danger">
+    <strong>最重要的一步</strong>：用手机打开网站地址试试！电脑能打开不代表手机也能打开。如果手机打不开或有错位，截图发给 AI 让它帮你调整。
+  </div>
+  <div class="callout info">
+    <strong>如果网站有问题</strong>：不要自己猜原因。描述清楚问题（比如"首页图片不显示""搜索点了没反应"），截图或录屏发给 AI，AI 能帮你判断是哪里出了问题。
+  </div>
+</section>
+
+<!-- 9 遇到问题 -->
+<section id="ch9">
+  <h2>九、遇到问题怎么办</h2>
+  <div class="callout success">
+    <strong>万能解决方法</strong>：不管遇到什么问题，都是同一套流程——截图或复制报错信息 → 发给 AI → AI 告诉你怎么改 → 改完重新部署。下面是一些常见问题和对应的提示词。
+  </div>
+
+  <h3>问题 1：在 Cloudflare 找不到 GitHub 仓库</h3>
+  <p><strong>原因</strong>：Cloudflare 没有获得你 GitHub 仓库的访问权限。</p>
+  <p><strong>解决</strong>：点击页面底部的授权链接，跳转到 GitHub 重新勾选目标仓库授权，保存后回到 Cloudflare 刷新。</p>
+
+  <h3>问题 2：部署失败了（显示红色）</h3>
+  <p><strong>原因</strong>：可能是配置填错了、代码有问题、或者依赖文件冲突。</p>
+  <p><strong>解决</strong>：不要反复点击重新部署！把构建日志里的红色报错信息复制发给 AI：</p>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我的网站在 Cloudflare Pages 部署失败了。
+GitHub 仓库是：【填你的仓库地址】
+这是报错信息：
+
+【粘贴构建日志里红色的报错内容】
 
 请帮我：
-1. 在当前项目目录初始化 Git
-2. 创建 .gitignore（包含 node_modules、.env、*.log、.DS_Store）
-3. 按仓库规范创建目录结构和初始文档（中文模板）
-4. 首次 commit：feat: 初始化项目结构
-5. 关联远程仓库并 push 到 main 分支
-6. 过程中需要授权的地方，请暂停告诉我<button class="cpb" onclick="cp('c-init')">复制</button></div>
-    <div class="why">建库本身 AI 帮不了（涉及你的 GitHub 账号），但初始化的每一步都可以托管给 AI。你唯一需要手动做的就是在 GitHub 网页点几下建一个空仓库。</div>
+1. 判断是什么原因
+2. 应该怎么修改
+3. 修改后怎么重新部署</div>
   </div>
-</div>
-<div class="sec">
-  <div class="sl">必须放进 .gitignore 的内容</div>
-  <div class="card">
-    <div class="cmd" id="c-ignore">node_modules/
-.env
-*.log
-.DS_Store<button class="cpb" onclick="cp('c-ignore')">复制</button></div>
-    <div class="why">API Key、飞书 token 等密钥只写在 .env 里，.env 写进 .gitignore，永远不上传。一旦泄露很难补救。</div>
+
+  <h3>问题 3：部署成功但页面是空白的</h3>
+  <p><strong>原因</strong>：通常是配置里的"输出目录"填错了。</p>
+  <p><strong>解决</strong>：把你的 GitHub 仓库地址发给 AI，问 AI"输出目录应该填什么"，然后去 Cloudflare 修改配置重新部署。</p>
+
+  <h3>问题 4：网站能打开但搜索/功能用不了</h3>
+  <p><strong>原因</strong>：可能是 Pages 函数没正常运行，或者 D1 绑定变量名和代码不一致。</p>
+  <p><strong>解决</strong>：</p>
+  <ol>
+    <li>去 Cloudflare Pages 项目里检查 <strong>设置 → 函数 → 绑定</strong></li>
+    <li>确认 D1 数据库已绑定，并且变量名和后端代码一致</li>
+    <li>保存配置后重新部署，再把浏览器报错和函数日志发给 AI</li>
+  </ol>
+
+  <h3>问题 5：Cloudflare 显示 522 错误</h3>
+  <p><strong>原因</strong>：可能是网站还在构建中，或者构建失败了。</p>
+  <p><strong>解决</strong>：去 Cloudflare 控制台「部署」页面看看构建状态。如果显示红色（失败），按问题 2 的方法处理。</p>
+
+  <h3>问题 6：API Token 不起作用</h3>
+  <p><strong>原因</strong>：可能是权限不够，或者 Token 已过期/被删除。</p>
+  <p><strong>解决</strong>：回到 API 令牌页面检查 Token 是否还存在。如果权限不够，删除旧 Token 重新创建一个权限更大的（确保包含 Pages 编辑和 D1 编辑权限）。</p>
+
+  <div class="callout warn">
+    <strong>遇到问题记住三个"不要"</strong>：不要慌、不要反复点击部署、不要自己瞎改配置。先把报错信息发给 AI，AI 帮你判断完再改。
   </div>
-</div>
-</div>
+</section>
 
-<!-- 页面2：归档散落项目 -->
-<div class="pg" id="p2">
-<div class="sec">
-  <div class="sl">万能归档提示词</div>
-  <div class="card">
-    <div class="ct">无论你在用什么 AI 工具，把这段复制进去</div>
-    <div class="cb">适用场景：已经有很多散落的项目，不知道怎么整理；或者做到一半才想起来要上传 GitHub。</div>
-    <div class="cmd" id="c-archive">请帮我整理当前设备上的 AI 项目，并上传到对应的 GitHub 仓库。
+<!-- 10 AI 模板 -->
+<section id="ch10">
+  <h2>十、给 AI 的提问模板</h2>
+  <p>整个部署过程中，遇到任何不确定的地方，都可以用以下模板问 AI。记住一个原则：<strong>信息越详细，AI 回答越准</strong>。</p>
 
-我有两个仓库：
-- 工作仓库（公司 AI 项目）：https://github.com/heweimian-sys/Work-AI
-- 个人仓库（学习和实验）：https://github.com/heweimian-sys/Personal-AI
+  <div class="prompt-box">
+    <div class="label">模板 A：刚开始部署，不知道怎么填配置</div>
+    <div class="content">我要把网站部署到 Cloudflare Pages。
+GitHub 仓库地址是：【填你的仓库地址】
 
-第一步：扫描和分类
-1. 列出你能找到的所有项目文件夹
-2. 判断每个项目属于"工作"还是"个人"
-3. 告诉我你的分类结果，等我确认
+请你帮我判断：
+1. 这个网站是什么类型的？
+2. Cloudflare 的"构建命令"填什么？
+3. "输出目录"填什么？
+4. 需要填"环境变量"吗？填什么？
+5. 如果部署失败，我先检查哪里？
 
-第二步：逐个整理（等我确认分类后）
-对每个项目：
-1. 检查是否已有 .git（避免重复初始化）
-2. 如果没有，初始化 Git
-3. 创建或补充 .gitignore
-4. 检查有没有项目说明.md，没有则生成基础版本
-5. commit 所有文件：chore: 归档现有项目
-6. 关联对应的 GitHub 仓库
-7. push 到 main 分支
-
-第三步：汇报结果
-列出所有已上传的项目清单，包括：
-- 项目名称
-- 上传到哪个仓库
-- 仓库中的路径
-
-注意：
-- 遇到需要 GitHub 授权的步骤，请暂停告诉我
-- 不确定放哪个仓库的项目，先问我再操作
-- .env 文件里的密钥不要上传<button class="cpb" onclick="cp('c-archive')">复制</button></div>
+请用大白话告诉我，我完全不懂代码。</div>
   </div>
-</div>
-<div class="sec">
-  <div class="sl">项目做到中途才想起来上传，用这个</div>
-  <div class="card">
-    <div class="cmd" id="c-midway">我有一个已经在开发中的项目，现在想把它上传到 GitHub。
 
-项目路径：[当前项目的文件夹路径]
-目标仓库：[工作仓库 or 个人仓库的地址]
+  <div class="prompt-box">
+    <div class="label">模板 B：部署/运行报错了</div>
+    <div class="content">我在部署/使用网站时遇到了问题。
+GitHub 仓库：【填你的仓库地址】
+网站地址：【填你的网站地址】（如果有的话）
+
+这是报错信息：
+
+【粘贴报错日志，或描述问题】
 
 请帮我：
-1. 检查是否已有 .git
-2. 如果没有，初始化 Git
-3. 检查 .gitignore 是否完整（node_modules、.env 等）
-4. 检查有没有项目说明.md，没有则生成基础版本
-5. commit 现有所有文件：chore: 初始化已有项目到 Git
-6. 关联 GitHub 仓库并 push
-7. 需要授权时暂停告诉我<button class="cpb" onclick="cp('c-midway')">复制</button></div>
+1. 判断是什么原因
+2. 应该怎么修改
+3. 如果需要你帮忙改代码，请直接帮我改好并推送
+
+我不懂代码，请直接帮我解决。</div>
   </div>
-</div>
-</div>
 
-<!-- 页面3：仓库规范 -->
-<div class="pg" id="p3">
-<div class="sec">
-  <div class="sl"><span class="tag tb">工作仓库</span> Work-AI 目录结构</div>
-  <div class="card">
-    <div class="tree">Work-AI/
-├── <span class="hl-l">项目说明.md</span>     ← 每次开发前必读
-├── <span class="hl-l">开发计划.md</span>     ← 待做事项
-├── <span class="hl-l">更新记录.md</span>     ← 开发日志
-├── <span class="hl-l">AI上下文.md</span>     ← AI 每次读取的状态文件 ⭐
-├── 产品需求.md
-├── 技术文档/
-├── 前端/ 后端/ MCP/ Agent/ 测试/ 素材/</div>
-    <div class="cmd" id="c-repo1">请按照以下规范初始化工作仓库：
+  <div class="prompt-box">
+    <div class="label">模板 C：用 API Token 让 AI 自动部署</div>
+    <div class="content">这是我的 Cloudflare API Token：【粘贴你的 Token】
+我的 GitHub 仓库是：【填你的仓库地址】
 
-GitHub：https://github.com/heweimian-sys/Work-AI
+请帮我：
+1. 把这个仓库部署到 Cloudflare Pages
+2. 构建命令和输出目录请你自己查看仓库代码判断
+3. 部署完成后告诉我网站地址
+4. 如果需要后端 D1 数据库，也帮我创建并绑定
 
-创建目录结构和以下初始文档（中文模板）：
-- 项目说明.md（README 格式）
-- 开发计划.md（TODO 格式，包含待办模板）
-- 更新记录.md（CHANGELOG 格式，含"今天如果重新开始"字段）
-- AI上下文.md（含：项目介绍/当前阶段/技术栈/重要决策/约束条件/下一步目标/目前最大的困难）
-
-要求：所有文档中文，代码注释中文，首次 commit：feat: 初始化项目结构<button class="cpb" onclick="cp('c-repo1')">复制</button></div>
+如果有任何问题请告诉我，我会提供更多信息。</div>
   </div>
-</div>
-<div class="sec">
-  <div class="sl"><span class="tag tg">个人仓库</span> Personal-AI 目录结构</div>
-  <div class="card">
-    <div class="tree">Personal-AI/
-├── <span class="hl-l">项目说明.md</span>
-├── <span class="hl-l">学习路线.md</span>
-├── <span class="hl-l">更新记录.md</span>
-├── <span class="hl-l">AI上下文.md</span>
-├── 知识库/
-│   ├── 提示词/       ← 可复用 Prompt 库
-│   └── 学习笔记/
-├── 项目/
-│   └── 竞品调研网站/
-│       ├── 项目说明.md / 产品需求.md
-│       ├── 开发计划.md / 更新记录.md
-│       ├── AI上下文.md
-│       ├── UI设计/ 前端/ 后端/ 素材/
-├── UI设计/ AI学习Demo/ 第二大脑/ 实验项目/</div>
+
+  <div class="prompt-box">
+    <div class="label">模板 D：网站打开了但功能不正常</div>
+    <div class="content">我的网站已经部署到 Cloudflare 了，
+地址是：【填你的网站地址】
+
+但是遇到以下问题：
+【描述问题，比如：搜索功能用不了 / 页面显示不全 / 图片不显示 / 手机上打不开】
+
+请你帮我排查原因，告诉我应该怎么解决。
+如果有截图我发给你看。</div>
   </div>
-</div>
-<div class="sec">
-  <div class="sl">AI上下文.md 模板（最重要的文件）</div>
-  <div class="card">
-    <div class="cmd" id="c-ctx"># AI上下文
 
-## 项目介绍
-[一句话描述这个项目做什么]
-
-## 当前阶段
-[现在开发到哪一步了]
-
-## 技术栈
-[用了哪些技术]
-
-## 重要决策
-[已经做的重要决策，不能随意更改]
-
-## 约束条件
-[不能改的东西]
-
-## 下一步目标
-[接下来要做的事]
-
-## 目前最大的困难
-[当前最卡的问题——AI 优先解决这个]<button class="cpb" onclick="cp('c-ctx')">复制</button></div>
-    <div class="why">AI 没有记忆，每次对话都是全新开始。这个文件是给 AI 的"项目交接文档"，让它每次都能快速进入状态，不需要你反复解释背景。</div>
+  <div class="callout info">
+    <strong>提问小技巧</strong>：给 AI 的信息越详细越好——仓库地址、报错日志、截图、你操作到哪一步了、你期望的结果是什么。信息越全，AI 回答越准。
   </div>
-</div>
-</div>
+</section>
 
-<!-- 页面4：每日节奏 -->
-<div class="pg" id="p4">
-<div class="sec">
-  <div class="sl">每天开始</div>
-  <div class="card">
-    <div class="cmd" id="c-morning">你现在是这个项目的长期开发成员，不是一次性的代码生成器。
+<!-- 11 后续维护 -->
+<section id="ch11">
+  <h2>十一、后续维护</h2>
 
-请先不要写代码。
-
-按顺序阅读：
-① 项目说明.md
-② 开发计划.md
-③ 更新记录.md
-④ AI上下文.md（重点看"目前最大的困难"）
-
-读完后告诉我：
-1. 你理解到的项目当前状态
-2. 今天建议优先解决什么
-3. 你的开发计划
-
-等我确认后再开始。<button class="cpb" onclick="cp('c-morning')">复制</button></div>
-    <div class="why">AI 没有记忆。每次新对话都是白板。这段话让 AI 先读懂项目，而不是凭你的描述乱猜。换 Trae、Cursor、Claude 都一样用。</div>
+  <h3>更新网站内容</h3>
+  <p>如果你修改了网站代码（或让 AI 帮你改了），只需要把新代码推送到 GitHub，Cloudflare 就会自动重新部署。不需要手动操作。</p>
+  <div class="callout info">
+    <strong>怎么推送？</strong>：如果你用 AI 编程工具（如 TRAE），直接告诉 AI "帮我推送到 GitHub"就行。推送后 Cloudflare 通常 2-3 分钟后自动更新。
   </div>
-</div>
-<div class="sec">
-  <div class="sl">每天结束</div>
-  <div class="card">
-    <div class="cmd" id="c-eod">今天开发完成了，请完成收尾工作：
-
-1. 输出今日总结（完成了什么 / 改了哪些文件 / 下一步建议）
-
-2. 更新 更新记录.md（追加今日内容，必须包含"今天如果重新开始，我会怎么做"）
-
-3. 更新 AI上下文.md（更新当前阶段和最大困难）
-
-4. 更新 开发计划.md（勾选完成项，补充新待办）
-
-5. Git 提交并 push：
-   - commit message 根据实际内容自动生成（feat/fix/docs 规范）
-   - push 到 main 分支
-   - 需要授权时暂停告诉我<button class="cpb" onclick="cp('c-eod')">复制</button></div>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我已经改好了网站代码，请帮我推送到 GitHub。
+推送后帮我看看 Cloudflare 有没有自动开始重新构建。</div>
   </div>
-</div>
-<div class="sec">
-  <div class="sl">遇到报错</div>
-  <div class="card">
-    <div class="cmd" id="c-err">我在做 [功能描述]，遇到了问题。
 
-【想实现的效果】
-[一句话描述]
+  <h3>用 API Token 让 AI 自动更新</h3>
+  <p>如果你已经有 API Token，可以直接让 AI 帮你完成从代码更新到部署的全过程：</p>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我的 Cloudflare API Token 是：【粘贴你的 Token】
+我的 GitHub 仓库是：【填你的仓库地址】
 
-【实际报错】
-[把终端里的完整报错粘贴在这里]
-
-【相关代码】
-[出问题的那段代码]
-
-请先告诉我你判断问题在哪，等我确认后再给修改方案。<button class="cpb" onclick="cp('c-err')">复制</button></div>
-    <div class="why">不需要你先懂是什么错。报错信息就是诊断书，AI 从里面能读出你不知道的技术细节。把红色文字全部复制过来就行。</div>
+我刚才更新了代码，请帮我：
+1. 推送代码到 GitHub
+2. 确认 Cloudflare Pages 是否自动开始重新构建
+3. 构建完成后告诉我结果</div>
   </div>
-</div>
-<div class="sec">
-  <div class="sl">需要新功能</div>
-  <div class="card">
-    <div class="cmd" id="c-feat">我需要增加一个功能：
 
-输入：[描述输入是什么]
-输出：[描述期望输出]
-用途：[在哪里被调用，做什么用]
+  <h3>查看网站状态</h3>
+  <ul>
+    <li><strong>Cloudflare</strong>：控制台 → Workers 和 Pages → 点你的项目 → <strong>部署</strong> 看每次部署是否成功（绿色=成功，红色=失败）</li>
+    <li><strong>Cloudflare 函数</strong>：Pages 项目 → <strong>函数</strong> 查看函数日志和构建状态</li>
+  </ul>
 
-请先告诉我你的实现方案和会影响哪些文件，等我确认再写代码。<button class="cpb" onclick="cp('c-feat')">复制</button></div>
+  <h3>查看网站访问数据</h3>
+  <p>Cloudflare 自带免费的数据统计功能：</p>
+  <ul>
+    <li>控制台 → 点你的项目 → <strong>分析</strong> 标签</li>
+    <li>可以看到：访问次数、访客数量、流量来源、访问者国家分布等</li>
+  </ul>
+
+  <h3>回退到旧版本</h3>
+  <p>如果新版本有问题，可以回退到之前能用的版本：</p>
+  <ul>
+    <li>Cloudflare：部署页面 → 找到之前显示绿色的那次构建 → 点击<strong>「提升到生产环境」</strong></li>
+  </ul>
+  <div class="callout info">
+    <strong>找不到按钮？</strong>：截图 Cloudflare 页面发给 AI，告诉 AI"我想回退到旧版本"，AI 会指导你点哪个按钮。
   </div>
-</div>
-</div>
 
-<!-- 页面5：Agent/Skills -->
-<div class="pg" id="p5">
-<div class="sec">
-  <div class="sl">概念先弄清楚</div>
-  <div class="card">
-    <div class="sr"><div class="sn">Bot</div><div class="sc"><strong>固定逻辑的自动化</strong>——触发词 → 执行预设动作。飞书机器人收发消息是 Bot 的部分。</div></div>
-    <div class="sr"><div class="sn">AI</div><div class="sc"><strong>Agent = LLM 自主决策工具调用</strong>——AI 自己决定"我要调哪个工具"。你的 agent/core.js 升级成 Function Calling 之后才是 Agent。</div></div>
-    <div class="sr"><div class="sn">Sk</div><div class="sc"><strong>Skill = 可复用的能力模块</strong>——比如"读取飞书文档"、"写入 Bitable"，可以被多个 Agent 调用。</div></div>
+  <h3>API Token 安全管理</h3>
+  <ul>
+    <li>定期检查 API 令牌页面，不需要的 Token 及时删除</li>
+    <li>如果 Token 怀疑泄露，立即删除并重新创建</li>
+    <li>不要在公开场合（微信群、论坛）分享 Token</li>
+    <li>可以为不同用途创建不同 Token，方便管理</li>
+  </ul>
+</section>
+
+<!-- 12 流程总结 -->
+<section id="ch12">
+  <h2>十二、流程总结</h2>
+  <div class="callout success">
+    <p><strong>第一步：设置中文界面（建议首先做）</strong></p>
+    <ol style="margin-top: 8px;">
+      <li>登录 Cloudflare → 点击右上角头像 → 「语言」→ 选择「简体中文」</li>
+      <li>界面立即切换为中文，后续操作更轻松</li>
+    </ol>
   </div>
-  <div class="card">
-    <div class="cb"><strong style="color:var(--text-primary)">Bot 是手脚，Agent 是大脑，Skill 是工具箱。</strong>三者组合才是完整系统。</div>
+  <div class="callout success">
+    <p><strong>第二步：前端部署（必须）</strong></p>
+    <ol style="margin-top: 8px;">
+      <li>左侧菜单「计算」→「Workers 和 Pages」→ 点「创建应用程序」</li>
+      <li>点击「Continue with GitHub」（或滚动到底部点「想要部署 Pages？开始使用」）</li>
+      <li>选「导入现有 Git 存储库」→ 连接 GitHub → 选择仓库</li>
+      <li>填写配置信息（<strong>不知道怎么填就问 AI</strong>）</li>
+      <li>点「保存并部署」→ 等待构建完成</li>
+      <li>复制 <code>xxx.pages.dev</code> 网站地址</li>
+    </ol>
   </div>
-</div>
-<div class="sec">
-  <div class="sl">新 Agent 的启动流程</div>
-  <div class="card">
-    <div class="ct">第一步：立项三问（必做）</div>
-    <div class="cmd" id="c-3q">在写任何代码前，先回答这三个问题：
-
-触发：用户做什么动作，触发这个功能？
-例：在飞书群 @机器人 + 输入问题
-
-成功：成功的输出长什么样？
-例：返回"文件名 + 三句话摘要 + 飞书链接"
-
-失败：找不到时回复什么？
-例："未找到相关资料，请联系运营同学"<button class="cpb" onclick="cp('c-3q')">复制</button></div>
+  <div class="callout success">
+    <p><strong>第三步：后端部署（有搜索/登录等功能时需要）</strong></p>
+    <ol style="margin-top: 8px;">
+      <li>左侧菜单「存储和数据库」→「D1 SQLite 数据库」</li>
+      <li>点击三点菜单（⋯）→「创建数据库」→ 输入名称 → 创建</li>
+      <li>回到 Pages 项目 → 设置 → 函数 → 绑定</li>
+      <li>添加 D1 数据库绑定，变量名和代码保持一致</li>
+      <li>保存配置后重新部署 Pages 项目</li>
+    </ol>
   </div>
-  <div class="card">
-    <div class="ct">第二步：让 AI 拆架构</div>
-    <div class="cmd" id="c-arch">我想做一个 [填你的 agent 功能]。
-运行环境：[飞书 bot / 网页 / 其他]
-用户操作：[用户怎么触发]
-期望结果：[输出什么]
-
-请帮我把这个系统拆成几个独立的层，
-每层写清楚：输入是什么格式 → 输出是什么格式。
-不要写代码，只给我架构说明。<button class="cpb" onclick="cp('c-arch')">复制</button></div>
-    <div class="why">先画架构，再写代码。这样出问题时你知道是哪一层的问题，不会连着所有层一起改，找不到错在哪里。</div>
+  <div class="callout success">
+    <p><strong>第四步：申请 API Token（想让 AI 自动部署时需要）</strong></p>
+    <ol style="margin-top: 8px;">
+      <li>左侧菜单找到「帐户 API 令牌」</li>
+      <li>点击「创建令牌」→ 填写名称 → 选择权限（Pages 编辑 + D1 编辑）</li>
+      <li>范围选「整个帐户」→ 创建</li>
+      <li><strong>立即复制保存 Token（只显示一次！）</strong></li>
+      <li>把 Token 给 AI，AI 就能帮你自动部署</li>
+    </ol>
   </div>
-  <div class="card">
-    <div class="ct">第三步：逐层验证</div>
-    <ul class="cl" style="margin-top:0">
-      <li>数据进来了吗？→ 检查文件是否下载成功、日志有没有 error</li>
-      <li>内容读出来了吗？→ 检查 summary 字段是否为空</li>
-      <li>内容找得到吗？→ 用关键词直接查数据库</li>
-      <li>Agent 能命中吗？→ 测试 query 工具，看 top3 返回什么</li>
-      <li>输出格式对吗？→ 把正确结果单独喂给 LLM 测试</li>
-    </ul>
-    <div class="why">每次只调试一层，不要连着所有层一起改。先跑通，再变好。</div>
+
+  <h3>三个重要地址（记好）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>名称</th><th>地址格式</th><th>用来干什么</th></tr></thead>
+      <tbody>
+        <tr><td>网站地址</td><td><code>https://xxx.pages.dev</code></td><td>分享给用户访问</td></tr>
+        <tr><td>D1 绑定名</td><td><code>DB</code> 或你的代码约定名称</td><td>告诉 AI，用来核对函数代码</td></tr>
+        <tr><td>API Token</td><td>一串很长的字符</td><td>给 AI 用，让它自动部署</td></tr>
+      </tbody>
+    </table>
   </div>
-</div>
+
+  <h3>记住这些原则</h3>
+  <ol>
+    <li><strong>先改中文界面</strong>，操作起来更轻松</li>
+    <li>网站部署选 <strong>Pages</strong>，不要选 Worker</li>
+    <li>找不到 GitHub 仓库，去检查授权</li>
+    <li>不知道配置怎么填，<strong>不要瞎填，问 AI</strong></li>
+    <li>部署成功不等于网站没问题，要自己打开检查</li>
+    <li>对外分享用 <code>xxx.pages.dev</code> 正式地址</li>
+    <li>遇到失败，先复制报错信息问 AI，<strong>不要反复点击部署</strong></li>
+    <li>API Token 就像密码，<strong>只给信任的 AI 工具，不要公开</strong></li>
+    <li><strong>你不是一个人在战斗</strong>：技术的事交给 AI，你负责点击和判断</li>
+  </ol>
+</section>
+
+</main>
 </div>
 
-<!-- 页面6：AI 协作规则 -->
-<div class="pg" id="p6">
-<div class="sec">
-  <div class="sl">贴给任何 AI 工具的开场白</div>
-  <div class="card">
-    <div class="cmd" id="c-intro">你现在是这个项目的长期开发成员，不是一次性的代码生成器。
-
-工作原则：
-1. 需求不明确时，先提问，再开发
-2. 每次开发前告诉我你的计划，等我确认再开始
-3. 如果可以解释，不要直接修改——先说明原因和影响范围
-4. 优先保证可维护性，不追求速度
-5. 不依赖聊天记录，以项目文档为唯一事实来源
-6. 发现可优化的地方可以提出，但不要未经确认直接修改
-7. 发现项目结构不符合规范，先问我，不要自动重构
-
-每次回答流程：
-① 告诉我你理解了什么
-② 告诉我准备怎么做
-③ 告诉我影响哪些文件
-④ 等我确认
-⑤ 再开始写代码
-⑥ 完成后输出总结
-
-现在请先阅读项目文档，理解当前进度后再告诉我你的建议。<button class="cpb" onclick="cp('c-intro')">复制</button></div>
-    <div class="why">没有这个规则，AI 很容易一句话没说就开始改几十个文件，改完你不知道改了什么。这六步流程让你始终掌握控制权。</div>
-  </div>
-</div>
-<div class="sec">
-  <div class="sl">统一开发八步流程</div>
-  <div class="card">
-    <div class="sr"><div class="sn">1</div><div class="sc">阅读<strong>项目说明.md</strong></div></div>
-    <div class="sr"><div class="sn">2</div><div class="sc">阅读<strong>开发计划.md</strong></div></div>
-    <div class="sr"><div class="sn">3</div><div class="sc">阅读<strong>更新记录.md</strong></div></div>
-    <div class="sr"><div class="sn">4</div><div class="sc">读取 <strong>AI上下文.md</strong>，重点看"目前最大的困难"</div></div>
-    <div class="sr"><div class="sn">5</div><div class="sc">告知开发计划，<strong>等确认再开始</strong>写代码</div></div>
-    <div class="sr"><div class="sn">6</div><div class="sc">完成后<strong>更新文档</strong>（更新记录 / 开发计划 / AI上下文）</div></div>
-    <div class="sr"><div class="sn">7</div><div class="sc"><strong>Git Commit</strong>（feat / fix / docs / refactor / chore）</div></div>
-    <div class="sr"><div class="sn">8</div><div class="sc"><strong>Push GitHub</strong>（需授权时提醒我）</div></div>
-  </div>
-</div>
-</div>
-
-<!-- 页面7：维护更新 -->
-<div class="pg" id="p7">
-<div class="sec">
-  <div class="sl">Commit Message 规范</div>
-  <div class="card">
-    <div class="cmd" id="c-commit">feat: 新增文件分片上传功能
-fix: 修复 checksum 格式错误
-docs: 更新项目说明和开发计划
-refactor: 重构 agent 核心调度逻辑
-chore: 更新依赖版本<button class="cpb" onclick="cp('c-commit')">复制</button></div>
-  </div>
-</div>
-<div class="sec">
-  <div class="sl">版本打标（每完成一个完整功能）</div>
-  <div class="card">
-    <div class="cmd" id="c-tag">请帮我为这个项目打一个版本标签。
-
-当前完成的功能：[列出这个版本的主要功能]
-版本号建议：v[x.x]
-
-请：
-1. 更新 项目说明.md 的版本号
-2. 在 更新记录.md 新增版本记录
-3. 创建 git tag：git tag v[x.x]
-4. push tag：git push origin v[x.x]<button class="cpb" onclick="cp('c-tag')">复制</button></div>
-  </div>
-</div>
-<div class="sec">
-  <div class="sl">这份 SOP 怎么更新</div>
-  <div class="card">
-    <ul class="cl">
-      <li>做完每个项目后，把新踩的坑补充进来</li>
-      <li>积累到 3 个新经验，升级版本号（v2.1 → v2.2）</li>
-      <li>更新同步到 Personal-AI 仓库的 知识库/SOP/ 目录</li>
-      <li>飞书文档版同步更新</li>
-    </ul>
-    <div class="why">这份 SOP 本身也要版本管理。不需要一次写完美，跟着你的能力一起成长就好。</div>
-  </div>
-</div>
-</div>
-
-</div>
+<footer>
+  <p>新人 AI 工作 SOP：网站部署上线 v5.0（新版 Cloudflare）</p>
+  <p style="margin-top:8px">基于新版 Cloudflare 中文界面制作。你负责点击操作，AI 负责技术判断。</p>
+</footer>
 
 <script>
-function go(n){
-  document.querySelectorAll('.nb').forEach((b,i)=>b.classList.toggle('active',i===n));
-  document.querySelectorAll('.pg').forEach((p,i)=>p.classList.toggle('active',i===n));
-}
-function cp(id){
-  const el=document.getElementById(id);
-  const btn=el.querySelector('.cpb');
-  const clone=el.cloneNode(true);
-  clone.querySelector('.cpb').remove();
-  navigator.clipboard.writeText(clone.innerText.trim()).then(()=>{
-    btn.textContent='已复制';
-    setTimeout(()=>btn.textContent='复制',1500);
+// 交互标注系统
+(function() {
+  let editMode = false;
+  let mosaicMode = false;
+  
+  // 创建工具栏
+  const toolbar = document.createElement('div');
+  toolbar.className = 'annot-toolbar';
+  toolbar.innerHTML = `
+    <button class="btn-edit-off" id="annotToggle">编辑标注</button>
+    <button class="btn-mosaic-off" id="mosaicToggle">马赛克模式</button>
+    <button class="btn-clear" id="annotClearAll">清空所有</button>
+    <span class="hint" id="annotHint"></span>
+  `;
+  document.body.appendChild(toolbar);
+  
+  const toggleBtn = document.getElementById('annotToggle');
+  const mosaicBtn = document.getElementById('mosaicToggle');
+  const clearBtn = document.getElementById('annotClearAll');
+  const hintSpan = document.getElementById('annotHint');
+  
+  // 给每个 shot-frame 添加 data-shot-id（保留已有 ID，避免标注错位）
+  const frames = document.querySelectorAll('.shot-frame');
+  let shotCounter = 0;
+  frames.forEach((frame) => {
+    shotCounter++;
+    if (!frame.dataset.shotId) {
+      frame.dataset.shotId = 'shot-' + shotCounter;
+    }
+    // 加载已保存的标注和马赛克
+    loadAnnotations(frame);
+    loadMosaics(frame);
   });
-}
+  
+  // 退出所有编辑模式
+  function exitAllModes() {
+    editMode = false;
+    mosaicMode = false;
+    frames.forEach(f => {
+      f.classList.remove('editing', 'mosaic-editing');
+      f.querySelectorAll('.annot-box').forEach(b => b.classList.add('readonly'));
+      f.querySelectorAll('.mosaic-box').forEach(b => b.classList.add('readonly'));
+    });
+    toggleBtn.textContent = '编辑标注';
+    toggleBtn.className = 'btn-edit-off';
+    mosaicBtn.textContent = '马赛克模式';
+    mosaicBtn.className = 'btn-mosaic-off';
+    hintSpan.textContent = '';
+  }
+  
+  toggleBtn.addEventListener('click', () => {
+    if (editMode) { exitAllModes(); return; }
+    // 进入标注模式，退出马赛克模式
+    mosaicMode = false;
+    mosaicBtn.textContent = '马赛克模式';
+    mosaicBtn.className = 'btn-mosaic-off';
+    editMode = true;
+    frames.forEach(f => {
+      f.classList.add('editing');
+      f.classList.remove('mosaic-editing');
+      f.querySelectorAll('.annot-box').forEach(b => b.classList.remove('readonly'));
+      f.querySelectorAll('.mosaic-box').forEach(b => b.classList.add('readonly'));
+    });
+    toggleBtn.textContent = '完成标注';
+    toggleBtn.className = 'btn-edit-on';
+    hintSpan.textContent = '点击图片添加标注框，拖动移动，拖右下角调整大小';
+  });
+  
+  mosaicBtn.addEventListener('click', () => {
+    if (mosaicMode) { exitAllModes(); return; }
+    // 进入马赛克模式，退出标注模式
+    editMode = false;
+    toggleBtn.textContent = '编辑标注';
+    toggleBtn.className = 'btn-edit-off';
+    mosaicMode = true;
+    frames.forEach(f => {
+      f.classList.add('mosaic-editing');
+      f.classList.remove('editing');
+      f.querySelectorAll('.mosaic-box').forEach(b => b.classList.remove('readonly'));
+      f.querySelectorAll('.annot-box').forEach(b => b.classList.add('readonly'));
+    });
+    mosaicBtn.textContent = '完成马赛克';
+    mosaicBtn.className = 'btn-mosaic-on';
+    hintSpan.textContent = '点击图片添加马赛克区域，拖动移动，拖右下角调整大小';
+  });
+  
+  // 点击 shot-frame 添加新标注或马赛克
+  frames.forEach(frame => {
+    frame.addEventListener('click', (e) => {
+      if (!editMode && !mosaicMode) return;
+      if (e.target.closest('.annot-box') || e.target.closest('.mosaic-box')) return;
+      
+      const rect = frame.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      
+      if (editMode) {
+        const existing = frame.querySelectorAll('.annot-box').length;
+        const num = existing + 1;
+        createAnnotBox(frame, num, x, y, 15, 8);
+        saveAnnotations(frame);
+      } else if (mosaicMode) {
+        createMosaicBox(frame, x, y, 20, 12);
+        saveMosaics(frame);
+      }
+    });
+  });
+  
+  // 清空所有标注和马赛克
+  clearBtn.addEventListener('click', () => {
+    if (!confirm('确定要清空所有图片的标注和马赛克吗？')) return;
+    frames.forEach(frame => {
+      frame.querySelectorAll('.annot-box').forEach(b => b.remove());
+      frame.querySelectorAll('.mosaic-box').forEach(b => b.remove());
+      localStorage.removeItem('annot-' + frame.dataset.shotId);
+      localStorage.removeItem('mosaic-' + frame.dataset.shotId);
+    });
+  });
+  
+  function createAnnotBox(frame, num, xPct, yPct, wPct, hPct) {
+    const box = document.createElement('div');
+    box.className = 'annot-box' + (editMode ? '' : ' readonly');
+    box.style.left = xPct + '%';
+    box.style.top = yPct + '%';
+    box.style.width = wPct + '%';
+    box.style.height = hPct + '%';
+    
+    const label = document.createElement('div');
+    label.className = 'annot-label';
+    label.textContent = num;
+    label.title = '点击删除';
+    box.appendChild(label);
+    
+    const resize = document.createElement('div');
+    resize.className = 'annot-resize';
+    box.appendChild(resize);
+    
+    // 点击编号删除
+    label.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!editMode) return;
+      if (confirm('删除这个标注？')) {
+        box.remove();
+        // 重新编号
+        renumber(frame);
+        saveAnnotations(frame);
+      }
+    });
+    
+    // 拖动移动
+    let isDragging = false, startX, startY, startLeft, startTop;
+    box.addEventListener('mousedown', (e) => {
+      if (!editMode) return;
+      if (e.target === resize || e.target === label) return;
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      const rect = frame.getBoundingClientRect();
+      startLeft = parseFloat(box.style.left);
+      startTop = parseFloat(box.style.top);
+      e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const rect = frame.getBoundingClientRect();
+      const dx = ((e.clientX - startX) / rect.width) * 100;
+      const dy = ((e.clientY - startY) / rect.height) * 100;
+      box.style.left = Math.max(0, Math.min(100 - parseFloat(box.style.width), startLeft + dx)) + '%';
+      box.style.top = Math.max(0, Math.min(100 - parseFloat(box.style.height), startTop + dy)) + '%';
+    });
+    
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        saveAnnotations(frame);
+      }
+    });
+    
+    // 拖动调整大小
+    let isResizing = false, rStartX, rStartY, rStartW, rStartH;
+    resize.addEventListener('mousedown', (e) => {
+      if (!editMode) return;
+      isResizing = true;
+      rStartX = e.clientX;
+      rStartY = e.clientY;
+      rStartW = parseFloat(box.style.width);
+      rStartH = parseFloat(box.style.height);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      const rect = frame.getBoundingClientRect();
+      const dw = ((e.clientX - rStartX) / rect.width) * 100;
+      const dh = ((e.clientY - rStartY) / rect.height) * 100;
+      box.style.width = Math.max(3, rStartW + dw) + '%';
+      box.style.height = Math.max(3, rStartH + dh) + '%';
+    });
+    
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        saveAnnotations(frame);
+      }
+    });
+    
+    frame.appendChild(box);
+    return box;
+  }
+  
+  function renumber(frame) {
+    const boxes = frame.querySelectorAll('.annot-box');
+    boxes.forEach((b, i) => {
+      b.querySelector('.annot-label').textContent = i + 1;
+    });
+  }
+  
+  function saveAnnotations(frame) {
+    const boxes = frame.querySelectorAll('.annot-box');
+    const data = [];
+    boxes.forEach(b => {
+      data.push({
+        num: parseInt(b.querySelector('.annot-label').textContent),
+        x: parseFloat(b.style.left),
+        y: parseFloat(b.style.top),
+        w: parseFloat(b.style.width),
+        h: parseFloat(b.style.height)
+      });
+    });
+    localStorage.setItem('annot-' + frame.dataset.shotId, JSON.stringify(data));
+  }
+  
+  function loadAnnotations(frame) {
+    const saved = localStorage.getItem('annot-' + frame.dataset.shotId);
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    data.forEach(d => {
+      createAnnotBox(frame, d.num, d.x, d.y, d.w, d.h);
+    });
+  }
+  
+  // === 马赛克功能 ===
+  // 生成马赛克效果：截取图片区域，缩小再放大形成像素化
+  function generateMosaic(img, box, frame) {
+    if (!img.complete || img.naturalWidth === 0) {
+      // 图片未加载，等加载后再生成
+      img.addEventListener('load', () => generateMosaic(img, box, frame), { once: true });
+      return;
+    }
+    const imgRect = img.getBoundingClientRect();
+    if (imgRect.width === 0 || imgRect.height === 0) return;
+    
+    // 马赛克框在图片上的实际像素位置
+    const boxLeft = parseFloat(box.style.left) / 100 * imgRect.width;
+    const boxTop = parseFloat(box.style.top) / 100 * imgRect.height;
+    const boxWidth = Math.max(1, parseFloat(box.style.width) / 100 * imgRect.width);
+    const boxHeight = Math.max(1, parseFloat(box.style.height) / 100 * imgRect.height);
+    
+    // 马赛克块大小（越小越模糊）
+    const blockSize = 12;
+    const smallW = Math.max(1, Math.floor(boxWidth / blockSize));
+    const smallH = Math.max(1, Math.floor(boxHeight / blockSize));
+    
+    // 图片缩放比
+    const scaleX = img.naturalWidth / imgRect.width;
+    const scaleY = img.naturalHeight / imgRect.height;
+    
+    try {
+      // 临时canvas：缩小绘制
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = smallW;
+      tempCanvas.height = smallH;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.imageSmoothingEnabled = false;
+      tempCtx.drawImage(img,
+        Math.max(0, boxLeft * scaleX), Math.max(0, boxTop * scaleY),
+        Math.max(1, boxWidth * scaleX), Math.max(1, boxHeight * scaleY),
+        0, 0, smallW, smallH
+      );
+      
+      // 最终canvas：放大回去（像素化）
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(boxWidth);
+      canvas.height = Math.ceil(boxHeight);
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(tempCanvas, 0, 0, smallW, smallH, 0, 0, canvas.width, canvas.height);
+      
+      box.style.backgroundImage = `url(${canvas.toDataURL()})`;
+    } catch (err) {
+      // 跨域或其它错误时，用纯色块替代
+      box.style.background = 'repeating-conic-gradient(#1c5d5f 0% 25%, #e8f4ee 0% 50%) 50% / 12px 12px';
+    }
+  }
+  
+  function createMosaicBox(frame, xPct, yPct, wPct, hPct) {
+    const img = frame.querySelector('img');
+    const box = document.createElement('div');
+    box.className = 'mosaic-box' + (mosaicMode ? '' : ' readonly');
+    box.style.left = xPct + '%';
+    box.style.top = yPct + '%';
+    box.style.width = wPct + '%';
+    box.style.height = hPct + '%';
+    
+    const label = document.createElement('div');
+    label.className = 'mosaic-label';
+    label.textContent = '×';
+    label.title = '点击删除';
+    box.appendChild(label);
+    
+    const resize = document.createElement('div');
+    resize.className = 'mosaic-resize';
+    box.appendChild(resize);
+    
+    // 生成马赛克
+    generateMosaic(img, box, frame);
+    
+    // 点击删除
+    label.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!mosaicMode) return;
+      if (confirm('删除这个马赛克？')) {
+        box.remove();
+        saveMosaics(frame);
+      }
+    });
+    
+    // 拖动移动
+    let isDragging = false, startX, startY, startLeft, startTop;
+    box.addEventListener('mousedown', (e) => {
+      if (!mosaicMode) return;
+      if (e.target === resize || e.target === label) return;
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = parseFloat(box.style.left);
+      startTop = parseFloat(box.style.top);
+      e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const rect = frame.getBoundingClientRect();
+      const dx = ((e.clientX - startX) / rect.width) * 100;
+      const dy = ((e.clientY - startY) / rect.height) * 100;
+      box.style.left = Math.max(0, Math.min(100 - parseFloat(box.style.width), startLeft + dx)) + '%';
+      box.style.top = Math.max(0, Math.min(100 - parseFloat(box.style.height), startTop + dy)) + '%';
+    });
+    
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        generateMosaic(img, box, frame);
+        saveMosaics(frame);
+      }
+    });
+    
+    // 拖动调整大小
+    let isResizing = false, rStartX, rStartY, rStartW, rStartH;
+    resize.addEventListener('mousedown', (e) => {
+      if (!mosaicMode) return;
+      isResizing = true;
+      rStartX = e.clientX;
+      rStartY = e.clientY;
+      rStartW = parseFloat(box.style.width);
+      rStartH = parseFloat(box.style.height);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      const rect = frame.getBoundingClientRect();
+      const dw = ((e.clientX - rStartX) / rect.width) * 100;
+      const dh = ((e.clientY - rStartY) / rect.height) * 100;
+      box.style.width = Math.max(5, rStartW + dw) + '%';
+      box.style.height = Math.max(5, rStartH + dh) + '%';
+    });
+    
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        generateMosaic(img, box, frame);
+        saveMosaics(frame);
+      }
+    });
+    
+    frame.appendChild(box);
+    return box;
+  }
+  
+  function saveMosaics(frame) {
+    const boxes = frame.querySelectorAll('.mosaic-box');
+    const data = [];
+    boxes.forEach(b => {
+      data.push({
+        x: parseFloat(b.style.left),
+        y: parseFloat(b.style.top),
+        w: parseFloat(b.style.width),
+        h: parseFloat(b.style.height)
+      });
+    });
+    localStorage.setItem('mosaic-' + frame.dataset.shotId, JSON.stringify(data));
+  }
+  
+  function loadMosaics(frame) {
+    const saved = localStorage.getItem('mosaic-' + frame.dataset.shotId);
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    data.forEach(d => {
+      createMosaicBox(frame, d.x, d.y, d.w, d.h);
+    });
+  }
+})();
 </script>
-</main>
+
 </body>
 </html>
