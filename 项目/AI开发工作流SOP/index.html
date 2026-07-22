@@ -255,83 +255,33 @@
   }
   .shot-frame img { display: block; width: 100%; }
 
-  /* 交互标注系统 */
-  .annot-toolbar {
-    position: fixed; top: 60px; right: 20px; z-index: 9999;
-    display: flex; gap: 8px; align-items: center;
-    background: var(--color-surface); border: 1px solid var(--color-border-strong);
-    border-radius: var(--radius-pill); padding: 6px 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  }
-  .annot-toolbar button {
-    border: none; border-radius: var(--radius-pill);
-    padding: 6px 16px; font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all 160ms ease;
-  }
-  .annot-toolbar .btn-edit-off { background: var(--color-surface-mint); color: var(--color-primary); border: 1px solid var(--color-border); }
-  .annot-toolbar .btn-edit-on { background: var(--color-annot, #e85d3a); color: #fff; border: 1px solid var(--color-annot, #e85d3a); }
-  .annot-toolbar .btn-clear { background: transparent; color: var(--color-muted); border: 1px solid var(--color-border); font-size: 12px; }
-  .annot-toolbar .btn-clear:hover { color: var(--color-error); border-color: var(--color-error); }
-  .annot-toolbar .btn-mosaic-off { background: var(--color-surface-mint); color: var(--color-primary); border: 1px solid var(--color-border); }
-  .annot-toolbar .btn-mosaic-on { background: var(--color-primary); color: #fff; border: 1px solid var(--color-primary); }
-  .annot-toolbar .hint { font-size: 12px; color: var(--color-muted); max-width: 240px; }
-
+  /* 批注和马赛克显示（只读） */
   .shot-frame { position: relative; }
-  .shot-frame.editing { cursor: crosshair; }
-  .shot-frame.editing img { pointer-events: none; }
 
   .annot-box {
     position: absolute; border: 3px solid #e85d3a;
     border-radius: 6px; background: rgba(232,93,58,0.08);
-    cursor: move; z-index: 5;
+    z-index: 5; pointer-events: none;
   }
   .annot-box .annot-label {
     position: absolute; top: -14px; left: -14px;
     width: 28px; height: 28px; background: #e85d3a;
     color: #fff; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 14px; cursor: pointer;
+    font-weight: 700; font-size: 14px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     z-index: 6;
   }
-  .annot-box .annot-label:hover { background: #c84a2a; }
-  .annot-box .annot-resize {
-    position: absolute; bottom: -6px; right: -6px;
-    width: 14px; height: 14px; background: #e85d3a;
-    border: 2px solid #fff; border-radius: 50%;
-    cursor: nwse-resize; z-index: 6;
-    display: none;
-  }
-  .shot-frame.editing .annot-box .annot-resize { display: block; }
-  .annot-box.readonly { cursor: default; }
-  .annot-box.readonly .annot-label { cursor: default; }
 
   /* 马赛克区域 */
   .mosaic-box {
     position: absolute; border: 2px solid var(--color-primary);
-    border-radius: 4px; cursor: move; z-index: 4;
+    border-radius: 4px; z-index: 4;
     background-repeat: no-repeat; background-size: 100% 100%;
     image-rendering: pixelated; -webkit-image-rendering: pixelated;
     box-shadow: 0 0 0 1px rgba(28,93,95,0.25);
+    pointer-events: none;
   }
-  .mosaic-box .mosaic-label {
-    position: absolute; top: -14px; right: -14px;
-    width: 28px; height: 28px; background: var(--color-primary);
-    color: #fff; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 14px; cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 6;
-  }
-  .mosaic-box .mosaic-label:hover { background: var(--color-primary-hover); }
-  .mosaic-box .mosaic-resize {
-    position: absolute; bottom: -6px; right: -6px;
-    width: 14px; height: 14px; background: var(--color-primary);
-    border: 2px solid #fff; border-radius: 50%;
-    cursor: nwse-resize; z-index: 6; display: none;
-  }
-  .shot-frame.mosaic-editing .mosaic-box .mosaic-resize { display: block; }
-  .mosaic-box.readonly { cursor: default; }
-  .mosaic-box.readonly .mosaic-label { cursor: default; }
 
   .demo-caption {
     margin: 0 0 var(--spacing-4); color: var(--color-muted);
@@ -1228,13 +1178,10 @@ GitHub 仓库：【填你的仓库地址】
 </footer>
 
 <script>
-// 交互标注系统
+// 批注和马赛克显示系统（只读）
 (function() {
-  let editMode = false;
-  let mosaicMode = false;
 
   // === 嵌入的批注和马赛克数据（从 localStorage 导出，部署后所有人可见）===
-  // 优先级：localStorage > EMBEDDED_DATA（编辑后保存到本地，覆盖嵌入数据）
   const EMBEDDED_DATA = {
     "annot-shot-1":[{"num":1,"x":91.6589,"y":1.44171,"w":3.90187,"h":6.19786},{"num":2,"x":74.5911,"y":23.7882,"w":20.8411,"h":4.27558}],
     "annot-shot-2":[{"num":1,"x":52.278,"y":62.553,"w":23.0607,"h":4.51586}],
@@ -1263,22 +1210,6 @@ GitHub 仓库：【填你的仓库地址】
     "mosaic-shot-18":[{"x":48.1542,"y":3.10945,"w":25.4907,"h":5}]
   };
   
-  // 创建工具栏
-  const toolbar = document.createElement('div');
-  toolbar.className = 'annot-toolbar';
-  toolbar.innerHTML = `
-    <button class="btn-edit-off" id="annotToggle">编辑标注</button>
-    <button class="btn-mosaic-off" id="mosaicToggle">马赛克模式</button>
-    <button class="btn-clear" id="annotClearAll">清空所有</button>
-    <span class="hint" id="annotHint"></span>
-  `;
-  document.body.appendChild(toolbar);
-  
-  const toggleBtn = document.getElementById('annotToggle');
-  const mosaicBtn = document.getElementById('mosaicToggle');
-  const clearBtn = document.getElementById('annotClearAll');
-  const hintSpan = document.getElementById('annotHint');
-  
   // 给每个 shot-frame 添加 data-shot-id（保留已有 ID，避免标注错位）
   const frames = document.querySelectorAll('.shot-frame');
   let shotCounter = 0;
@@ -1292,94 +1223,9 @@ GitHub 仓库：【填你的仓库地址】
     loadMosaics(frame);
   });
   
-  // 退出所有编辑模式
-  function exitAllModes() {
-    editMode = false;
-    mosaicMode = false;
-    frames.forEach(f => {
-      f.classList.remove('editing', 'mosaic-editing');
-      f.querySelectorAll('.annot-box').forEach(b => b.classList.add('readonly'));
-      f.querySelectorAll('.mosaic-box').forEach(b => b.classList.add('readonly'));
-    });
-    toggleBtn.textContent = '编辑标注';
-    toggleBtn.className = 'btn-edit-off';
-    mosaicBtn.textContent = '马赛克模式';
-    mosaicBtn.className = 'btn-mosaic-off';
-    hintSpan.textContent = '';
-  }
-  
-  toggleBtn.addEventListener('click', () => {
-    if (editMode) { exitAllModes(); return; }
-    // 进入标注模式，退出马赛克模式
-    mosaicMode = false;
-    mosaicBtn.textContent = '马赛克模式';
-    mosaicBtn.className = 'btn-mosaic-off';
-    editMode = true;
-    frames.forEach(f => {
-      f.classList.add('editing');
-      f.classList.remove('mosaic-editing');
-      f.querySelectorAll('.annot-box').forEach(b => b.classList.remove('readonly'));
-      f.querySelectorAll('.mosaic-box').forEach(b => b.classList.add('readonly'));
-    });
-    toggleBtn.textContent = '完成标注';
-    toggleBtn.className = 'btn-edit-on';
-    hintSpan.textContent = '点击图片添加标注框，拖动移动，拖右下角调整大小';
-  });
-  
-  mosaicBtn.addEventListener('click', () => {
-    if (mosaicMode) { exitAllModes(); return; }
-    // 进入马赛克模式，退出标注模式
-    editMode = false;
-    toggleBtn.textContent = '编辑标注';
-    toggleBtn.className = 'btn-edit-off';
-    mosaicMode = true;
-    frames.forEach(f => {
-      f.classList.add('mosaic-editing');
-      f.classList.remove('editing');
-      f.querySelectorAll('.mosaic-box').forEach(b => b.classList.remove('readonly'));
-      f.querySelectorAll('.annot-box').forEach(b => b.classList.add('readonly'));
-    });
-    mosaicBtn.textContent = '完成马赛克';
-    mosaicBtn.className = 'btn-mosaic-on';
-    hintSpan.textContent = '点击图片添加马赛克区域，拖动移动，拖右下角调整大小';
-  });
-  
-  // 点击 shot-frame 添加新标注或马赛克
-  frames.forEach(frame => {
-    frame.addEventListener('click', (e) => {
-      if (!editMode && !mosaicMode) return;
-      if (e.target.closest('.annot-box') || e.target.closest('.mosaic-box')) return;
-      
-      const rect = frame.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      
-      if (editMode) {
-        const existing = frame.querySelectorAll('.annot-box').length;
-        const num = existing + 1;
-        createAnnotBox(frame, num, x, y, 15, 8);
-        saveAnnotations(frame);
-      } else if (mosaicMode) {
-        createMosaicBox(frame, x, y, 20, 12);
-        saveMosaics(frame);
-      }
-    });
-  });
-  
-  // 清空所有标注和马赛克
-  clearBtn.addEventListener('click', () => {
-    if (!confirm('确定要清空所有图片的标注和马赛克吗？')) return;
-    frames.forEach(frame => {
-      frame.querySelectorAll('.annot-box').forEach(b => b.remove());
-      frame.querySelectorAll('.mosaic-box').forEach(b => b.remove());
-      localStorage.removeItem('annot-' + frame.dataset.shotId);
-      localStorage.removeItem('mosaic-' + frame.dataset.shotId);
-    });
-  });
-  
   function createAnnotBox(frame, num, xPct, yPct, wPct, hPct) {
     const box = document.createElement('div');
-    box.className = 'annot-box' + (editMode ? '' : ' readonly');
+    box.className = 'annot-box';
     box.style.left = xPct + '%';
     box.style.top = yPct + '%';
     box.style.width = wPct + '%';
@@ -1388,119 +1234,16 @@ GitHub 仓库：【填你的仓库地址】
     const label = document.createElement('div');
     label.className = 'annot-label';
     label.textContent = num;
-    label.title = '点击删除';
     box.appendChild(label);
-    
-    const resize = document.createElement('div');
-    resize.className = 'annot-resize';
-    box.appendChild(resize);
-    
-    // 点击编号删除
-    label.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!editMode) return;
-      if (confirm('删除这个标注？')) {
-        box.remove();
-        // 重新编号
-        renumber(frame);
-        saveAnnotations(frame);
-      }
-    });
-    
-    // 拖动移动
-    let isDragging = false, startX, startY, startLeft, startTop;
-    box.addEventListener('mousedown', (e) => {
-      if (!editMode) return;
-      if (e.target === resize || e.target === label) return;
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      const rect = frame.getBoundingClientRect();
-      startLeft = parseFloat(box.style.left);
-      startTop = parseFloat(box.style.top);
-      e.preventDefault();
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      const rect = frame.getBoundingClientRect();
-      const dx = ((e.clientX - startX) / rect.width) * 100;
-      const dy = ((e.clientY - startY) / rect.height) * 100;
-      box.style.left = Math.max(0, Math.min(100 - parseFloat(box.style.width), startLeft + dx)) + '%';
-      box.style.top = Math.max(0, Math.min(100 - parseFloat(box.style.height), startTop + dy)) + '%';
-    });
-    
-    document.addEventListener('mouseup', () => {
-      if (isDragging) {
-        isDragging = false;
-        saveAnnotations(frame);
-      }
-    });
-    
-    // 拖动调整大小
-    let isResizing = false, rStartX, rStartY, rStartW, rStartH;
-    resize.addEventListener('mousedown', (e) => {
-      if (!editMode) return;
-      isResizing = true;
-      rStartX = e.clientX;
-      rStartY = e.clientY;
-      rStartW = parseFloat(box.style.width);
-      rStartH = parseFloat(box.style.height);
-      e.preventDefault();
-      e.stopPropagation();
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-      if (!isResizing) return;
-      const rect = frame.getBoundingClientRect();
-      const dw = ((e.clientX - rStartX) / rect.width) * 100;
-      const dh = ((e.clientY - rStartY) / rect.height) * 100;
-      box.style.width = Math.max(3, rStartW + dw) + '%';
-      box.style.height = Math.max(3, rStartH + dh) + '%';
-    });
-    
-    document.addEventListener('mouseup', () => {
-      if (isResizing) {
-        isResizing = false;
-        saveAnnotations(frame);
-      }
-    });
     
     frame.appendChild(box);
     return box;
   }
   
-  function renumber(frame) {
-    const boxes = frame.querySelectorAll('.annot-box');
-    boxes.forEach((b, i) => {
-      b.querySelector('.annot-label').textContent = i + 1;
-    });
-  }
-  
-  function saveAnnotations(frame) {
-    const boxes = frame.querySelectorAll('.annot-box');
-    const data = [];
-    boxes.forEach(b => {
-      data.push({
-        num: parseInt(b.querySelector('.annot-label').textContent),
-        x: parseFloat(b.style.left),
-        y: parseFloat(b.style.top),
-        w: parseFloat(b.style.width),
-        h: parseFloat(b.style.height)
-      });
-    });
-    localStorage.setItem('annot-' + frame.dataset.shotId, JSON.stringify(data));
-  }
-  
   function loadAnnotations(frame) {
     const key = 'annot-' + frame.dataset.shotId;
-    // 优先使用 localStorage（用户编辑后的数据），否则用嵌入数据
-    let saved = localStorage.getItem(key);
-    if (!saved && EMBEDDED_DATA[key]) {
-      saved = JSON.stringify(EMBEDDED_DATA[key]);
-    }
-    if (!saved) return;
-    const data = JSON.parse(saved);
+    const data = EMBEDDED_DATA[key];
+    if (!data) return;
     data.forEach(d => {
       createAnnotBox(frame, d.num, d.x, d.y, d.w, d.h);
     });
@@ -1563,122 +1306,23 @@ GitHub 仓库：【填你的仓库地址】
   function createMosaicBox(frame, xPct, yPct, wPct, hPct) {
     const img = frame.querySelector('img');
     const box = document.createElement('div');
-    box.className = 'mosaic-box' + (mosaicMode ? '' : ' readonly');
+    box.className = 'mosaic-box';
     box.style.left = xPct + '%';
     box.style.top = yPct + '%';
     box.style.width = wPct + '%';
     box.style.height = hPct + '%';
     
-    const label = document.createElement('div');
-    label.className = 'mosaic-label';
-    label.textContent = '×';
-    label.title = '点击删除';
-    box.appendChild(label);
-    
-    const resize = document.createElement('div');
-    resize.className = 'mosaic-resize';
-    box.appendChild(resize);
-    
     // 生成马赛克
     generateMosaic(img, box, frame);
-    
-    // 点击删除
-    label.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!mosaicMode) return;
-      if (confirm('删除这个马赛克？')) {
-        box.remove();
-        saveMosaics(frame);
-      }
-    });
-    
-    // 拖动移动
-    let isDragging = false, startX, startY, startLeft, startTop;
-    box.addEventListener('mousedown', (e) => {
-      if (!mosaicMode) return;
-      if (e.target === resize || e.target === label) return;
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      startLeft = parseFloat(box.style.left);
-      startTop = parseFloat(box.style.top);
-      e.preventDefault();
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      const rect = frame.getBoundingClientRect();
-      const dx = ((e.clientX - startX) / rect.width) * 100;
-      const dy = ((e.clientY - startY) / rect.height) * 100;
-      box.style.left = Math.max(0, Math.min(100 - parseFloat(box.style.width), startLeft + dx)) + '%';
-      box.style.top = Math.max(0, Math.min(100 - parseFloat(box.style.height), startTop + dy)) + '%';
-    });
-    
-    document.addEventListener('mouseup', () => {
-      if (isDragging) {
-        isDragging = false;
-        generateMosaic(img, box, frame);
-        saveMosaics(frame);
-      }
-    });
-    
-    // 拖动调整大小
-    let isResizing = false, rStartX, rStartY, rStartW, rStartH;
-    resize.addEventListener('mousedown', (e) => {
-      if (!mosaicMode) return;
-      isResizing = true;
-      rStartX = e.clientX;
-      rStartY = e.clientY;
-      rStartW = parseFloat(box.style.width);
-      rStartH = parseFloat(box.style.height);
-      e.preventDefault();
-      e.stopPropagation();
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-      if (!isResizing) return;
-      const rect = frame.getBoundingClientRect();
-      const dw = ((e.clientX - rStartX) / rect.width) * 100;
-      const dh = ((e.clientY - rStartY) / rect.height) * 100;
-      box.style.width = Math.max(5, rStartW + dw) + '%';
-      box.style.height = Math.max(5, rStartH + dh) + '%';
-    });
-    
-    document.addEventListener('mouseup', () => {
-      if (isResizing) {
-        isResizing = false;
-        generateMosaic(img, box, frame);
-        saveMosaics(frame);
-      }
-    });
     
     frame.appendChild(box);
     return box;
   }
   
-  function saveMosaics(frame) {
-    const boxes = frame.querySelectorAll('.mosaic-box');
-    const data = [];
-    boxes.forEach(b => {
-      data.push({
-        x: parseFloat(b.style.left),
-        y: parseFloat(b.style.top),
-        w: parseFloat(b.style.width),
-        h: parseFloat(b.style.height)
-      });
-    });
-    localStorage.setItem('mosaic-' + frame.dataset.shotId, JSON.stringify(data));
-  }
-  
   function loadMosaics(frame) {
     const key = 'mosaic-' + frame.dataset.shotId;
-    // 优先使用 localStorage（用户编辑后的数据），否则用嵌入数据
-    let saved = localStorage.getItem(key);
-    if (!saved && EMBEDDED_DATA[key]) {
-      saved = JSON.stringify(EMBEDDED_DATA[key]);
-    }
-    if (!saved) return;
-    const data = JSON.parse(saved);
+    const data = EMBEDDED_DATA[key];
+    if (!data) return;
     data.forEach(d => {
       createMosaicBox(frame, d.x, d.y, d.w, d.h);
     });
