@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8月大航海 — 教练培训指南</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,700;0,800;0,900;1,400;1,500&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ========== RESET & BASE ========== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #d4922a;
+      --gold-light: #f0c868;
+      --cyan: #0fbcb4;
+      --cyan-dim: rgba(15, 188, 180, 0.15);
+      --deep-blue: #0a2540;
+      --mid-blue: #1a4a7a;
+      --coral: #e07856;
+      --cream: #f5f0eb;
+      --paper: #faf7f2;
+      --ink: #1a1a2e;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: "Noto Sans SC", system-ui, sans-serif;
+      color: var(--cream);
+      background: var(--deep-blue);
+      cursor: pointer;
+    }
+
+    /* ========== SLIDE SYSTEM ========== */
+    .slide {
+      position: fixed;
+      inset: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+      z-index: 0;
+    }
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      z-index: 1;
+    }
+
+    /* ========== BACKGROUND ========== */
+    .slide-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      z-index: 0;
+    }
+    .slide-bg.slow-zoom {
+      animation: slowZoom 20s ease-out forwards;
+    }
+    @keyframes slowZoom {
+      from { transform: scale(1.0); }
+      to { transform: scale(1.05); }
+    }
+
+    /* CSS background for no-image slides */
+    .slide.no-bg .slide-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      z-index: 0;
+    }
+    .slide.no-bg .slide-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 37, 64, 0.55);
+      backdrop-filter: blur(2px);
+    }
+
+    /* ========== DECORATIVE LINES (no-bg slides) ========== */
+    .deco-line {
+      position: absolute;
+      background: linear-gradient(90deg, transparent, rgba(15,188,180,0.12), transparent);
+      height: 1px;
+      width: 60vw;
+      left: 20vw;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .deco-line.top { top: 15vh; }
+    .deco-line.mid { top: 50vh; }
+    .deco-line.bot { top: 85vh; }
+
+    .deco-glow {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .deco-glow.tl {
+      top: -10vh; left: -5vw;
+      width: 40vw; height: 40vh;
+      background: radial-gradient(ellipse, rgba(212,146,42,0.05) 0%, transparent 70%);
+    }
+    .deco-glow.br {
+      bottom: -10vh; right: -5vw;
+      width: 50vw; height: 50vh;
+      background: radial-gradient(ellipse, rgba(15,188,180,0.04) 0%, transparent 70%);
+    }
+
+    /* ========== CHROME (top bar) ========== */
+    .chrome {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 4vh 6vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      z-index: 10;
+    }
+    .chrome-left { display: flex; align-items: center; gap: 0.6em; }
+    .chrome-left .sep {
+      display: inline-block;
+      width: 20px; height: 1px;
+      background: currentColor;
+      opacity: 0.4;
+    }
+    .slide.has-bg .chrome {
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(10,37,64,0.7);
+    }
+    .slide.no-bg .chrome {
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(10,37,64,0.7);
+    }
+
+    /* ========== FOOT (bottom bar) ========== */
+    .foot {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 4vh 6vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      z-index: 10;
+    }
+    .foot-left {
+      font-family: "Noto Serif SC", serif;
+      font-size: 13px;
+      font-weight: 400;
+    }
+    .foot-right {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+    }
+    .slide.has-bg .foot { color: #fff; text-shadow: 0 2px 12px rgba(10,37,64,0.7); }
+    .slide.no-bg .foot { color: #fff; text-shadow: 0 2px 12px rgba(10,37,64,0.7); }
+
+    /* ========== CONTENT ========== */
+    .content {
+      position: relative;
+      z-index: 5;
+      padding: 12vh 6vw 10vh;
+      max-width: 72vw;
+    }
+    .slide.has-bg .content {
+      text-shadow: 0 2px 20px rgba(10,37,64,0.8), 0 1px 4px rgba(0,0,0,0.5);
+      color: #fff;
+    }
+    .slide.no-bg .content { color: #fff; text-shadow: 0 2px 20px rgba(10,37,64,0.8), 0 1px 4px rgba(0,0,0,0.5); }
+
+    /* ========== KICKER ========== */
+    .kicker {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-bottom: 2.6vh;
+    }
+    .slide.has-bg .kicker { color: #fff; }
+    .slide.no-bg .kicker { color: var(--gold-light); }
+    .slide.no-bg .kicker.gold { color: var(--gold-light); }
+    .slide.no-bg .kicker.coral { color: #f0a080; }
+
+    /* ========== TITLES ========== */
+    .title {
+      margin-bottom: 3vh;
+    }
+    .title-en {
+      font-family: "Playfair Display", serif;
+      font-weight: 700;
+      font-size: 11vw;
+      line-height: 0.92;
+      letter-spacing: -0.025em;
+      margin-bottom: 1vh;
+    }
+    .title-cn {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 700;
+      font-size: 5.5vw;
+      line-height: 1.1;
+    }
+    .title-cn.large { font-size: 7vw; }
+    .title-cn.medium { font-size: 4.5vw; }
+
+    /* ========== BODY TEXT ========== */
+    .body {
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 400;
+      font-size: max(15px, 1.22vw);
+      line-height: 1.75;
+      opacity: 0.85;
+      max-width: 52vw;
+    }
+    .slide.has-bg .body { color: #fff; }
+    .slide.no-bg .body { color: var(--cream); }
+
+    /* ========== QUOTE (金句) ========== */
+    .quote {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 500;
+      font-size: 2.5vw;
+      font-style: italic;
+      border-left: 3px solid currentColor;
+      padding-left: 2vw;
+      margin-top: 4vh;
+      max-width: 48vw;
+      line-height: 1.5;
+    }
+    .slide.has-bg .quote {
+      color: #fff;
+      border-color: var(--gold);
+      text-shadow: 0 0 30px rgba(212,146,42,0.3);
+    }
+    .slide.no-bg .quote {
+      color: var(--gold-light);
+      border-color: var(--gold);
+    }
+
+    /* ========== GHOST NUMBER ========== */
+    .ghost {
+      position: absolute;
+      font-family: "Playfair Display", serif;
+      font-weight: 900;
+      font-size: 34vw;
+      line-height: 0.8;
+      pointer-events: none;
+      z-index: 1;
+      user-select: none;
+    }
+    .ghost-right { right: -2vw; bottom: -4vh; }
+    .ghost-left { left: -2vw; bottom: -4vh; }
+    .slide.has-bg .ghost { color: #fff; opacity: 0.06; }
+    .slide.no-bg .ghost { color: #fff; opacity: 0.06; }
+
+    /* ========== CARDS ========== */
+    .card {
+      background: rgba(10,37,64,0.5);
+      border-left: 2px solid var(--cyan);
+      padding: 2.5vh 2vw;
+      border-radius: 4px;
+    }
+    .card.gold-border { border-left-color: var(--gold); }
+    .card.coral-border { border-left-color: var(--coral); }
+
+    .card-title {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 600;
+      font-size: max(16px, 1.3vw);
+      margin-bottom: 0.8vh;
+      color: var(--cream);
+    }
+    .card-desc {
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 400;
+      font-size: max(13px, 1.05vw);
+      line-height: 1.7;
+      opacity: 0.75;
+      color: var(--cream);
+    }
+    .card-num {
+      font-family: "Playfair Display", serif;
+      font-weight: 800;
+      font-size: max(32px, 3vw);
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 1vh;
+    }
+
+    /* ========== GRID LAYOUTS ========== */
+    .grid-2x3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 2vh 1.5vw;
+      margin-top: 3vh;
+    }
+    .grid-3col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2vh 1.5vw;
+      margin-top: 3vh;
+    }
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2vh 2vw;
+      margin-top: 3vh;
+    }
+
+    /* ========== GLASS CARD (for bg slides) ========== */
+    .glass {
+      background: rgba(10,37,64,0.45);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 8px;
+      padding: 3vh 2.5vw;
+      color: #fff;
+    }
+
+    /* ========== PILLS / TAGS ========== */
+    .pill-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1vh 1vw;
+      margin-top: 3vh;
+    }
+    .pill {
+      display: inline-block;
+      padding: 1.2vh 1.8vw;
+      border-radius: 100px;
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: max(15px, 1.2vw);
+      font-weight: 400;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .pill.cyan {
+      color: #7ff5ee;
+      border-color: rgba(15,188,180,0.7);
+      background: rgba(15,188,180,0.25);
+      box-shadow: 0 0 20px rgba(15,188,180,0.15);
+    }
+    .pill.gold {
+      color: #ffd878;
+      border-color: rgba(212,146,42,0.7);
+      background: rgba(212,146,42,0.25);
+      box-shadow: 0 0 20px rgba(212,146,42,0.15);
+    }
+
+    /* ========== OUTPUT GRID (slide 05) ========== */
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2vh 1.5vw;
+      margin-top: 3vh;
+    }
+    .output-card {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 2.5vh 1.2vw;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+    .output-card:hover {
+      background: rgba(255,255,255,0.18);
+      transform: translateY(-4px);
+    }
+    .output-icon {
+      font-family: "Playfair Display", serif;
+      font-weight: 800;
+      font-size: max(28px, 2.5vw);
+      color: var(--gold-light);
+      text-shadow: 0 0 20px rgba(212,146,42,0.3);
+      margin-bottom: 1vh;
+    }
+    .output-name {
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: max(13px, 1vw);
+      color: #fff;
+      opacity: 0.9;
+    }
+
+    /* ========== TIMELINE ========== */
+    .timeline {
+      position: relative;
+      padding-left: 2.5vw;
+      margin-top: 3vh;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0.5vw;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--cyan), rgba(15,188,180,0.2));
+    }
+    .timeline-node {
+      position: relative;
+      padding: 1.5vh 0 2.5vh 1.5vw;
+    }
+    .timeline-node::before {
+      content: '';
+      position: absolute;
+      left: -2.1vw;
+      top: 2.2vh;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 12px rgba(212,146,42,0.4);
+    }
+    .timeline-label {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.5vh;
+    }
+    .timeline-title {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 600;
+      font-size: max(16px, 1.3vw);
+      margin-bottom: 0.5vh;
+    }
+    .timeline-desc {
+      font-size: max(13px, 1.05vw);
+      opacity: 0.7;
+      line-height: 1.65;
+    }
+
+    /* ========== FORMAT CARD (slide 02) ========== */
+    .format-card {
+      border: 1px solid rgba(212,146,42,0.5);
+      border-radius: 6px;
+      padding: 2vh 2vw;
+      background: rgba(212,146,42,0.06);
+      margin-top: 2vh;
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: max(14px, 1.1vw);
+      color: var(--gold-light);
+      line-height: 1.7;
+    }
+    .example-card {
+      border: 1px solid rgba(15,188,180,0.5);
+      border-radius: 6px;
+      padding: 2vh 2vw;
+      background: rgba(15,188,180,0.06);
+      margin-top: 2vh;
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: max(14px, 1.1vw);
+      color: var(--cyan);
+      line-height: 1.7;
+    }
+
+    /* ========== DO/DON'T (slide 09) ========== */
+    .do-card {
+      background: rgba(15,188,180,0.08);
+      border: 1px solid rgba(15,188,180,0.25);
+      border-radius: 8px;
+      padding: 3vh 2vw;
+    }
+    .do-card .card-title { color: var(--cyan); }
+    .dont-card {
+      background: rgba(224,120,86,0.08);
+      border: 1px solid rgba(224,120,86,0.25);
+      border-radius: 8px;
+      padding: 3vh 2vw;
+    }
+    .dont-card .card-title { color: var(--coral); }
+    .list-item {
+      padding: 0.8vh 0;
+      font-size: max(13px, 1.05vw);
+      line-height: 1.65;
+      opacity: 0.8;
+    }
+
+    /* ========== ROUTE LIST (slide 06) ========== */
+    .route-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2vh 3vw;
+      margin-top: 2vh;
+    }
+    .route-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2vh;
+    }
+    .route-item {
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: max(14px, 1.15vw);
+      line-height: 1.6;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(10,37,64,0.8), 0 1px 4px rgba(0,0,0,0.5);
+    }
+    .route-item .route-num {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: var(--gold-light);
+      letter-spacing: 0.15em;
+    }
+
+    /* ========== HERO STATS (slide 01) ========== */
+    .hero-stats {
+      position: absolute;
+      right: 6vw; bottom: 14vh;
+      display: flex;
+      gap: 3vw;
+      z-index: 5;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: "Playfair Display", serif;
+      font-weight: 800;
+      font-size: max(64px, 7vw);
+      color: #fff;
+      text-shadow: 0 2px 20px rgba(10,37,64,0.8);
+      line-height: 1;
+    }
+    .stat-label {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: max(13px, 1.2vw);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      margin-top: 0.5vh;
+    }
+    .hero-meta {
+      position: absolute;
+      left: 6vw; bottom: 10vh;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.5);
+      text-shadow: 0 2px 12px rgba(10,37,64,0.7);
+      z-index: 5;
+    }
+
+    /* ========== MODULE CARD MINI ========== */
+    .module-tag {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 0.4vh;
+    }
+
+    /* ========== NAV DOTS ========== */
+    .nav-dots {
+      position: fixed;
+      bottom: 2.5vh;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      z-index: 100;
+    }
+    .nav-dot {
+      width: 8px; height: 8px;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.3);
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-dot.active {
+      width: 28px;
+      background: var(--gold);
+    }
+
+    /* ========== REVEAL ANIMATION ========== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ========== SCENARIO TAG ========== */
+    .scenario-tag {
+      display: inline-block;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 0.4vh 0.8vw;
+      border-radius: 3px;
+      margin-bottom: 1vh;
+    }
+    .scenario-tag.green {
+      color: var(--cyan);
+      background: rgba(15,188,180,0.12);
+    }
+    .scenario-tag.amber {
+      color: var(--gold-light);
+      background: rgba(212,146,42,0.12);
+    }
+    .scenario-tag.red {
+      color: var(--coral);
+      background: rgba(224,120,86,0.12);
+    }
+
+    /* ========== GOLD UNDERLINE ========== */
+    .gold-underline {
+      text-decoration: none;
+      background-image: linear-gradient(120deg, var(--gold) 0%, var(--gold-light) 100%);
+      background-size: 100% 3px;
+      background-position: 0 88%;
+      background-repeat: no-repeat;
+    }
+
+    /* ========== SUBTITLE ========== */
+    .sub-gold {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 600;
+      font-size: max(15px, 1.3vw);
+      color: var(--gold-light);
+      margin-top: 3vh;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 01: Hero（背景图 hero-voyage-start.png） -->
+  <!-- ============================================================ -->
+  <div class="slide has-bg" data-slide="0" data-ghost="01">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-voyage-start.png)"></div>
+    <div class="ghost ghost-right">01</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">01 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker reveal">2026年8月 · 教练培训</div>
+      <div class="title title-cn large reveal">教练登船指南</div>
+      <p class="body reveal">从学习打卡走向成果交付——让每位船员21天后带着真实作品靠岸</p>
+    </div>
+    <div class="hero-stats">
+      <div class="reveal"><div class="stat-num">21</div><div class="stat-label">天航程</div></div>
+      <div class="reveal"><div class="stat-num">7</div><div class="stat-label">条航线</div></div>
+      <div class="reveal"><div class="stat-num">1</div><div class="stat-label">个目标</div></div>
+    </div>
+    <div class="hero-meta reveal">雪雪 · 运营培训 · 40分钟讲解</div>
+    <div class="foot">
+      <div class="foot-left">启航</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 02: 破冰开场（无背景图） -->
+  <!-- ============================================================ -->
+  <div class="slide no-bg" data-slide="1" data-ghost="02">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-core-change.png)"></div>
+    <div class="ghost ghost-right">02</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">02 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker reveal">破冰 · 团队介绍</div>
+      <h1 class="title title-cn reveal">先认识彼此</h1>
+      <p class="body reveal">评论区用统一格式刷屏，让每位船员快速找到同航道的伙伴。</p>
+      <div class="format-card reveal">
+        格式：<strong>【昵称】+【坐标】+【擅长领域 / 关注航线】</strong>
+      </div>
+      <div class="example-card reveal">
+        示例：雪雪｜杭州｜AI写作 / AI视频 / AI编程
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">破冰开场</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 03: 今日议程（无背景图） -->
+  <!-- ============================================================ -->
+  <div class="slide no-bg" data-slide="2" data-ghost="03">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-seven-routes.png)"></div>
+    <div class="ghost ghost-right">03</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">03 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker gold reveal">议程 · 六个模块</div>
+      <h1 class="title title-cn reveal">六个模块 一条主线</h1>
+      <div class="grid-2x3 reveal">
+        <div class="card">
+          <div class="module-tag">模块一</div>
+          <div class="card-title">破冰开场</div>
+          <div class="card-desc">认识彼此，建立连接</div>
+        </div>
+        <div class="card">
+          <div class="module-tag">模块二</div>
+          <div class="card-title">核心理念</div>
+          <div class="card-desc">从"学过"到"做出来"</div>
+        </div>
+        <div class="card">
+          <div class="module-tag">模块三</div>
+          <div class="card-title">成果定义</div>
+          <div class="card-desc">靠岸时要能拿出什么</div>
+        </div>
+        <div class="card">
+          <div class="module-tag">模块四</div>
+          <div class="card-title">航线总览</div>
+          <div class="card-desc">7条航线，21天航行</div>
+        </div>
+        <div class="card">
+          <div class="module-tag">模块五</div>
+          <div class="card-title">角色与任务</div>
+          <div class="card-desc">教练定位与三件事</div>
+        </div>
+        <div class="card">
+          <div class="module-tag">模块六</div>
+          <div class="card-title">实操指南</div>
+          <div class="card-desc">流程、反馈与突发应对</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">今日议程</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 04: 核心变化（背景图 hero-core-change.png） -->
+  <!-- ============================================================ -->
+  <div class="slide has-bg" data-slide="3" data-ghost="04">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-core-change.png)"></div>
+    <div class="ghost ghost-left">04</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">04 / 15</div>
+    </div>
+    <div class="content">
+      <div class="glass reveal" style="max-width:56vw;">
+        <div class="kicker">核心理念 · 从学到做</div>
+        <h1 class="title title-cn reveal">从"学过"到"做出来"</h1>
+        <p class="body reveal" style="color:#fff;">船员不只是记录今天学了什么——我们要看到他们做出来的东西。每一天的打卡应该是成果，不是笔记。</p>
+        <div class="quote reveal">
+          做出来，才算学会。
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">核心理念</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 05: 成果作业（无背景图） -->
+  <!-- ============================================================ -->
+  <div class="slide no-bg" data-slide="4" data-ghost="05">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-coach-role.png)"></div>
+    <div class="ghost ghost-right">05</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">05 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker coral reveal">成果定义 · 靠岸标准</div>
+      <h1 class="title title-cn reveal">靠岸时要能拿出来</h1>
+      <p class="body reveal">21天不长，每天必须推进一点可展示的成果。以下都是认可的输出形式：</p>
+      <div class="output-grid reveal">
+        <div class="output-card">
+          <div class="output-icon">D</div>
+          <div class="output-name">产品Demo</div>
+        </div>
+        <div class="output-card">
+          <div class="output-icon">A</div>
+          <div class="output-name">Agent</div>
+        </div>
+        <div class="output-card">
+          <div class="output-icon">V</div>
+          <div class="output-name">视频作品</div>
+        </div>
+        <div class="output-card">
+          <div class="output-icon">S</div>
+          <div class="output-name">第二大脑内容系统</div>
+        </div>
+        <div class="output-card">
+          <div class="output-icon">P</div>
+          <div class="output-name">发布记录</div>
+        </div>
+        <div class="output-card">
+          <div class="output-icon">R</div>
+          <div class="output-name">数据截图</div>
+        </div>
+        <div class="output-card">
+          <div class="output-icon">K</div>
+          <div class="output-name">知识库</div>
+        </div>
+        <div class="output-card">
+          <div class="output-icon">X</div>
+          <div class="output-name">可复用Skill</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">成果定义</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 06: 7条航线（背景图 hero-seven-routes.png） -->
+  <!-- ============================================================ -->
+  <div class="slide has-bg" data-slide="5" data-ghost="06">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-seven-routes.png)"></div>
+    <div class="ghost ghost-left">06</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">06 / 15</div>
+    </div>
+    <div class="content">
+      <div class="glass reveal" style="max-width:62vw;">
+        <div class="kicker">航线总览 · 七条路径</div>
+        <h1 class="title title-cn reveal">7条航线 21天航行</h1>
+        <p class="body reveal" style="color:#fff;">每条航线对应一个明确成果方向。船员选择一条主线深入，也可探索相邻海域。</p>
+        <div class="route-list reveal">
+          <div class="route-col">
+            <div class="route-item"><span class="route-num">R1</span> AI产品（国内—小程序）</div>
+            <div class="route-item"><span class="route-num">R2</span> AI产品（国外—热词游戏站）</div>
+            <div class="route-item"><span class="route-num">R3</span> AI第二大脑—内容创作系统</div>
+            <div class="route-item"><span class="route-num">R4</span> AI高质感视频—电影感短片实战</div>
+          </div>
+          <div class="route-col">
+            <div class="route-item"><span class="route-num">R5</span> AI视频带货</div>
+            <div class="route-item"><span class="route-num">R6</span> AI Agent架构师</div>
+            <div class="route-item"><span class="route-num">R7</span> Agent Skills炼术营</div>
+          </div>
+        </div>
+        <div class="sub-gold reveal" style="color:var(--gold-light); text-shadow: 0 2px 12px rgba(10,37,64,0.7);">8月5日开船 · 结营时间待同步</div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">航线总览</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 07: 角色定位（背景图 hero-coach-role.png） -->
+  <!-- ============================================================ -->
+  <div class="slide has-bg" data-slide="6" data-ghost="07">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-coach-role.png)"></div>
+    <div class="ghost ghost-left">07</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">07 / 15</div>
+    </div>
+    <div class="content" style="margin-top:10vh;">
+      <div class="glass reveal" style="max-width:58vw; text-align:center; margin:0 auto;">
+        <div class="kicker">角色定位 · 教练身份</div>
+        <h1 class="title title-cn reveal" style="text-align:center;">陪跑者 反馈者</h1>
+        <p class="body reveal" style="color:rgba(255,255,255,0.9); margin:0 auto 2vh; max-width:44vw; text-align:center;">教练不需要什么都会，但需要愿意陪伴船员找到答案，把问题往前推一步。</p>
+        <div class="quote reveal" style="max-width:48vw; margin:2vh auto 0; border-color:var(--gold); text-align:left;">
+          教练的价值不在于全知，而在于愿意陪船员把问题往前推一步。
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">角色定位</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 08: 教练三件事（无背景图） -->
+  <!-- ============================================================ -->
+  <div class="slide no-bg" data-slide="7" data-ghost="08">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-voyage-start.png)"></div>
+    <div class="ghost ghost-right">08</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">08 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker gold reveal">教练任务 · 三件事</div>
+      <h1 class="title title-cn reveal">答疑 反馈 推动</h1>
+      <div class="grid-3col reveal">
+        <div class="card gold-border" style="border-top:2px solid var(--gold); border-left:none; padding-top:3vh;">
+          <div class="card-num">01</div>
+          <div class="card-title">答疑</div>
+          <div class="card-desc">及时回应船员的问题，帮他们理清思路，而不是直接给答案。引导他们学会自己查找和验证。</div>
+        </div>
+        <div class="card gold-border" style="border-top:2px solid var(--gold); border-left:none; padding-top:3vh;">
+          <div class="card-num">02</div>
+          <div class="card-title">作业反馈</div>
+          <div class="card-desc">看三个维度：完成要求了吗？可以展示了吗？下一步是什么？反馈要具体、可执行。</div>
+        </div>
+        <div class="card gold-border" style="border-top:2px solid var(--gold); border-left:none; padding-top:3vh;">
+          <div class="card-num">03</div>
+          <div class="card-title">陪伴推动</div>
+          <div class="card-desc">关注船员进度，主动推动停滞的伙伴。记录每个人的状态，及时提醒和鼓励。</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">教练任务</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 09: 减负边界（无背景图） -->
+  <!-- ============================================================ -->
+  <div class="slide no-bg" data-slide="8" data-ghost="09">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-delivery.png)"></div>
+    <div class="ghost ghost-right">09</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">09 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker reveal">减负边界 · 该做不该做</div>
+      <h1 class="title title-cn reveal">好的教练不是代工</h1>
+      <div class="grid-2col reveal">
+        <div class="do-card">
+          <div class="card-title" style="font-size:max(18px,1.5vw); margin-bottom:2vh;">应该做</div>
+          <div class="list-item">引导船员自己排查问题</div>
+          <div class="list-item">给出方向性建议和参考</div>
+          <div class="list-item">鼓励船员先尝试再提问</div>
+          <div class="list-item">反馈时指出具体改进点</div>
+          <div class="list-item">记录常见问题更新常见问题文档</div>
+        </div>
+        <div class="dont-card">
+          <div class="card-title" style="font-size:max(18px,1.5vw); margin-bottom:2vh;">不要做</div>
+          <div class="list-item">替船员完成作业</div>
+          <div class="list-item">直接给代码/成品答案</div>
+          <div class="list-item">在群里批评或公开施压</div>
+          <div class="list-item">承诺自己不确定的内容</div>
+          <div class="list-item">花过多时间在单个人身上</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">减负边界</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 10: 航行流程（无背景图） -->
+  <!-- ============================================================ -->
+  <div class="slide no-bg" data-slide="9" data-ghost="10">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-core-change.png)"></div>
+    <div class="ghost ghost-right">10</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">10 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker gold reveal">航行流程 · 21天周期</div>
+      <h1 class="title title-cn reveal">从入群到靠岸</h1>
+      <div class="timeline reveal">
+        <div class="timeline-node">
+          <div class="timeline-label">阶段一</div>
+          <div class="timeline-title">开船前</div>
+          <div class="card-desc">船员入群、选航线、自我介绍。教练熟悉成员，建立连接。</div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-label">阶段二</div>
+          <div class="timeline-title">第 1–3 天</div>
+          <div class="card-desc">破冰、选工具、确定首个小目标。教练帮每个人找到起点。</div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-label">阶段三</div>
+          <div class="timeline-title">航海中期</div>
+          <div class="card-desc">持续打卡、遇到困难、教练答疑和推动。关注掉队信号。</div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-label">阶段四</div>
+          <div class="timeline-title">靠岸冲刺</div>
+          <div class="card-desc">整理成果、打磨展示、准备结营。教练逐人过审。</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">航行流程</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 11: 最常见问题（无背景图） -->
+  <!-- ============================================================ -->
+  <div class="slide no-bg" data-slide="10" data-ghost="11">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-seven-routes.png)"></div>
+    <div class="ghost ghost-right">11</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">11 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker reveal">航行中 · 常见问题</div>
+      <h1 class="title title-cn reveal" style="font-size:max(48px, 6.5vw); line-height:1.15; max-width:56vw;">我该从哪开始？</h1>
+      <p class="body reveal" style="font-size:max(18px, 1.5vw); line-height:1.8; opacity:0.9; max-width:48vw; margin-top:3vh;">刚启航的前几天，这是最常听到的问题。答案是：随便一个能跑起来的小东西，比完美的计划重要一百倍。先动起来，方向会在航行中变清晰。</p>
+    </div>
+    <div class="foot">
+      <div class="foot-left">常见问题</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 12: 作业反馈（无背景图） -->
+  <!-- ============================================================ -->
+  <div class="slide no-bg" data-slide="11" data-ghost="12">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-coach-role.png)"></div>
+    <div class="ghost ghost-right">12</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">12 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker gold reveal">作业反馈 · 三条标准</div>
+      <h1 class="title title-cn reveal">只看三件事</h1>
+      <div class="grid-3col reveal" style="margin-top:4vh;">
+        <div class="card" style="padding-top:3vh;">
+          <div class="card-num">01</div>
+          <div class="card-title">完成要求</div>
+          <div class="card-desc">今天的任务做了吗？形式是否符合规定？不需要完美，但要有实质内容。</div>
+        </div>
+        <div class="card" style="padding-top:3vh;">
+          <div class="card-num">02</div>
+          <div class="card-title">可展示</div>
+          <div class="card-desc">拿出去给人看，别人能看懂吗？如果是一个截图、一个链接、一段视频，它能不能自己说话？</div>
+        </div>
+        <div class="card" style="padding-top:3vh;">
+          <div class="card-num">03</div>
+          <div class="card-title">下一步</div>
+          <div class="card-desc">从今天的产出到最终成果，还差什么？帮船员明确明天该推进什么。</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">反馈标准</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 13: 答疑场景（无背景图） -->
+  <!-- ============================================================ -->
+  <div class="slide no-bg" data-slide="12" data-ghost="13">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-voyage-start.png)"></div>
+    <div class="ghost ghost-right">13</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">13 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker reveal">答疑场景 · 三种情况</div>
+      <h1 class="title title-cn reveal">能答 确认 再回复</h1>
+      <div class="grid-3col reveal" style="margin-top:4vh;">
+        <div class="card" style="padding-top:3vh;">
+          <div class="scenario-tag green">情况一</div>
+          <div class="card-title">手册里有答案</div>
+          <div class="card-desc">直接指引用船员去对应章节或常见问题文档，培养他们先查资料的习惯。</div>
+        </div>
+        <div class="card" style="padding-top:3vh;">
+          <div class="scenario-tag amber">情况二</div>
+          <div class="card-title">需要经验判断</div>
+          <div class="card-desc">基于自己的经验给出方向性建议，同时说明这是个人判断，鼓励船员多角度验证。</div>
+        </div>
+        <div class="card" style="padding-top:3vh;">
+          <div class="scenario-tag red">情况三</div>
+          <div class="card-title">自己也不确定</div>
+          <div class="card-desc">诚实告知不确定，帮船员找到可以确认的渠道（官方文档、社区、群里其他教练）。</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">答疑场景</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 14: 突发情况（无背景图） -->
+  <!-- ============================================================ -->
+  <div class="slide no-bg" data-slide="13" data-ghost="14">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-delivery.png)"></div>
+    <div class="ghost ghost-right">14</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">14 / 15</div>
+    </div>
+    <div class="content">
+      <div class="kicker coral reveal">突发情况 · 维持秩序</div>
+      <h1 class="title title-cn reveal">先接住 再解决</h1>
+      <div class="grid-3col reveal" style="margin-top:4vh;">
+        <div class="card coral-border" style="padding-top:3vh;">
+          <div class="card-num" style="color:var(--coral);">01</div>
+          <div class="card-title">船员抱怨</div>
+          <div class="card-desc">先共情，不要反驳。私下沟通了解具体困难，再协调资源或调整节奏。</div>
+        </div>
+        <div class="card coral-border" style="padding-top:3vh;">
+          <div class="card-num" style="color:var(--coral);">02</div>
+          <div class="card-title">广告争吵</div>
+          <div class="card-desc">及时提醒群规，必要时移出。保持群内氛围积极，不卷入争论。</div>
+        </div>
+        <div class="card coral-border" style="padding-top:3vh;">
+          <div class="card-num" style="color:var(--coral);">03</div>
+          <div class="card-title">临时缺席</div>
+          <div class="card-desc">记录缺席情况，主动联系了解原因。连续缺席需上报运营，启动干预流程。</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="foot-left">突发应对</div>
+      <div class="foot-right">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SLIDE 15: 收尾（背景图 hero-delivery.png） -->
+  <!-- ============================================================ -->
+  <div class="slide has-bg" data-slide="14" data-ghost="15">
+    <div class="slide-bg slow-zoom" style="background-image:url(../assets/hero-delivery.png)"></div>
+    <div class="ghost ghost-left">15</div>
+    <div class="chrome">
+      <div class="chrome-left">2026年8月 <span class="sep"></span> 教练培训</div>
+      <div class="chrome-right">15 / 15</div>
+    </div>
+    <div class="content" style="max-width:50vw; justify-content:flex-end; padding-bottom:18vh;">
+      <div class="kicker reveal">收尾 · 带着成果靠岸</div>
+      <h1 class="title title-cn reveal" style="font-size:max(36px, 4.5vw); line-height:1.3; max-width:50vw;">希望21天之后，每个船员都带着真实成果靠岸。</h1>
+      <p class="body reveal" style="color:rgba(255,255,255,0.85); margin-top:4vh; max-width:44vw;">辛苦大家，咱们教练群里见，加油。</p>
+    </div>
+    <div class="foot">
+      <div class="foot-left">收尾</div>
+      <div class="foot-right" style="text-align:center; flex:1; font-size:max(13px,1.1vw); letter-spacing:0.25em; color:rgba(255,255,255,0.7);">培训结束 · 教练加油</div>
+      <div class="foot-right" style="text-align:right;">8月大航海</div>
+    </div>
+  </div>
+
+  <!-- ========== JAVASCRIPT ========== -->
+  <script>
+    (function() {
+      const total = 15;
+      let current = -1;
+
+      function goTo(index) {
+        if (index >= total) index = 0;
+        if (index < 0) index = total - 1;
+        if (index === current) return;
+        const slides = document.querySelectorAll('.slide');
+        const prev = slides[current];
+        const next = slides[index];
+
+        // Remove old active
+        if (prev) {
+          prev.classList.remove('active');
+          prev.querySelectorAll('.reveal').forEach(function(el) {
+            el.classList.remove('revealed');
+            el.style.transitionDelay = '';
+          });
+        }
+
+        // Add new active
+        next.classList.add('active');
+        const reveals = next.querySelectorAll('.reveal');
+        reveals.forEach(function(el, i) {
+          el.style.transitionDelay = (i * 0.1) + 's';
+          requestAnimationFrame(function() {
+            el.classList.add('revealed');
+          });
+        });
+
+        current = index;
+        updateNav();
+      }
+
+      function updateNav() {
+        // Update page number in chrome
+        const activeSlide = document.querySelectorAll('.slide')[current];
+        if (activeSlide) {
+          const chromeRight = activeSlide.querySelector('.chrome-right');
+          if (chromeRight) {
+            chromeRight.textContent = String(current + 1).padStart(2, '0') + ' / ' + total;
+          }
+        }
+      }
+
+      // 点击导航
+      document.addEventListener('click', function(e) {
+        goTo(current + 1);
+      });
+      document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        goTo(current - 1);
+      });
+
+      // 键盘导航
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+          e.preventDefault();
+          goTo(current + 1);
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          goTo(current - 1);
+        }
+      });
+
+      // Initialize
+      goTo(0);
+    })();
+  </script>
+</body>
+</html>

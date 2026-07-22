@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新人 AI 工作 SOP：网站部署上线</title>
+<meta name="description" content="面向新人的 AI 协同网站部署 SOP，覆盖 Cloudflare Pages、Cloudflare D1、Pages Functions、维护和排错。">
+<style>
+
+/* ========================================
+   Refero DESIGN.md tokens -> theme layer
+   Source: https://styles.refero.design/style/376baf20-9ace-405d-bf4a-086016f2b1e3
+   ======================================== */
+@layer theme {
+  :root {
+    color-scheme: light;
+
+    /* Color tokens */
+    --color-primary: #1c5d5f;
+    --color-primary-hover: #174d4f;
+    --color-primary-soft: #d7ece7;
+    --color-ink: #153032;
+    --color-text: #284144;
+    --color-muted: #687a7b;
+    --color-border: #d8e2dd;
+    --color-border-strong: #bfd1ca;
+    --color-page: #f4f0e8;
+    --color-surface: #fffdf8;
+    --color-surface-mint: #e8f4ee;
+    --color-surface-blush: #f7e6df;
+    --color-surface-blue: #e6eef2;
+    --color-error: #b74a3b;
+    --color-warning: #8a6835;
+    --color-success: #1c5d5f;
+
+    /* Typography tokens */
+    --font-serif: "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, "Times New Roman", serif;
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Courier New", monospace;
+    --text-display-size: 64px;
+    --text-display-lh: 68px;
+    --text-headline-lg-size: 34px;
+    --text-headline-lg-lh: 40px;
+    --text-headline-md-size: 21px;
+    --text-headline-md-lh: 30px;
+    --text-body-lg-size: 18px;
+    --text-body-lg-lh: 29px;
+    --text-body-md-size: 16px;
+    --text-body-md-lh: 27px;
+    --text-body-sm-size: 14px;
+    --text-body-sm-lh: 22px;
+    --text-label-sm-size: 12px;
+    --text-label-sm-lh: 16px;
+
+    /* Tailwind v4 style design tokens */
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-3: 12px;
+    --spacing-4: 16px;
+    --spacing-6: 24px;
+    --spacing-10: 40px;
+    --spacing-20: 80px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-pill: 9999px;
+    --shadow-card: 0 1px 0 rgba(28, 93, 95, 0.05);
+    --sidebar-width: 240px;
+    --content-max: 920px;
+    --page-max: 1280px;
+  }
+}
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    min-height: 100vh;
+    background:
+      linear-gradient(180deg, rgba(232, 244, 238, 0.86) 0, rgba(244, 240, 232, 0) 360px),
+      var(--color-page);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-body-md-size);
+    line-height: var(--text-body-md-lh);
+    letter-spacing: 0;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: inherit; }
+  strong { color: var(--color-ink); font-weight: 650; }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    color: var(--color-primary);
+    background: rgba(28, 93, 95, 0.09);
+    border: 1px solid rgba(28, 93, 95, 0.12);
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+}
+
+@layer components {
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 253, 248, 0.88);
+    border-bottom: 1px solid var(--color-border);
+    backdrop-filter: blur(18px);
+    padding: var(--spacing-3) var(--spacing-10);
+  }
+  .nav-inner {
+    max-width: var(--page-max);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    gap: var(--spacing-4);
+  }
+  .nav-brand {
+    color: var(--color-ink);
+    font-size: 15px;
+    font-weight: 760;
+    text-decoration: none;
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    flex-wrap: wrap;
+  }
+  .nav-link,
+  .nav-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    border-radius: var(--radius-pill);
+    padding: 0 var(--spacing-4);
+    font-size: var(--text-body-sm-size);
+    font-weight: 650;
+    line-height: 1;
+    text-decoration: none;
+    transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+  }
+  .nav-link {
+    color: var(--color-muted);
+    border: 1px solid transparent;
+  }
+  .nav-link:hover {
+    color: var(--color-primary);
+    background: var(--color-surface-mint);
+  }
+  .nav-cta {
+    min-width: 112px;
+    color: #fffdf8;
+    background: var(--color-primary);
+    border: 1px solid var(--color-primary);
+  }
+  .nav-cta:hover { background: var(--color-primary-hover); }
+
+  .page {
+    max-width: var(--page-max);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, var(--content-max));
+    gap: var(--spacing-10);
+    padding: 0 var(--spacing-10);
+  }
+  .sidebar {
+    position: sticky;
+    top: 73px;
+    align-self: start;
+    height: calc(100vh - 73px);
+    overflow-y: auto;
+    padding: var(--spacing-10) 0;
+  }
+  .sidebar-label {
+    margin: 0 0 var(--spacing-3) var(--spacing-2);
+    color: var(--color-muted);
+    font-size: var(--text-label-sm-size);
+    font-weight: 700;
+    line-height: var(--text-label-sm-lh);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .sidebar-list {
+    list-style: none;
+    counter-reset: toc;
+    display: grid;
+    gap: var(--spacing-1);
+  }
+  .sidebar-list li { counter-increment: toc; }
+  .sidebar-list a {
+    position: relative;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    align-items: start;
+    gap: var(--spacing-2);
+    min-height: 36px;
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-2);
+    color: var(--color-muted);
+    font-size: var(--text-body-sm-size);
+    line-height: var(--text-body-sm-lh);
+    text-decoration: none;
+  }
+  .sidebar-list a::before {
+    content: counter(toc, decimal-leading-zero);
+    color: var(--color-primary);
+    font-size: var(--text-label-sm-size);
+    font-weight: 760;
+  }
+  .sidebar-list a:hover {
+    color: var(--color-ink);
+    background: rgba(255, 253, 248, 0.72);
+  }
+  .sidebar-list li::before { content: none; }
+
+  .content {
+    min-width: 0;
+    padding: var(--spacing-10) 0 var(--spacing-20);
+  }
+  .hero {
+    position: relative;
+    padding: 56px 0 var(--spacing-6);
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: var(--spacing-10) auto auto -28px;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: var(--color-surface-blush);
+    z-index: -1;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-mint);
+    color: var(--color-primary);
+    padding: 0 var(--spacing-4);
+    font-size: var(--text-label-sm-size);
+    font-weight: 760;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .hero h1 {
+    max-width: 760px;
+    margin-top: var(--spacing-4);
+    color: var(--color-ink);
+    font-family: var(--font-serif);
+    font-size: var(--text-display-size);
+    font-weight: 400;
+    line-height: var(--text-display-lh);
+    letter-spacing: 0;
+  }
+  .hero p {
+    max-width: 680px;
+    margin-top: var(--spacing-4);
+    color: var(--color-muted);
+    font-size: var(--text-body-lg-size);
+    line-height: var(--text-body-lg-lh);
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+    margin-top: var(--spacing-6);
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+    margin-top: var(--spacing-6);
+    color: var(--color-muted);
+    font-size: var(--text-body-sm-size);
+  }
+  .hero-meta span {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: rgba(255, 253, 248, 0.72);
+    padding: 0 var(--spacing-3);
+  }
+
+  .flow-board {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-3);
+    margin: 0 0 var(--spacing-10);
+  }
+  .flow-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 176px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    padding: var(--spacing-4);
+    text-decoration: none;
+  }
+  .flow-card:nth-child(1) { background: var(--color-surface-mint); }
+  .flow-card:nth-child(2) { background: var(--color-surface-blue); }
+  .flow-card:nth-child(3) { background: var(--color-surface-blush); }
+  .flow-card .eyebrow {
+    color: var(--color-primary);
+    font-size: var(--text-label-sm-size);
+    font-weight: 760;
+    line-height: var(--text-label-sm-lh);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .flow-card h2 {
+    margin: var(--spacing-4) 0 var(--spacing-2);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 22px;
+    font-weight: 760;
+    line-height: 28px;
+  }
+  .flow-card p {
+    color: var(--color-muted);
+    font-size: var(--text-body-sm-size);
+    line-height: var(--text-body-sm-lh);
+  }
+  .flow-card .arrow {
+    margin-top: auto;
+    color: var(--color-primary);
+    font-size: var(--text-body-sm-size);
+    font-weight: 760;
+  }
+
+  section {
+    scroll-margin-top: 92px;
+    padding: var(--spacing-10) 0;
+    border-top: 1px solid var(--color-border);
+  }
+  section h2 {
+    margin-bottom: var(--spacing-4);
+    color: var(--color-ink);
+    font-family: var(--font-serif);
+    font-size: var(--text-headline-lg-size);
+    font-weight: 400;
+    line-height: var(--text-headline-lg-lh);
+    letter-spacing: 0;
+  }
+  section h3 {
+    margin-top: var(--spacing-6);
+    margin-bottom: var(--spacing-2);
+    color: var(--color-ink);
+    font-size: var(--text-headline-md-size);
+    font-weight: 680;
+    line-height: var(--text-headline-md-lh);
+    letter-spacing: 0;
+  }
+  section h4 {
+    margin-top: var(--spacing-4);
+    margin-bottom: var(--spacing-2);
+    color: var(--color-ink);
+    font-size: var(--text-body-sm-size);
+    font-weight: 760;
+  }
+  section p { margin-bottom: var(--spacing-2); }
+  section ul,
+  section ol {
+    margin: var(--spacing-2) 0 var(--spacing-2) 1.25rem;
+  }
+  section li { margin-bottom: var(--spacing-1); }
+
+  .card,
+  .callout,
+  .prompt-box,
+  .table-wrap {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-card);
+  }
+  .card {
+    padding: var(--spacing-4);
+    margin: var(--spacing-3) 0;
+  }
+  .callout {
+    margin: var(--spacing-4) 0;
+    padding: var(--spacing-4);
+    color: var(--color-text);
+    font-size: var(--text-body-sm-size);
+    line-height: var(--text-body-sm-lh);
+  }
+  .callout.info,
+  .callout.success {
+    background: var(--color-surface-mint);
+    border-color: var(--color-border-strong);
+  }
+  .callout.warn {
+    background: #f5ead7;
+    border-color: #dfcfaa;
+    color: var(--color-warning);
+  }
+  .callout.danger {
+    background: var(--color-surface-blush);
+    border-color: #e6c3b8;
+    color: #74392f;
+  }
+
+  .prompt-box {
+    margin: var(--spacing-4) 0;
+    overflow: hidden;
+  }
+  .prompt-box .label {
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface-blue);
+    color: var(--color-primary);
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--text-label-sm-size);
+    font-weight: 760;
+    line-height: var(--text-label-sm-lh);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .prompt-box .content {
+    max-width: none;
+    padding: var(--spacing-4);
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 21px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .ui-ref {
+    margin: var(--spacing-3) 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 253, 248, 0.76);
+    padding: var(--spacing-3) var(--spacing-4);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 21px;
+    overflow-wrap: anywhere;
+  }
+  .ui-ref .key { color: var(--color-primary); font-weight: 760; }
+  .ui-ref .cn { color: var(--color-muted); }
+
+  .table-wrap {
+    margin: var(--spacing-4) 0;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    background: transparent;
+    font-size: var(--text-body-sm-size);
+    line-height: var(--text-body-sm-lh);
+  }
+  th,
+  td {
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--spacing-3) var(--spacing-4);
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--color-surface-mint);
+    color: var(--color-primary);
+    font-size: var(--text-label-sm-size);
+    font-weight: 760;
+    letter-spacing: 0.04em;
+  }
+  tr:last-child td { border-bottom: 0; }
+
+  .step {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: var(--spacing-4);
+    margin: var(--spacing-4) 0;
+  }
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    color: #fffdf8;
+    font-size: var(--text-body-sm-size);
+    font-weight: 760;
+  }
+  .step-body {
+    min-width: 0;
+    padding-top: 5px;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    border-radius: var(--radius-pill);
+    padding: 0 var(--spacing-3);
+    font-size: var(--text-label-sm-size);
+    font-weight: 760;
+    line-height: 1;
+  }
+  .status.ok {
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
+  }
+  .status.warn {
+    color: var(--color-warning);
+    background: #f2e2c3;
+  }
+  .status.bad {
+    color: var(--color-error);
+    background: var(--color-surface-blush);
+  }
+
+  .demo-img {
+    display: block;
+    width: 100%;
+    margin: var(--spacing-4) 0 var(--spacing-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+  .demo-caption {
+    margin: 0 0 var(--spacing-4);
+    color: var(--color-muted);
+    font-size: var(--text-label-sm-size);
+    line-height: 18px;
+    text-align: center;
+  }
+
+  #ch5 .step {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    margin: var(--spacing-6) 0;
+  }
+  #ch5 .step-body {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: var(--spacing-4);
+    padding: var(--spacing-4);
+  }
+  #ch5 .step-body > p {
+    grid-column: 2;
+  }
+  #ch5 .step-body > p:first-of-type {
+    margin: 0;
+    color: var(--color-ink);
+    font-size: var(--text-headline-md-size);
+    line-height: var(--text-headline-md-lh);
+  }
+  #ch5 .step-body > p:nth-of-type(2) {
+    margin: -2px 0 var(--spacing-3);
+    color: var(--color-muted);
+    font-size: var(--text-body-sm-size);
+    line-height: var(--text-body-sm-lh);
+  }
+  #ch5 .step-num {
+    grid-row: 1 / span 3;
+  }
+  #ch5 .demo-img {
+    grid-column: 1 / -1;
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    border-radius: 0;
+    box-shadow: none;
+  }
+  #ch5 .demo-caption {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: var(--spacing-3) var(--spacing-4);
+    border-top: 1px solid var(--color-border);
+    background: rgba(232, 244, 238, 0.55);
+    text-align: left;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 136px;
+    min-height: 48px;
+    border-radius: var(--radius-pill);
+    padding: 0 var(--spacing-6);
+    font-size: var(--text-body-sm-size);
+    font-weight: 760;
+    line-height: 1;
+    text-decoration: none;
+    transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+  .btn-primary {
+    color: #fffdf8;
+    background: var(--color-primary);
+    border: 1px solid var(--color-primary);
+  }
+  .btn-primary:hover { background: var(--color-primary-hover); }
+  .btn-secondary {
+    color: var(--color-primary);
+    background: rgba(255, 253, 248, 0.76);
+    border: 1px solid var(--color-border-strong);
+  }
+  .btn-secondary:hover { background: var(--color-surface-mint); }
+
+  footer {
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+    padding: var(--spacing-10);
+    text-align: center;
+  }
+  footer p {
+    color: var(--color-muted);
+    font-size: var(--text-body-sm-size);
+    line-height: var(--text-body-sm-lh);
+  }
+  footer p:first-child {
+    color: var(--color-ink);
+    font-weight: 760;
+  }
+}
+
+@layer utilities {
+  @media (max-width: 980px) {
+    :root {
+      --text-display-size: 46px;
+      --text-display-lh: 50px;
+      --text-headline-lg-size: 30px;
+      --text-headline-lg-lh: 36px;
+    }
+    .nav { padding: var(--spacing-2) var(--spacing-4); }
+    .nav-inner { align-items: flex-start; flex-direction: column; }
+    .nav-links {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: var(--spacing-1);
+    }
+    .page {
+      display: block;
+      padding: 0 var(--spacing-4);
+    }
+    .flow-board { grid-template-columns: 1fr; }
+    .flow-card { min-height: 140px; }
+    .sidebar {
+      position: static;
+      height: auto;
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--spacing-4) 0;
+    }
+    .sidebar-list {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: var(--spacing-2);
+      overflow-x: auto;
+      padding-bottom: var(--spacing-2);
+    }
+    .sidebar-list li { flex: 0 0 auto; }
+    .sidebar-list a {
+      display: inline-flex;
+      min-height: 34px;
+      white-space: nowrap;
+      grid-template-columns: none;
+      background: rgba(255, 253, 248, 0.68);
+      border: 1px solid var(--color-border);
+    }
+    .sidebar-list a::before { content: none; }
+    .content { padding-top: var(--spacing-4); }
+    .hero { padding: var(--spacing-10) 0; }
+  }
+
+  @media (max-width: 560px) {
+    :root {
+      --text-display-size: 38px;
+      --text-display-lh: 42px;
+      --text-headline-lg-size: 28px;
+      --text-headline-lg-lh: 34px;
+    }
+    .nav-brand { font-size: 14px; }
+    .nav-link,
+    .nav-cta {
+      min-height: 36px;
+      padding: 0 var(--spacing-3);
+      font-size: 13px;
+    }
+    .hero-actions,
+    .hero-actions a {
+      width: 100%;
+    }
+    .hero-meta span { min-height: 30px; }
+    section { padding: var(--spacing-6) 0; }
+    #ch5 .step-body {
+      grid-template-columns: 36px 1fr;
+      gap: var(--spacing-3);
+    }
+    .step {
+      grid-template-columns: 36px 1fr;
+      gap: var(--spacing-3);
+    }
+    .step-num {
+      width: 32px;
+      height: 32px;
+    }
+    .prompt-box .content,
+    .ui-ref { font-size: 12px; }
+    footer { padding: var(--spacing-6) var(--spacing-4); }
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- Top Nav -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#top" class="nav-brand">Deploy SOP</a>
+    <div class="nav-links" aria-label="快速导航">
+      <a href="#ch4" class="nav-link">前端部署</a>
+      <a href="#ch5" class="nav-link">后端 D1</a>
+      <a href="#ch9" class="nav-link">AI 模板</a>
+      <a href="#ch10" class="nav-cta">后续维护</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page" id="top">
+
+<!-- Sidebar TOC -->
+<aside class="sidebar">
+  <div class="sidebar-label">目录</div>
+  <ol class="sidebar-list">
+    <li><a href="#ch1">这个 SOP 是给谁用的</a></li>
+    <li><a href="#ch2">网络环境说明（重要）</a></li>
+    <li><a href="#ch3">部署前准备</a></li>
+    <li><a href="#ch4">前端部署到 Cloudflare Pages</a></li>
+    <li><a href="#ch5">后端部署到 Cloudflare D1</a></li>
+    <li><a href="#ch7">部署后检查事项</a></li>
+    <li><a href="#ch8">遇到问题怎么办</a></li>
+    <li><a href="#ch9">给 AI 的提问模板</a></li>
+    <li><a href="#ch10">后续维护</a></li>
+    <li><a href="#ch11">流程总结</a></li>
+  </ol>
+</aside>
+
+<!-- Main Content -->
+<main class="content">
+
+<!-- Hero -->
+<div class="hero">
+  <span class="hero-badge">Cloudflare Pages SOP</span>
+  <h1>新人 AI 工作 SOP<br>网站部署上线</h1>
+  <p>面向使用 AI 但不懂代码的新手。你负责点击操作，AI 负责技术判断。遇到任何困难，把信息发给 AI，让部署上线这件事变成一条清晰、可回退、可复用的路径。</p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="#ch4">开始部署</a>
+    <a class="btn-secondary" href="#ch10">维护网站</a>
+  </div>
+  <div class="hero-meta">
+    <span><strong>v4.0 Refero refresh</strong></span>
+    <span><strong>2026-07-14</strong></span>
+    <span><strong>零基础</strong></span>
+    <span><strong>你点 + AI 帮</strong></span>
+  </div>
+</div>
+
+<section class="flow-board" aria-label="部署流程总览">
+  <a class="flow-card" href="#ch4">
+    <span class="eyebrow">Step 01</span>
+    <h2>前端上线</h2>
+    <p>把网站代码连接到 Cloudflare Pages，完成构建、发布和正式地址确认。</p>
+    <span class="arrow">查看前端步骤</span>
+  </a>
+  <a class="flow-card" href="#ch5">
+    <span class="eyebrow">Step 02</span>
+    <h2>后端 D1</h2>
+    <p>创建 D1 Database，并把数据库绑定到 Pages Functions，形成 Cloudflare 内部后端链路。</p>
+    <span class="arrow">查看 D1 绑定</span>
+  </a>
+  <a class="flow-card" href="#ch9">
+    <span class="eyebrow">Step 03</span>
+    <h2>维护排错</h2>
+    <p>上线后用部署记录、函数日志和 AI 提示词快速定位问题，必要时回退版本。</p>
+    <span class="arrow">查看维护模板</span>
+  </a>
+</section>
+
+<!-- 1 -->
+<section id="ch1">
+  <h2>一、这个 SOP 是给谁用的</h2>
+  <p>当你已经有一个网站项目，代码已经上传到 GitHub 后，可以用这个 SOP 完成上线。</p>
+  <h3>适合的场景</h3>
+  <ul>
+    <li>纯展示类网站（官网、活动页、个人主页）</li>
+    <li>带搜索、登录等交互功能的网站</li>
+    <li>工具页、落地页上线</li>
+  </ul>
+  <h3>你需要准备的账号</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>账号</th><th>干什么用的</th><th>是否必须</th></tr></thead>
+      <tbody>
+        <tr><td>GitHub 账号</td><td>存放你的网站代码</td><td>必须</td></tr>
+        <tr><td>Cloudflare 账号</td><td>放你的网站，让用户能访问</td><td>必须</td></tr>
+        <tr><td>Cloudflare D1</td><td>存放后端数据，和 Pages Functions 配合使用</td><td>有后端数据时必须</td></tr>
+        <tr><td>代理工具（翻墙软件）</td><td>注册和配置海外平台时需要</td><td>必须（见第二章）</td></tr>
+        <tr><td>AI 工具（如 TRAE）</td><td>遇到任何困难随时问 AI</td><td>强烈建议</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout info">
+    <strong>核心理念</strong>：你不需要懂代码。你只需要做两件事：<strong>跟着步骤点击操作</strong>，以及<strong>遇到不确定的地方把信息发给 AI 让它帮你判断</strong>。
+  </div>
+  <div class="callout success">
+    <strong>什么是"前端"和"后端"？</strong>：简单理解——用户能看到和点击的页面叫"前端"，在背后处理数据、搜索、保存信息的程序叫"后端"。如果你的网站只有展示页面没有交互功能，那就只有前端，不需要后端。
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="ch2">
+  <h2>二、网络环境说明（重要）</h2>
+  <div class="callout danger">
+    <strong>这是新手最容易忽略的一步</strong>：不同平台在国内的访问情况不同。不提前了解，会导致"明明操作对了但就是打不开"。
+  </div>
+  <h3>各平台在国内能不能打开？</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>平台</th><th>国内状态</th><th>用来干什么</th></tr></thead>
+      <tbody>
+        <tr><td>Cloudflare Pages</td><td><span class="status ok">能直接打开</span></td><td>放你的网站</td></tr>
+        <tr><td>DeepSeek</td><td><span class="status ok">能直接打开</span></td><td>AI 服务（如果你的网站用到了）</td></tr>
+        <tr><td>GitHub</td><td><span class="status warn">时好时坏</span></td><td>存代码</td></tr>
+        <tr><td>Cloudflare 操作后台</td><td><span class="status warn">建议开代理</span></td><td>配置网站部署</td></tr>
+        <tr><td>Cloudflare D1</td><td><span class="status warn">建议开代理配置</span></td><td>存放后端数据</td></tr>
+        <tr><td>Vercel</td><td><span class="status bad">打不开</span></td><td>不要用这个</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>什么时候要开代理，什么时候不用？</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>你在做什么</th><th>要开代理吗？</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>注册 GitHub / Cloudflare 账号</td><td>要开</td><td>注册时可能需要验证，不开代理可能卡住</td></tr>
+        <tr><td>在 Cloudflare 后台操作</td><td>建议开</td><td>开了更稳定，不容易加载失败</td></tr>
+        <tr><td>上传代码到 GitHub</td><td>看情况</td><td>有时候能传成功，传不上去就开代理</td></tr>
+        <tr><td><strong>别人访问你的网站</strong></td><td><strong>不用开</strong></td><td><strong>网站放在 Cloudflare 上，国内直接能打开</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout warn">
+    <strong>记住这句话</strong>：你在配置和部署的时候需要开代理，但你的用户访问网站时不需要开代理。
+  </div>
+  <h3>上传代码到 GitHub 总是失败？</h3>
+  <p>如果你在上传代码到 GitHub 时经常失败，可能是网络问题。不要自己折腾网络设置，直接问 AI：</p>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我在上传代码到 GitHub 时总是失败，提示连接超时。
+我的电脑用的是 Windows 系统，代理软件是【填你的代理软件名称，比如 Clash / V2Ray 等】。
+请帮我：
+1. 判断是不是代理没配置好
+2. 如果需要配置，请告诉我具体怎么操作（一步一步来）
+3. 配置好了之后怎么测试是否成功</div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="ch3">
+  <h2>三、部署前准备</h2>
+  <p>在开始部署前，确认以下内容：</p>
+  <ol>
+    <li>已注册并登录 Cloudflare 账号（注册时需要开代理）</li>
+    <li>已有 GitHub 账号，网站代码已经上传到 GitHub 仓库</li>
+    <li>如果你的网站有搜索、登录等交互功能，还需要准备好后端代码的 GitHub 仓库</li>
+  </ol>
+  <div class="callout info">
+    <strong>部署时需要填一些配置信息，但你不需要自己判断怎么填</strong>：Cloudflare 会问你一些问题（比如"你的项目用什么技术""构建命令是什么"），这些你不需要懂。把你的 GitHub 仓库地址发给 AI，AI 会告诉你每个空填什么。
+  </div>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我要把网站部署到 Cloudflare Pages，这是我的 GitHub 仓库地址：【填你的仓库地址】
+请你帮我看看：
+1. 这个网站是什么类型的？
+2. Cloudflare 会问我的"构建命令"应该填什么？
+3. "输出目录"应该填什么？
+4. 有没有需要提前准备的东西？
+请用大白话告诉我，我完全不懂代码。</div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="ch4">
+  <h2>四、前端部署到 Cloudflare Pages</h2>
+  <p>这是核心步骤。Cloudflare Pages 是一个免费的网站托管平台，放在上面的网站国内用户可以直接访问。</p>
+
+  <div class="step"><div class="step-num">1</div><div class="step-body">
+    <p><strong>进入 Cloudflare 后台</strong></p>
+    <p>打开 <code>https://dash.cloudflare.com/</code>（建议开代理），登录后进入控制台首页。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">2</div><div class="step-body">
+    <p><strong>找到 Workers &amp; Pages</strong></p>
+    <p>在左侧菜单栏找到 <strong>Workers &amp; Pages</strong>，点击进入。</p>
+    <p>如果左侧菜单很多，在 <strong>Build / Compute</strong> 分类下找。</p>
+    <div class="callout info">
+      <strong>Workers &amp; Pages 是什么</strong>：就是 Cloudflare 里"管理网站"的页面。进去之后可以创建新的网站项目。
+    </div>
+    <img class="demo-img" src="assets/step-workers-pages.webp" width="1400" height="708" decoding="async" alt="Cloudflare 控制台 Workers & Pages 页面" loading="lazy">
+    <p class="demo-caption">↑ 在左侧找到 Workers & Pages，然后点右上角蓝色按钮 Create application</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">3</div><div class="step-body">
+    <p><strong>创建新应用</strong></p>
+    <p>点击右上角蓝色按钮 <strong>Create application</strong>。</p>
+    <p>中文理解：就是"创建新项目"的意思。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">4</div><div class="step-body">
+    <p><strong>选择部署 Pages（不要选 Worker！）</strong></p>
+    <p>默认显示 <strong>Create a Worker</strong>。不要点这个！我们是部署网站页面，需要选 Pages。</p>
+    <p>在页面下方找到 <strong>"Looking to deploy Pages? Get started"</strong>，点击 <strong>Get started</strong>。</p>
+    <div class="callout warn">
+      <strong>Worker 和 Pages 的区别（简单理解）</strong>：Worker 是用来处理后端逻辑的，Pages 是用来放网站页面的。我们要上线网站，所以选 Pages。<strong>选错了也没关系</strong>，退回去重新选就好。
+    </div>
+    <img class="demo-img" src="assets/step-select-pages.webp" width="1263" height="564" decoding="async" alt="Cloudflare 创建 Worker 或 Pages 选择页面" loading="lazy">
+    <p class="demo-caption">↑ 不要选 Create a Worker，在页面底部找到 "Looking to deploy Pages? Get started" 点这个</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">5</div><div class="step-body">
+    <p><strong>选择从 GitHub 导入</strong></p>
+    <p>选择 <strong>Import an existing Git repository</strong>，点击 <strong>Get started</strong>。</p>
+    <p>中文理解：从 GitHub 上已有的代码仓库导入。这样以后你更新了 GitHub 上的代码，Cloudflare 会自动帮你重新部署。</p>
+    <img class="demo-img" src="assets/step-import-git.webp" width="1400" height="491" decoding="async" alt="Cloudflare Pages 导入 Git 仓库页面" loading="lazy">
+    <p class="demo-caption">↑ 选第一个 "Import an existing Git repository"，然后点 Get started</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">6</div><div class="step-body">
+    <p><strong>选择 GitHub 仓库</strong></p>
+    <p>确认 GitHub 账号是否正确 → 在 <strong>Select a repository</strong> 区域选择你的网站仓库。</p>
+    <p>仓库太多可以在搜索框输入名称搜索。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">7</div><div class="step-body">
+    <p><strong>如果找不到仓库怎么办？</strong></p>
+    <p>页面底部会提示 <strong>"configure repository access for the Cloudflare Pages app on GitHub"</strong>，点击 <strong>Cloudflare Pages</strong> 链接：</p>
+    <ol>
+      <li>进入 GitHub 授权设置页面</li>
+      <li>选择允许 Cloudflare Pages 访问的仓库</li>
+      <li>勾选目标仓库 → 保存</li>
+      <li>回到 Cloudflare 页面刷新，重新搜索</li>
+    </ol>
+    <div class="callout info">
+      <strong>为什么找不到仓库？</strong>：因为 Cloudflare 还没有获得你 GitHub 仓库的访问权限。点授权链接给它权限就好了。
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-num">8</div><div class="step-body">
+    <p><strong>填写配置信息（不知道怎么填就问 AI）</strong></p>
+    <p>选择仓库后会进入配置页面，需要填写几个信息。这里有英文术语，你不需要自己判断怎么填。</p>
+    <div class="callout warn">
+      <strong>不要自己瞎填！</strong>：把你 GitHub 仓库地址发给 AI，AI 会告诉你每个空填什么。填错了会导致部署失败。
+    </div>
+    <div class="prompt-box">
+      <div class="label">发给 AI 的提示词</div>
+      <div class="content">我正在 Cloudflare Pages 上部署网站，现在需要填写配置信息。
+我的 GitHub 仓库是：【填你的仓库地址】
+请告诉我：
+1. "Project name"（项目名称）填什么？
+2. "Production branch"（生产分支）填什么？
+3. "Build command"（构建命令）填什么？
+4. "Build output directory"（输出目录）填什么？
+5. "Environment variables"（环境变量）需要填吗？填什么？
+请一个一个告诉我，用大白话说。</div>
+    </div>
+    <p>AI 告诉你每个空填什么后，照着填就行。</p>
+    <img class="demo-img" src="assets/step-select-repo.webp" width="1010" height="775" decoding="async" alt="Cloudflare Pages 选择 GitHub 仓库和配置页面" loading="lazy">
+    <p class="demo-caption">↑ 选择你的仓库后，剩下的配置不知道怎么填就把仓库地址发给 AI 让它告诉你</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">9</div><div class="step-body">
+    <p><strong>点击部署</strong></p>
+    <p>配置完成后，点击页面底部的 <strong>Save and Deploy</strong> 按钮。</p>
+    <p>中文理解：保存并开始部署。Cloudflare 会开始自动构建你的网站。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">10</div><div class="step-body">
+    <p><strong>等待部署完成</strong></p>
+    <p>部署过程中会显示构建过程（一堆英文日志，看不懂没关系）。</p>
+    <p>如果部署成功，会出现成功页面，显示：</p>
+    <p><strong>Success! Your project is deployed to Region: Earth</strong></p>
+    <p>并展示一个网址，例如 <code>website-deploy-sop.pages.dev</code>。</p>
+    <div class="callout warn">
+      <strong>如果部署失败了</strong>：不要慌，也不要反复点击重新部署。把构建日志里红色的报错信息复制发给 AI，让 AI 帮你找原因。
+    </div>
+    <img class="demo-img" src="assets/step-deploy-success.webp" width="1380" height="880" decoding="async" alt="Cloudflare Pages 部署成功页面" loading="lazy">
+    <p class="demo-caption">↑ 看到这个页面就代表部署成功了！出现这个地球图和网址就对了</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">11</div><div class="step-body">
+    <p><strong>找到正式网站地址</strong></p>
+    <p>在项目详情页 <strong>Deployments</strong> → <strong>Production</strong> 区域，可以看到你的网站地址：</p>
+    <p><code>https://你的项目名.pages.dev</code></p>
+    <p>这个地址就是正式访问地址，可以分享给任何人。</p>
+    <div class="callout info">
+      <strong>两种地址的区别</strong>：正式地址 <code>xxx.pages.dev</code> 是对外分享用的；还有一种带随机前缀的地址（比如 <code>4601e4a2.xxx.pages.dev</code>）是某次部署的预览链接，一般不用管。对外分享用正式地址。
+    </div>
+    <img class="demo-img" src="assets/step-find-domain.webp" width="1400" height="673" decoding="async" alt="Cloudflare Pages 部署详情页面显示正式域名" loading="lazy">
+    <p class="demo-caption">↑ 在 Deployments 页面找到 Production 区域，这里显示的就是你的正式网站地址</p>
+  </div></div>
+</section>
+
+<!-- 5 -->
+<section id="ch5">
+  <h2>五、后端部署到 Cloudflare D1</h2>
+  <div class="callout info">
+    <strong>这一版后端统一放在 Cloudflare</strong>：后端数据存储改用 Cloudflare D1，并通过 Pages Functions 的 Bindings 绑定到当前 Pages 项目。这样前端和后端都在 Cloudflare 体系内，部署链路更短，也不需要额外做跨平台中转。
+  </div>
+  <p><strong>你要完成的事</strong>：先创建一个 D1 Database，再回到当前 Pages 项目，在 <strong>Settings → Functions → Bindings</strong> 中添加 D1 database 绑定。</p>
+
+  <h3>操作步骤</h3>
+
+  <div class="step"><div class="step-num">1</div><div class="step-body">
+    <p><strong>进入 Cloudflare 的 D1 Database</strong></p>
+    <p>从 Cloudflare 控制台左侧进入 D1 数据库区域，准备创建后端要使用的数据库。</p>
+    <img class="demo-img" src="assets/doc-image-01.webp" width="1400" height="706" decoding="async" alt="进入 Cloudflare 的 D1 Database" loading="lazy">
+    <p class="demo-caption">↑ 从 Cloudflare 控制台左侧进入 D1 数据库区域，准备创建后端要使用的数据库。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">2</div><div class="step-body">
+    <p><strong>点击 Create database</strong></p>
+    <p>在 D1 Database 页面点击创建按钮，开始新建数据库。</p>
+    <img class="demo-img" src="assets/doc-image-02.webp" width="1400" height="676" decoding="async" alt="点击 Create database" loading="lazy">
+    <p class="demo-caption">↑ 在 D1 Database 页面点击创建按钮，开始新建数据库。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">3</div><div class="step-body">
+    <p><strong>回到 Workers & Pages 项目列表</strong></p>
+    <p>找到当前网站对应的 Pages 项目，后续要把 D1 数据库绑定到这个项目。</p>
+    <img class="demo-img" src="assets/doc-image-03.webp" width="1400" height="690" decoding="async" alt="回到 Workers & Pages 项目列表" loading="lazy">
+    <p class="demo-caption">↑ 找到当前网站对应的 Pages 项目，后续要把 D1 数据库绑定到这个项目。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">4</div><div class="step-body">
+    <p><strong>填写 D1 数据库名称</strong></p>
+    <p>数据库名称使用项目名或业务名，位置保持 Automatic，让 Cloudflare 自动选择。</p>
+    <img class="demo-img" src="assets/doc-image-04.webp" width="1400" height="748" decoding="async" alt="填写 D1 数据库名称" loading="lazy">
+    <p class="demo-caption">↑ 数据库名称使用项目名或业务名，位置保持 Automatic，让 Cloudflare 自动选择。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">5</div><div class="step-body">
+    <p><strong>确认数据库创建成功</strong></p>
+    <p>创建完成后，D1 Database 列表里会出现新的数据库记录。</p>
+    <img class="demo-img" src="assets/doc-image-05.webp" width="1400" height="691" decoding="async" alt="确认数据库创建成功" loading="lazy">
+    <p class="demo-caption">↑ 创建完成后，D1 Database 列表里会出现新的数据库记录。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">6</div><div class="step-body">
+    <p><strong>进入 Pages 项目的 Settings</strong></p>
+    <p>进入网站项目后切换到 Settings，并找到 Functions 相关配置。</p>
+    <img class="demo-img" src="assets/doc-image-06.webp" width="1400" height="680" decoding="async" alt="进入 Pages 项目的 Settings" loading="lazy">
+    <p class="demo-caption">↑ 进入网站项目后切换到 Settings，并找到 Functions 相关配置。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">7</div><div class="step-body">
+    <p><strong>打开 Bindings 并添加绑定</strong></p>
+    <p>在 Bindings 区域点击 Add，准备把 D1 数据库暴露给后端函数使用。</p>
+    <img class="demo-img" src="assets/doc-image-07.webp" width="1400" height="784" decoding="async" alt="打开 Bindings 并添加绑定" loading="lazy">
+    <p class="demo-caption">↑ 在 Bindings 区域点击 Add，准备把 D1 数据库暴露给后端函数使用。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">8</div><div class="step-body">
+    <p><strong>选择 D1 database 类型</strong></p>
+    <p>绑定类型选择 D1 database，不要选 KV、R2 或其他存储类型。</p>
+    <img class="demo-img" src="assets/doc-image-08.webp" width="1400" height="738" decoding="async" alt="选择 D1 database 类型" loading="lazy">
+    <p class="demo-caption">↑ 绑定类型选择 D1 database，不要选 KV、R2 或其他存储类型。</p>
+  </div></div>
+
+  <div class="step"><div class="step-num">9</div><div class="step-body">
+    <p><strong>选择刚创建的数据库并保存</strong></p>
+    <p>变量名填写后端代码约定的名称，数据库选择刚创建的 D1 Database，然后保存配置。</p>
+    <img class="demo-img" src="assets/doc-image-09.webp" width="1400" height="780" decoding="async" alt="选择刚创建的数据库并保存" loading="lazy">
+    <p class="demo-caption">↑ 变量名填写后端代码约定的名称，数据库选择刚创建的 D1 Database，然后保存配置。</p>
+  </div></div>
+
+  <h3>绑定完成后检查</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>检查项</th><th>正确结果</th></tr></thead>
+      <tbody>
+        <tr><td>D1 Database</td><td>Cloudflare 控制台里能看到刚创建的数据库</td></tr>
+        <tr><td>Pages Binding</td><td>Pages 项目的 Functions / Bindings 里已添加 D1 database</td></tr>
+        <tr><td>变量名</td><td>Binding 变量名必须和后端函数代码里读取的名称一致</td></tr>
+        <tr><td>重新部署</td><td>保存配置后，重新部署或触发一次 Pages 构建</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout warn">
+    <strong>不要再使用旧的外部后端流程</strong>：如果你的后端已经迁到 Cloudflare D1，只需要完成 D1 数据库和 Pages Functions Binding 配置。
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="ch7">
+  <h2>六、部署后检查事项</h2>
+  <p>网站上线后，不要只看 Cloudflare 显示成功，还需要自己打开网站检查一遍。</p>
+  <h3>检查清单</h3>
+  <ol>
+    <li>打开正式网站地址，确认页面能正常打开</li>
+    <li>检查首页内容是否显示正常（文字、图片有没有错位）</li>
+    <li>检查按钮、链接、图片是否能正常点击和显示</li>
+    <li>用手机打开网站地址试试（很重要！）</li>
+    <li>如果网站有搜索功能，试试搜索能不能用</li>
+    <li>如果网站有表单，试试能不能提交</li>
+  </ol>
+  <div class="callout danger">
+    <strong>最重要的一步</strong>：用手机打开网站地址试试！电脑能打开不代表手机也能打开。如果手机打不开或有错位，截图发给 AI 让它帮你调整。
+  </div>
+  <div class="callout info">
+    <strong>如果网站有问题</strong>：不要自己猜原因。描述清楚问题（比如"首页图片不显示""搜索点了没反应"），截图或录屏发给 AI，AI 能帮你判断是哪里出了问题。
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="ch8">
+  <h2>七、遇到问题怎么办</h2>
+  <div class="callout success">
+    <strong>万能解决方法</strong>：不管遇到什么问题，都是同一套流程——截图或复制报错信息 → 发给 AI → AI 告诉你怎么改 → 改完重新部署。下面是一些常见问题和对应的提示词。
+  </div>
+
+  <h3>问题 1：在 Cloudflare 找不到 GitHub 仓库</h3>
+  <p><strong>原因</strong>：Cloudflare 没有获得你 GitHub 仓库的访问权限。</p>
+  <p><strong>解决</strong>：点击页面底部的 <strong>Cloudflare Pages</strong> 授权链接，到 GitHub 重新勾选目标仓库授权。</p>
+
+  <h3>问题 2：部署失败了（显示红色）</h3>
+  <p><strong>原因</strong>：可能是配置填错了、代码有问题、或者依赖文件冲突。</p>
+  <p><strong>解决</strong>：不要反复点击重新部署！把构建日志里的红色报错信息复制发给 AI：</p>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我的网站在 Cloudflare Pages 部署失败了。
+GitHub 仓库是：【填你的仓库地址】
+这是报错信息：
+
+【粘贴构建日志里红色的报错内容】
+
+请帮我：
+1. 判断是什么原因
+2. 应该怎么修改
+3. 修改后怎么重新部署</div>
+  </div>
+
+  <h3>问题 3：部署成功但页面是空白的</h3>
+  <p><strong>原因</strong>：通常是配置里的"输出目录"填错了。</p>
+  <p><strong>解决</strong>：把你的 GitHub 仓库地址发给 AI，问 AI "输出目录应该填什么"，然后去 Cloudflare 修改配置重新部署。</p>
+
+  <h3>问题 4：网站能打开但搜索/功能用不了</h3>
+  <p><strong>原因</strong>：可能是 Pages Functions 没正常运行，或者 D1 Binding 变量名和代码不一致。</p>
+  <p><strong>解决</strong>：</p>
+  <ol>
+    <li>去 Cloudflare Pages 项目里检查 <strong>Settings → Functions → Bindings</strong></li>
+    <li>确认 D1 database 已绑定，并且变量名和后端代码一致</li>
+    <li>保存配置后重新部署，再把浏览器报错和 Functions 日志发给 AI</li>
+  </ol>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我的网站能打开，但后端功能用不了。
+网站地址：【填你的网站地址】
+D1 Binding 变量名：【填变量名】
+
+这是浏览器里的报错信息：
+【截图或描述问题】
+
+这是 Cloudflare Functions 日志：
+【粘贴日志内容】
+
+请帮我判断是 D1 绑定问题、代码问题，还是部署配置问题，并告诉我怎么修。</div>
+  </div>
+
+  <h3>问题 5：Cloudflare 显示 522 错误</h3>
+  <p><strong>原因</strong>：可能是网站还在构建中，或者构建失败了。</p>
+  <p><strong>解决</strong>：去 Cloudflare 控制台 <strong>Deployments</strong> 页面看看构建状态。如果显示红色（失败），按问题 2 的方法处理。</p>
+
+  <h3>问题 6：提示有安全漏洞</h3>
+  <p><strong>原因</strong>：你的项目用到了某个有安全问题的依赖包。</p>
+  <p><strong>解决</strong>：把提示信息发给 AI，让 AI 帮你升级到安全版本并重新推送。</p>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我的网站在 Cloudflare 上提示有安全漏洞：
+【粘贴提示信息或截图】
+
+请帮我：
+1. 这是什么问题
+2. 怎么修复
+3. 请直接帮我修好并推送到 GitHub</div>
+  </div>
+
+  <h3>问题 7：Vercel 在国内打不开</h3>
+  <p><strong>原因</strong>：Vercel 在国内被墙了。</p>
+  <p><strong>解决</strong>：改用 Cloudflare Pages 部署。这就是本 SOP 推荐用 Cloudflare 的原因。</p>
+
+  <div class="callout warn">
+    <strong>遇到问题记住三个"不要"</strong>：不要慌、不要反复点击部署、不要自己瞎改配置。先把报错信息发给 AI，AI 帮你判断完再改。
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="ch9">
+  <h2>八、给 AI 的提问模板</h2>
+  <p>整个部署过程中，遇到任何不确定的地方，都可以用以下模板问 AI。记住一个原则：<strong>信息越详细，AI 回答越准</strong>。</p>
+
+  <div class="prompt-box">
+    <div class="label">模板 A：刚开始部署，不知道怎么填配置</div>
+    <div class="content">我要把网站部署到 Cloudflare Pages。
+GitHub 仓库地址是：【填你的仓库地址】
+
+请你帮我判断：
+1. 这个网站是什么类型的？
+2. Cloudflare 的"构建命令"填什么？
+3. "输出目录"填什么？
+4. 需要填"环境变量"吗？填什么？
+5. 如果部署失败，我先检查哪里？
+
+请用大白话告诉我，我完全不懂代码。</div>
+  </div>
+
+  <div class="prompt-box">
+    <div class="label">模板 B：部署/运行报错了</div>
+    <div class="content">我在部署/使用网站时遇到了问题。
+GitHub 仓库：【填你的仓库地址】
+网站地址：【填你的网站地址】（如果有的话）
+后端地址：【填你的后端地址】（如果有的话）
+
+这是报错信息：
+
+【粘贴报错日志，或描述问题】
+
+请帮我：
+1. 判断是什么原因
+2. 应该怎么修改
+3. 如果需要你帮忙改代码，请直接帮我改好并推送
+
+我不懂代码，请直接帮我解决。</div>
+  </div>
+
+  <div class="prompt-box">
+    <div class="label">模板 C：网站打开了但功能不正常</div>
+    <div class="content">我的网站已经部署到 Cloudflare 了，
+地址是：【填你的网站地址】
+
+但是遇到以下问题：
+【描述问题，比如：搜索功能用不了 / 页面显示不全 / 图片不显示 / 手机上打不开】
+
+后端地址是：【填你的后端地址】
+
+请你帮我排查原因，告诉我应该怎么解决。
+如果有截图我发给你看。</div>
+  </div>
+
+  <div class="prompt-box">
+    <div class="label">模板 D：需要 AI 直接帮你做（不想自己操作）</div>
+    <div class="content">请帮我完成以下操作，我不懂代码，你直接帮我做好：
+
+【描述你需要做的事，比如：
+- 帮我创建中转文件并推送到 GitHub
+- 帮我修复安全漏洞
+- 帮我升级版本
+- 帮我修改配置文件】
+
+我的仓库地址是：【填你的仓库地址】
+其他信息：【填 AI 需要知道的信息】</div>
+  </div>
+
+  <div class="callout info">
+    <strong>提问小技巧</strong>：给 AI 的信息越详细越好——仓库地址、报错日志、截图、你操作到哪一步了、你期望的结果是什么。信息越全，AI 回答越准。
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="ch10">
+  <h2>九、后续维护</h2>
+
+  <h3>更新网站内容</h3>
+  <p>如果你修改了网站代码（或让 AI 帮你改了），只需要把新代码推送到 GitHub，Cloudflare 就会自动重新部署。不需要手动操作。</p>
+  <div class="callout info">
+    <strong>怎么推送？</strong>：如果你用 AI 编程工具（如 TRAE），直接告诉 AI "帮我推送到 GitHub"就行。推送后 Cloudflare 通常 2-3 分钟后自动更新。
+  </div>
+  <div class="prompt-box">
+    <div class="label">发给 AI 的提示词</div>
+    <div class="content">我已经改好了网站代码，请帮我推送到 GitHub。
+推送后帮我看看 Cloudflare 有没有自动开始重新构建。</div>
+  </div>
+
+  <h3>查看网站状态</h3>
+  <ul>
+    <li><strong>Cloudflare</strong>：控制台 → Workers &amp; Pages → 点你的项目 → <strong>Deployments</strong> 看每次部署是否成功（绿色=成功，红色=失败）</li>
+    <li><strong>Cloudflare Functions</strong>：Pages 项目 → <strong>Functions / Deployments</strong> 查看函数日志和构建状态</li>
+  </ul>
+
+  <h3>查看网站访问数据</h3>
+  <p>Cloudflare 自带免费的数据统计功能：</p>
+  <ul>
+    <li>控制台 → 点你的项目 → <strong>Analytics</strong> 标签</li>
+    <li>可以看到：访问次数、访客数量、流量来源、访问者国家分布等</li>
+  </ul>
+  <div class="callout info">
+    <strong>不知道怎么看？</strong>：进了 Cloudflare 控制台找不到数据？截图发给 AI，告诉 AI"我想看网站访问数据"，AI 会指导你点哪里。
+  </div>
+
+  <h3>网站监控（可选）</h3>
+  <p>推荐用 <strong>UptimeRobot</strong>（<code>https://uptimerobot.com</code>）免费监控网站是否在线：</p>
+  <ul>
+    <li>每 5 分钟自动检查一次你的网站能不能打开</li>
+    <li>网站打不开了立刻发邮件通知你</li>
+    <li>免费版支持 50 个网站监控</li>
+  </ul>
+  <div class="callout info">
+    <strong>建议</strong>：上线后第一时间设置监控，这样网站出问题你能第一时间知道，而不是等用户反馈。
+  </div>
+
+  <h3>回退到旧版本</h3>
+  <p>如果新版本有问题，可以回退到之前能用的版本：</p>
+  <ul>
+    <li><strong>Cloudflare</strong>：Deployments 页面 → 找到之前显示绿色的那次构建 → 点 <strong>Promote to production</strong></li>
+    
+  </ul>
+  <div class="callout info">
+    <strong>找不到按钮？</strong>：截图 Cloudflare 页面发给 AI，告诉 AI "我想回退到旧版本"，AI 会指导你点哪个按钮。
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="ch11">
+  <h2>十、流程总结</h2>
+  <div class="callout success">
+    <p><strong>第一步：前端部署（必须）</strong></p>
+    <ol style="margin-top: 8px;">
+      <li>登录 Cloudflare → 找到 Workers &amp; Pages → 点 Create application</li>
+      <li>选 Pages → Get started → 选 Import an existing Git repository</li>
+      <li>连接 GitHub → 选择你的网站仓库</li>
+      <li>填写配置信息（<strong>不知道怎么填就问 AI</strong>）</li>
+      <li>点 Save and Deploy → 等待构建完成</li>
+      <li>复制 <code>xxx.pages.dev</code> 网站地址</li>
+    </ol>
+  </div>
+  <div class="callout success">
+    <p><strong>第二步：后端部署（有搜索/登录等功能时需要）</strong></p>
+    <ol style="margin-top: 8px;">
+      <li>进入 Cloudflare D1 Database，创建数据库</li>
+      <li>回到 Pages 项目 → Settings → Functions → Bindings</li>
+      <li>添加 D1 database 绑定，变量名和代码保持一致</li>
+      <li>保存配置后重新部署 Pages 项目</li>
+    </ol>
+  </div>
+
+  <h3>三个重要地址（记好）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>名称</th><th>地址格式</th><th>用来干什么</th></tr></thead>
+      <tbody>
+        <tr><td>网站地址</td><td><code>https://xxx.pages.dev</code></td><td>分享给用户访问</td></tr>
+        <tr><td>D1 绑定名</td><td><code>DB</code> 或你的代码约定名称</td><td>告诉 AI，用来核对 Functions 代码</td></tr>
+        <tr><td>检查地址</td><td><code>https://xxx.pages.dev/api/health</code></td><td>验证网站功能是否正常</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>记住这些原则</h3>
+  <ol>
+    <li>网站部署选 <strong>Pages</strong>，不要选 Worker</li>
+    <li>找不到 GitHub 仓库，去检查授权</li>
+    <li>不知道配置怎么填，<strong>不要瞎填，问 AI</strong></li>
+    <li>部署成功不等于网站没问题，要自己打开检查</li>
+    <li>对外分享用 <code>xxx.pages.dev</code> 正式地址</li>
+    <li>遇到失败，先复制报错信息问 AI，<strong>不要反复点击部署</strong></li>
+    <li>如果 AI 也卡住了，换个 AI 工具试试，或者搜索报错信息</li>
+    <li><strong>你不是一个人在战斗</strong>：技术的事交给 AI，你负责点击和判断</li>
+  </ol>
+</section>
+
+</main>
+</div>
+
+<footer>
+  <p>新人 AI 工作 SOP：网站部署上线 v4.0</p>
+  <p style="margin-top:8px">你负责点击操作，AI 负责技术判断。基于真实部署经验整理。</p>
+</footer>
+
+</body>
+</html>

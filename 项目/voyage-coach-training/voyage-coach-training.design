@@ -1,0 +1,100 @@
+{
+  "data": [
+    {
+      "id": "page-storytelling",
+      "title": "教练培训 Storytelling",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752646800000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/storytelling.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "image-001",
+      "title": "启航主视觉",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1752646800000,
+      "canvasData": {
+        "x": 0,
+        "y": 289
+      },
+      "devMetadata": {
+        "imageSrc": "assets/hero-voyage-start.png"
+      }
+    },
+    {
+      "id": "image-002",
+      "title": "成果交付核心理念",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1752646800000,
+      "canvasData": {
+        "x": 620,
+        "y": 289
+      },
+      "devMetadata": {
+        "imageSrc": "assets/hero-core-change.png"
+      }
+    },
+    {
+      "id": "image-003",
+      "title": "七条航线全景",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1752646800000,
+      "canvasData": {
+        "x": 1240,
+        "y": 289
+      },
+      "devMetadata": {
+        "imageSrc": "assets/hero-seven-routes.png"
+      }
+    },
+    {
+      "id": "image-004",
+      "title": "教练角色定位",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1752646800000,
+      "canvasData": {
+        "x": 1860,
+        "y": 289
+      },
+      "devMetadata": {
+        "imageSrc": "assets/hero-coach-role.png"
+      }
+    },
+    {
+      "id": "image-005",
+      "title": "成果靠岸",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1752646800000,
+      "canvasData": {
+        "x": 2480,
+        "y": 289
+      },
+      "devMetadata": {
+        "imageSrc": "assets/hero-delivery.png"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "freeSize",
+    "projectName": "8月航海教练培训 Storytelling",
+    "designLibrary": null,
+    "windowSize": {
+      "width": 800,
+      "height": 600
+    }
+  }
+}
