@@ -26,6 +26,70 @@ from app.services.firecrawl_service import SearchResult
 
 logger = logging.getLogger(__name__)
 
+RESEARCH_MODES = {"create", "work", "explore"}
+
+
+def normalize_research_mode(mode: str | None) -> str:
+    """Normalize user-facing research mode."""
+    value = (mode or "explore").strip().lower()
+    return value if value in RESEARCH_MODES else "explore"
+
+
+def _guess_source_type(url: str, name: str = "") -> str:
+    """Infer a coarse source type for credibility display."""
+    text = f"{url} {name}".lower()
+    if any(token in text for token in [".gov", "gov.cn", "mofcom", "stats.gov", "sec.gov"]):
+        return "official"
+    if any(token in text for token in [".edu", "arxiv", "doi.org", "nature.com", "science.org"]):
+        return "academic"
+    if any(token in text for token in ["reuters", "apnews", "bloomberg", "ft.com", "wsj", "economist"]):
+        return "media"
+    if any(token in text for token in ["github.com", "openai.com", "anthropic.com", "google", "microsoft", "nvidia"]):
+        return "primary"
+    return "web"
+
+
+def _credibility_for_source(source_type: str, has_url: bool, has_support: bool) -> str:
+    if not has_url:
+        return "low"
+    if source_type in {"official", "academic", "primary"} and has_support:
+        return "high"
+    if source_type in {"official", "academic", "primary", "media"}:
+        return "medium"
+    return "medium" if has_support else "low"
+
+
+def _normalize_source(
+    source: dict | str,
+    default_support: str = "",
+    default_date: str | None = None,
+) -> dict:
+    """Normalize source metadata used by events and mode reports."""
+    if isinstance(source, str):
+        raw = {"name": source, "url": ""}
+    elif isinstance(source, dict):
+        raw = source
+    else:
+        raw = {}
+
+    name = str(raw.get("name") or raw.get("title") or raw.get("source") or "未知来源")
+    url = str(raw.get("url") or raw.get("link") or "")
+    published_at = raw.get("published_at") or raw.get("date") or default_date
+    supports = raw.get("supports") or raw.get("claim") or default_support
+    source_type = raw.get("type") or _guess_source_type(url, name)
+
+    return {
+        "name": name,
+        "url": url,
+        "published_at": published_at,
+        "supports": supports,
+        "type": source_type,
+        "credibility": raw.get(
+            "credibility",
+            _credibility_for_source(source_type, bool(url), bool(supports)),
+        ),
+    }
+
 
 class DeepSeekError(Exception):
     """DeepSeek 服务异常"""
@@ -57,6 +121,10 @@ class ExtractedEvent:
     def __post_init__(self) -> None:
         if self.sources is None:
             self.sources = []
+        self.sources = [
+            _normalize_source(src, default_support=self.summary, default_date=self.date)
+            for src in self.sources
+        ]
 
     def to_dict(self) -> dict:
         return {
@@ -162,6 +230,89 @@ class GeneratedInsight:
         }
 
 
+@dataclass
+class ModeReportSection:
+    """Mode-specific report section."""
+
+    title: str
+    body: str = ""
+    bullets: list[str] = None
+    evidence_indices: list[int] = None
+    source_refs: list[dict] = None
+
+    def __post_init__(self) -> None:
+        if self.bullets is None:
+            self.bullets = []
+        if self.evidence_indices is None:
+            self.evidence_indices = []
+        if self.source_refs is None:
+            self.source_refs = []
+        self.source_refs = [_normalize_source(src) for src in self.source_refs]
+
+    def to_dict(self) -> dict:
+        return {
+            "title": self.title,
+            "body": self.body,
+            "bullets": self.bullets,
+            "evidence_indices": self.evidence_indices,
+            "source_refs": self.source_refs,
+        }
+
+
+@dataclass
+class ModeReport:
+    """Mode-specific structured report."""
+
+    mode: str
+    title: str
+    sections: list[ModeReportSection] = None
+    source_notes: list[str] = None
+
+    def __post_init__(self) -> None:
+        self.mode = normalize_research_mode(self.mode)
+        if self.sections is None:
+            self.sections = []
+        if self.source_notes is None:
+            self.source_notes = []
+
+    def to_dict(self) -> dict:
+        return {
+            "mode": self.mode,
+            "title": self.title,
+            "sections": [section.to_dict() for section in self.sections],
+            "source_notes": self.source_notes,
+        }
+
+
+def _extract_response_output_text(response) -> str:
+    """Extract text from an OpenAI Responses API object."""
+    output_text = getattr(response, "output_text", None)
+    if output_text:
+        return output_text
+
+    chunks: list[str] = []
+    for item in getattr(response, "output", []) or []:
+        for part in getattr(item, "content", []) or []:
+            text = getattr(part, "text", None)
+            if text:
+                chunks.append(text)
+            elif isinstance(part, dict) and part.get("text"):
+                chunks.append(part["text"])
+
+    if chunks:
+        return "".join(chunks)
+
+    if isinstance(response, dict):
+        if response.get("output_text"):
+            return response["output_text"]
+        for item in response.get("output", []) or []:
+            for part in item.get("content", []) or []:
+                if part.get("text"):
+                    chunks.append(part["text"])
+
+    return "".join(chunks)
+
+
 class DeepSeekService:
     """DeepSeek AI 服务
 
@@ -191,9 +342,12 @@ class DeepSeekService:
             base_url: API 地址
             model: 模型名称
         """
-        self.api_key = api_key or settings.DEEPSEEK_API_KEY
-        self.base_url = base_url or settings.DEEPSEEK_BASE_URL
-        self.model = model or settings.DEEPSEEK_MODEL
+        self.api_key = api_key or settings.MODEL_API_KEY or settings.OPENAI_API_KEY or settings.DEEPSEEK_API_KEY
+        self.base_url = base_url or settings.MODEL_BASE_URL or settings.OPENAI_BASE_URL or settings.DEEPSEEK_BASE_URL
+        self.model = model or settings.MODEL_NAME or settings.OPENAI_MODEL or settings.DEEPSEEK_MODEL
+        self.wire_api = settings.MODEL_WIRE_API.lower()
+        self.reasoning_effort = settings.MODEL_REASONING_EFFORT
+        self.disable_response_storage = settings.DISABLE_RESPONSE_STORAGE
         self._client: AsyncOpenAI | None = None
 
     @property
@@ -229,21 +383,10 @@ class DeepSeekService:
             DeepSeekResponseError: JSON 解析失败
             DeepSeekError: API 调用失败
         """
-        try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                temperature=temperature,
-                response_format={"type": "json_object"},
-            )
-        except Exception as e:
-            logger.error("DeepSeek API 调用失败: %s", e)
-            raise DeepSeekError(f"DeepSeek API 调用失败: {e}") from e
-
-        content = response.choices[0].message.content
+        if self.wire_api == "responses":
+            content = await self._responses_json(system_prompt, user_prompt, temperature)
+        else:
+            content = await self._chat_completions_json(system_prompt, user_prompt, temperature)
 
         try:
             result = json.loads(content)
@@ -256,12 +399,59 @@ class DeepSeekService:
 
         return result
 
+    async def _chat_completions_json(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float,
+    ) -> str:
+        """Call Chat Completions and return raw JSON text."""
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=temperature,
+                response_format={"type": "json_object"},
+            )
+        except Exception as e:
+            logger.error("模型 API 调用失败: %s", e)
+            raise DeepSeekError(f"模型 API 调用失败: {e}") from e
+
+        return response.choices[0].message.content or "{}"
+
+    async def _responses_json(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float,
+    ) -> str:
+        """Call Responses API and return raw JSON text."""
+        payload = {
+            "model": self.model,
+            "input": f"{system_prompt}\n\n---\n\n{user_prompt}",
+            "text": {"format": {"type": "json_object"}},
+            "store": not self.disable_response_storage,
+        }
+
+        try:
+            response = await self.client.responses.create(**payload)
+        except Exception as e:
+            logger.error("Responses API 调用失败: %s", e)
+            raise DeepSeekError(f"Responses API 调用失败: {e}") from e
+
+        content = _extract_response_output_text(response)
+        return content or "{}"
+
     async def extract_events(
         self,
         query: str,
         search_results: list[SearchResult],
         max_events: int = 8,
         query_profile: dict | None = None,
+        mode: str = "explore",
     ) -> list[ExtractedEvent]:
         """从搜索结果中提取结构化事件
 
@@ -284,13 +474,13 @@ class DeepSeekService:
             logger.info("搜索结果为空，跳过事件提取")
             return []
 
+        mode = normalize_research_mode(mode)
         framework = _get_topic_framework(query_profile)
+        mode_framework = _get_mode_framework(mode)
         system_prompt = (
-            framework + "\n\n" + _EVENT_EXTRACTION_SYSTEM_PROMPT
-            if framework
-            else _EVENT_EXTRACTION_SYSTEM_PROMPT
+            "\n\n".join(part for part in [mode_framework, framework, _EVENT_EXTRACTION_SYSTEM_PROMPT] if part)
         )
-        user_prompt = _build_event_extraction_user_prompt(query, search_results, max_events)
+        user_prompt = _build_event_extraction_user_prompt(query, search_results, max_events, mode)
 
         logger.info(
             "开始提取事件: query='%s', 搜索结果数=%d, 最大事件数=%d",
@@ -327,6 +517,7 @@ class DeepSeekService:
         query: str,
         events: list[ExtractedEvent],
         query_profile: dict | None = None,
+        mode: str = "explore",
     ) -> list[AnalyzedRelation]:
         """分析事件间的关联关系
 
@@ -345,11 +536,11 @@ class DeepSeekService:
             logger.info("事件数不足 2 个，跳过关系分析")
             return []
 
+        mode = normalize_research_mode(mode)
         framework = _get_topic_framework(query_profile)
+        mode_framework = _get_mode_framework(mode)
         system_prompt = (
-            framework + "\n\n" + _RELATION_ANALYSIS_SYSTEM_PROMPT
-            if framework
-            else _RELATION_ANALYSIS_SYSTEM_PROMPT
+            "\n\n".join(part for part in [mode_framework, framework, _RELATION_ANALYSIS_SYSTEM_PROMPT] if part)
         )
         user_prompt = _build_relation_analysis_user_prompt(query, events)
 
@@ -391,6 +582,7 @@ class DeepSeekService:
         events: list[ExtractedEvent],
         relations: list[AnalyzedRelation],
         query_profile: dict | None = None,
+        mode: str = "explore",
     ) -> list[ChapterOutline]:
         """将事件按叙事逻辑分成章节
 
@@ -410,11 +602,11 @@ class DeepSeekService:
             logger.info("事件为空，跳过章节组织")
             return []
 
+        mode = normalize_research_mode(mode)
         framework = _get_topic_framework(query_profile)
+        mode_framework = _get_mode_framework(mode)
         system_prompt = (
-            framework + "\n\n" + _CHAPTER_ORGANIZATION_SYSTEM_PROMPT
-            if framework
-            else _CHAPTER_ORGANIZATION_SYSTEM_PROMPT
+            "\n\n".join(part for part in [mode_framework, framework, _CHAPTER_ORGANIZATION_SYSTEM_PROMPT] if part)
         )
         user_prompt = _build_chapter_organization_user_prompt(query, events, relations)
 
@@ -450,6 +642,7 @@ class DeepSeekService:
         events: list[ExtractedEvent],
         relations: list[AnalyzedRelation],
         query_profile: dict | None = None,
+        mode: str = "explore",
     ) -> GeneratedInsight:
         """生成趋势判断和行动建议
 
@@ -473,18 +666,19 @@ class DeepSeekService:
             logger.info("事件为空，跳过洞察生成")
             return GeneratedInsight(title="", body="暂无足够信息生成洞察。")
 
+        mode = normalize_research_mode(mode)
         topic_type = (query_profile or {}).get("topic_type", "general")
         framework = _get_topic_framework(query_profile)
+        mode_framework = _get_mode_framework(mode)
         roles_block = (
             "行动建议角色（请严格使用以下角色，不要增减）：\n"
             f"{_get_insight_roles(topic_type)}\n"
             "每个角色给出 1-3 条具体可执行的建议。"
         )
         base_prompt = _INSIGHT_GENERATION_SYSTEM_PROMPT
-        if framework:
-            system_prompt = framework + "\n\n" + base_prompt + "\n\n" + roles_block
-        else:
-            system_prompt = base_prompt + "\n\n" + roles_block
+        system_prompt = "\n\n".join(
+            part for part in [mode_framework, framework, base_prompt, roles_block] if part
+        )
         user_prompt = _build_insight_generation_user_prompt(query, events, relations)
 
         logger.info(
@@ -509,6 +703,57 @@ class DeepSeekService:
 
         logger.info("洞察生成完成: %s", insight.title[:50])
         return insight
+
+    async def generate_mode_report(
+        self,
+        query: str,
+        mode: str,
+        events: list[ExtractedEvent],
+        relations: list[AnalyzedRelation],
+        search_results: list[SearchResult],
+        query_profile: dict | None = None,
+    ) -> ModeReport:
+        """Generate the mode-specific report structure."""
+        mode = normalize_research_mode(mode)
+        if not events:
+            return ModeReport(mode=mode, title=query, sections=[])
+
+        system_prompt = "\n\n".join(
+            part for part in [
+                _get_mode_framework(mode),
+                _get_topic_framework(query_profile),
+                _MODE_REPORT_SYSTEM_PROMPT,
+            ] if part
+        )
+        user_prompt = _build_mode_report_user_prompt(query, mode, events, relations, search_results)
+
+        logger.info("开始生成模式报告: query='%s', mode='%s'", query, mode)
+        result = await self.chat_json(system_prompt, user_prompt, temperature=0.35)
+
+        try:
+            sections = [
+                ModeReportSection(
+                    title=item.get("title", ""),
+                    body=item.get("body", ""),
+                    bullets=item.get("bullets", []),
+                    evidence_indices=item.get("evidence_indices", []),
+                    source_refs=item.get("source_refs", []),
+                )
+                for item in result.get("sections", [])
+                if isinstance(item, dict)
+            ]
+            report = ModeReport(
+                mode=mode,
+                title=result.get("title", query),
+                sections=sections,
+                source_notes=result.get("source_notes", []),
+            )
+        except (TypeError, ValueError, AttributeError) as e:
+            logger.warning("模式报告格式异常: %s", e)
+            return ModeReport(mode=mode, title=query, sections=[])
+
+        logger.info("模式报告生成完成: mode='%s', sections=%d", mode, len(report.sections))
+        return report
 
 
 # ============================================================
@@ -591,6 +836,26 @@ def _get_topic_framework(query_profile: dict | None) -> str:
     return result
 
 
+def _get_mode_framework(mode: str) -> str:
+    """Return mode-specific research focus."""
+    mode = normalize_research_mode(mode)
+    frameworks = {
+        "create": """当前研究模式：创作
+用户目标：寻找选题、内容角度、真实观点冲突、案例证据和可编辑提纲。
+报告重点：常见叙事、差异化角度、观点冲突、案例证据、标题方向、内容提纲。
+写作边界：不要直接代写成稿，不制造虚假争议，不给标题党。""",
+        "work": """当前研究模式：工作
+用户目标：在会议、汇报或项目前快速建立认知、识别风险和形成待确认问题。
+报告重点：执行摘要、核心概念、市场与趋势、关键参与者、典型案例、风险、决策提示、会议问题。
+写作边界：市场数字必须有日期和来源；区分事实、预测和模型判断；信息不足时写明需要进一步确认。""",
+        "explore": """当前研究模式：探索
+用户目标：轻松但系统地理解主题，并知道下一步还能探索什么。
+报告重点：一句话认识、核心脉络、关键知识、常见误解、不同视角、与我的关系、继续探索、推荐来源。
+写作边界：少堆术语，用日常语言解释必要概念，不把建议对象突然变成政府、机构或开发者。""",
+    }
+    return frameworks[mode]
+
+
 def _get_insight_roles(topic_type: str) -> str:
     """根据主题类型返回洞察建议的角色集合
 
@@ -622,12 +887,13 @@ _EVENT_EXTRACTION_SYSTEM_PROMPT = """你是一个信息分析专家。你的任�
 要求：
 1. 每个事件必须有明确的标题、摘要
 2. 日期字段格式为 YYYY-MM-DD，如果无法确定具体日期则为 null
-3. 来源字段包含 name（来源名称）和 url（来源链接）
+3. 来源字段必须尽量包含 name（来源名称）、url（来源链接）、published_at（发布日期或 null）、supports（该来源支持的具体结论）、type（official/academic/primary/media/web）、credibility（high/medium/low）
 4. key_quote 是该事件中最有信息量的引述，如果没有则为 null
 5. confidence 是你对这个事件真实性和重要性的确信度，范围 0-1
 6. 去重：如果多个来源报道同一事件，合并为一个
 7. 按时间从近到远排序（最新的在前）
 8. 只提取与查询关键词真正相关的事件
+9. 关键数字、人物观点、市场规模和案例必须有来源；没有可靠来源时降低 confidence，并在摘要中避免确定语气
 
 注意：对于非科技/商业主题，"事件"可以理解为"知识节点"——即一个有价值的知识点、观点、事实或认知线索。
 每个节点包含标题、摘要/解释、来源、置信度。
@@ -640,7 +906,14 @@ _EVENT_EXTRACTION_SYSTEM_PROMPT = """你是一个信息分析专家。你的任�
       "title": "事件标题（简洁有力，15-30字）",
       "summary": "事件摘要（100-200字，包含关键事实）",
       "date": "2024-03-15 或 null",
-      "sources": [{"name": "来源名称", "url": "https://..."}],
+      "sources": [{
+        "name": "来源名称",
+        "url": "https://...",
+        "published_at": "2024-03-15 或 null",
+        "supports": "该来源支持的具体结论",
+        "type": "official|academic|primary|media|web",
+        "credibility": "high|medium|low"
+      }],
       "key_quote": "关键引述或 null",
       "confidence": 0.85
     }
@@ -652,13 +925,17 @@ def _build_event_extraction_user_prompt(
     query: str,
     search_results: list[SearchResult],
     max_events: int,
+    mode: str = "explore",
 ) -> str:
     """构建事件提取的用户提示词
 
     将搜索结果格式化为 AI 可读的文本。
     """
+    mode = normalize_research_mode(mode)
     parts = [f"查询关键词：{query}\n"]
+    parts.append(f"研究模式：{mode}\n")
     parts.append(f"请从以下搜索结果中提取最多 {max_events} 个关键事件。\n")
+    parts.append("请优先保留能支撑模式报告关键结论的来源，并说明每个来源支持什么结论。\n")
     parts.append("---\n")
 
     for i, result in enumerate(search_results, 1):
@@ -847,4 +1124,94 @@ def _build_insight_generation_user_prompt(
     parts.append("---\n")
     parts.append("请从事件中提炼出核心趋势判断，并给出分角色行动建议。")
 
+    return "\n".join(parts)
+
+
+# ============================================================
+# 三模式报告提示词
+# ============================================================
+
+_MODE_REPORT_SYSTEM_PROMPT = """你是一个可信研究报告编辑。你的任务是把已经提取出的事件、关系和来源，整理成当前模式需要的结构化报告。
+
+共同要求：
+1. 只能基于给定事件、关系和搜索来源生成，不编造数字、案例、人物观点或链接。
+2. 事实、预测、建议要用不同表达区分；不确定时写明“需要进一步确认”。
+3. 每个关键结论、关键数字、案例或观点冲突，都要在 source_refs 中引用能支撑它的来源。
+4. source_refs 每项包含 name、url、published_at、supports、type、credibility。
+5. 如果来源不足，要在 source_notes 中明确提醒，而不是用确定语气掩盖。
+
+模式结构：
+- create：主题速览、常见叙事、差异化角度、观点冲突、案例与证据、标题方向、内容提纲、来源。
+- work：执行摘要、核心概念、市场与趋势、关键参与者、典型案例、争议与风险、决策提示、会议速记、来源。
+- explore：一句话认识、核心脉络、关键知识、常见误解、不同视角、与我的关系、继续探索、来源。
+
+输出格式（JSON）：
+{
+  "title": "适合当前模式的报告标题",
+  "sections": [
+    {
+      "title": "章节标题",
+      "body": "章节正文，1-3段，避免空话",
+      "bullets": ["要点1", "要点2"],
+      "evidence_indices": [0, 2],
+      "source_refs": [{
+        "name": "来源名称",
+        "url": "https://...",
+        "published_at": "2024-03-15 或 null",
+        "supports": "该来源支持的具体结论",
+        "type": "official|academic|primary|media|web",
+        "credibility": "high|medium|low"
+      }]
+    }
+  ],
+  "source_notes": ["来源不足或交叉验证状态说明"]
+}"""
+
+
+def _build_mode_report_user_prompt(
+    query: str,
+    mode: str,
+    events: list[ExtractedEvent],
+    relations: list[AnalyzedRelation],
+    search_results: list[SearchResult],
+) -> str:
+    """Build mode report prompt from structured evidence."""
+    mode = normalize_research_mode(mode)
+    parts = [f"查询关键词：{query}", f"研究模式：{mode}", ""]
+    parts.append("事件/知识节点：")
+    for i, event in enumerate(events):
+        parts.append(f"[{i}] {event.title}（{event.date or '日期未知'}，置信度 {event.confidence:.2f}）")
+        parts.append(f"摘要：{event.summary}")
+        if event.key_quote:
+            parts.append(f"引述：{event.key_quote}")
+        if event.sources:
+            parts.append("来源：")
+            for src in event.sources:
+                parts.append(
+                    "- {name} | {published_at} | {type}/{credibility} | {url} | 支持：{supports}".format(
+                        name=src.get("name", "未知来源"),
+                        published_at=src.get("published_at") or "日期未知",
+                        type=src.get("type", "web"),
+                        credibility=src.get("credibility", "low"),
+                        url=src.get("url", ""),
+                        supports=src.get("supports", ""),
+                    )
+                )
+        parts.append("")
+
+    if relations:
+        parts.append("关系：")
+        for rel in relations:
+            parts.append(
+                f"- [{rel.from_event_index}] --{rel.type}--> [{rel.to_event_index}]：{rel.description}"
+            )
+        parts.append("")
+
+    parts.append("搜索来源列表（用于补充来源可信度，不要编造这里没有的链接）：")
+    for i, result in enumerate(search_results, 1):
+        parts.append(f"{i}. {result.title} | {result.url}")
+        if result.description:
+            parts.append(f"   描述：{result.description[:240]}")
+    parts.append("")
+    parts.append("请按当前模式结构生成报告，并为关键结论绑定 source_refs。")
     return "\n".join(parts)

@@ -12,8 +12,36 @@ import {
   RotateCcw,
   Code,
 } from 'lucide-react';
-import { research } from '@/lib/api';
-import type { ResearchResult, EventItem, Insight, QueryProfile, Relation } from '@/lib/types';
+import { getReport, research } from '@/lib/api';
+import type { EventItem, Relation, ResearchMode, ResearchResult, Source } from '@/lib/types';
+
+const MODE_META: Record<ResearchMode, { label: string; eyebrow: string; nodeLabel: string }> = {
+  create: { label: '创作', eyebrow: '创作报告', nodeLabel: '素材节点' },
+  work: { label: '工作', eyebrow: '工作报告', nodeLabel: '证据节点' },
+  explore: { label: '探索', eyebrow: '探索记录', nodeLabel: '知识节点' },
+};
+
+function normalizeMode(value: string | null): ResearchMode {
+  return value === 'create' || value === 'work' || value === 'explore' ? value : 'explore';
+}
+
+function credibilityLabel(value?: string): string {
+  if (value === 'high') return '高可信';
+  if (value === 'medium') return '中可信';
+  if (value === 'low') return '低可信';
+  return '待核查';
+}
+
+function sourceTypeLabel(value?: string): string {
+  const map: Record<string, string> = {
+    official: '官方',
+    academic: '学术',
+    primary: '一手',
+    media: '媒体',
+    web: '网页',
+  };
+  return value ? map[value] || value : '来源';
+}
 
 /** 关系类型 → 中文标签 + 符号 + 颜色 */
 const RELATION_META: Record<string, { label: string; symbol: string; color: string }> = {
@@ -121,10 +149,30 @@ function KnowledgeGraph({ events, relations }: { events: EventItem[]; relations:
 
 /** 将探索记录转为 Markdown */
 function reportToMarkdown(result: ResearchResult): string {
+  const mode = result.mode || result.mode_report?.mode || 'explore';
+  const meta = MODE_META[mode];
   let md = `# ${result.query}\n\n`;
-  md += `> 知行 · 探索记录 | ${new Date().toISOString().split('T')[0]}\n\n`;
+  md += `> 知行 · ${meta.eyebrow} | ${new Date().toISOString().split('T')[0]}\n\n`;
 
   md += `## 引导摘要\n\n${result.summary}\n\n`;
+
+  if (result.mode_report?.sections?.length) {
+    md += `## ${result.mode_report.title}\n\n`;
+    result.mode_report.sections.forEach((section) => {
+      md += `### ${section.title}\n\n`;
+      if (section.body) md += `${section.body}\n\n`;
+      section.bullets.forEach((item) => { md += `- ${item}\n`; });
+      if (section.bullets.length > 0) md += `\n`;
+      if (section.source_refs.length > 0) {
+        md += `来源：${section.source_refs.map((s) => `[${s.name}](${s.url || '#'})`).join('、')}\n\n`;
+      }
+    });
+    if (result.mode_report.source_notes.length > 0) {
+      md += `来源提示：\n`;
+      result.mode_report.source_notes.forEach((note) => { md += `- ${note}\n`; });
+      md += `\n`;
+    }
+  }
 
   if (result.chapters.length > 0) {
     result.chapters.forEach((ch, ci) => {
@@ -137,7 +185,7 @@ function reportToMarkdown(result: ResearchResult): string {
         md += `${evt.summary}\n\n`;
         if (evt.key_quote) md += `> ${evt.key_quote}\n\n`;
         if (evt.sources.length > 0) {
-          md += `**来源：** ${evt.sources.map(s => `[${s.name}](${s.url})`).join('、')}\n\n`;
+          md += `**来源：** ${evt.sources.map(s => `[${s.name}](${s.url || '#'})${s.published_at ? `（${s.published_at}）` : ''}`).join('、')}\n\n`;
         }
       });
     });
@@ -177,10 +225,97 @@ function reportToMarkdown(result: ResearchResult): string {
   return md;
 }
 
+function SourcePill({ source }: { source: Source }) {
+  return (
+    <a
+      className={`source-pill credibility-${source.credibility || 'unknown'}`}
+      href={source.url || undefined}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={source.supports || source.name}
+    >
+      <span>{source.name}</span>
+      <span>{source.published_at || '日期待核查'}</span>
+      <span>{sourceTypeLabel(source.type)} · {credibilityLabel(source.credibility)}</span>
+      {source.supports && <span className="source-supports">支持：{source.supports}</span>}
+      {source.url && <ExternalLink size={10} />}
+    </a>
+  );
+}
+
+function SourceSummaryBox({ result }: { result: ResearchResult }) {
+  const summary = result.source_summary;
+  if (!summary) return null;
+  return (
+    <div className="source-summary-box">
+      <div className="source-summary-grid">
+        <div>
+          <span className="source-summary-num">{summary.total}</span>
+          <span className="source-summary-label">来源</span>
+        </div>
+        <div>
+          <span className="source-summary-num">{summary.with_date}</span>
+          <span className="source-summary-label">有日期</span>
+        </div>
+        <div>
+          <span className="source-summary-num">{summary.high_credibility}</span>
+          <span className="source-summary-label">高可信</span>
+        </div>
+      </div>
+      {summary.notes.length > 0 && (
+        <div className="source-summary-notes">
+          {summary.notes.map((note, i) => <span key={i}>{note}</span>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ModeReportView({ result }: { result: ResearchResult }) {
+  const report = result.mode_report;
+  if (!report) return null;
+  return (
+    <section className="mode-report-section">
+      <p className="summary-label">{MODE_META[report.mode].eyebrow}</p>
+      <h2 className="mode-report-title">{report.title}</h2>
+      <div className="mode-report-list">
+        {report.sections.map((section, i) => (
+          <article key={`${section.title}-${i}`} className="mode-report-item">
+            <div className="mode-report-index">{String(i + 1).padStart(2, '0')}</div>
+            <div className="mode-report-content">
+              <h3>{section.title}</h3>
+              {section.body && <p>{section.body}</p>}
+              {section.bullets.length > 0 && (
+                <ul>
+                  {section.bullets.map((item, bi) => <li key={bi}>{item}</li>)}
+                </ul>
+              )}
+              {section.source_refs.length > 0 && (
+                <div className="source-pill-row">
+                  {section.source_refs.map((src, si) => <SourcePill key={`${src.url || src.name}-${si}`} source={src} />)}
+                </div>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+      {report.source_notes.length > 0 && (
+        <div className="source-notes">
+          {report.source_notes.map((note, i) => <span key={i}>{note}</span>)}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function ReportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
+  const reportIdParam = searchParams.get('id');
+  const reportId = reportIdParam ? Number(reportIdParam) : null;
+  const mode = normalizeMode(searchParams.get('mode'));
+  const modeMeta = MODE_META[mode];
 
   const [result, setResult] = useState<ResearchResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -189,8 +324,13 @@ function ReportContent() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (!query) {
+    if (!query && !reportId) {
       router.push('/');
+      return;
+    }
+    if (reportIdParam && (!reportId || Number.isNaN(reportId))) {
+      setError('报告 ID 无效');
+      setLoading(false);
       return;
     }
     let cancelled = false;
@@ -210,7 +350,7 @@ function ReportContent() {
       setLoading(true);
       setError(null);
       try {
-        const data = await research(query);
+        const data = reportId ? await getReport(reportId) : await research(query, mode);
         if (!cancelled) setResult(data);
       } catch (err) {
         if (!cancelled) {
@@ -230,7 +370,7 @@ function ReportContent() {
       cancelled = true;
       clearTimeout(stepTimer);
     };
-  }, [query, router]);
+  }, [query, mode, reportId, reportIdParam, router]);
 
   const handleCopy = async () => {
     if (!result) return;
@@ -258,7 +398,7 @@ function ReportContent() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `知行_探索记录_${result.query}.md`;
+    a.download = `知行_${MODE_META[result.mode || result.mode_report?.mode || 'explore'].label}报告_${result.query}.md`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -270,7 +410,7 @@ function ReportContent() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `知行_探索记录_${result.query}.json`;
+    a.download = `知行_${MODE_META[result.mode || result.mode_report?.mode || 'explore'].label}报告_${result.query}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -283,7 +423,9 @@ function ReportContent() {
           <div className="loading-brand-icon">知</div>
           <span className="loading-brand-text">知行</span>
         </div>
-        <div className="loading-query">正在探索「{query}」</div>
+        <div className="loading-query">
+          {reportId ? `正在打开历史报告 #${reportId}` : `正在生成${modeMeta.label}报告「${query}」`}
+        </div>
         <div className="loading-steps">
           {LOADING_STEPS.map((step, i) => {
             const status = i < loadingStep ? 'done' : i === loadingStep ? 'active' : 'pending';
@@ -323,6 +465,8 @@ function ReportContent() {
   }
 
   if (!result) return null;
+  const activeMode = result.mode || result.mode_report?.mode || mode;
+  const activeModeMeta = MODE_META[activeMode];
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
@@ -338,7 +482,7 @@ function ReportContent() {
             <Home size={16} /> 首页
           </a>
           <a className="sidebar-nav-item active">
-            <FileText size={16} /> 探索记录
+            <FileText size={16} /> {activeModeMeta.eyebrow}
           </a>
         </nav>
 
@@ -350,14 +494,17 @@ function ReportContent() {
         <div className="reading-panel">
           {/* 探索记录头部 */}
           <div className="report-header">
-            <p className="report-eyebrow">探索记录</p>
+            <p className="report-eyebrow">{activeModeMeta.eyebrow}</p>
             <h1 className="report-title">{result.query}</h1>
             <div className="report-meta">
               <span>{new Date().toISOString().split('T')[0]}</span>
               <span className="meta-sep" />
               <span>阅读约 {Math.max(1, Math.ceil(result.events.length * 1.5))} 分钟</span>
               <span className="meta-sep" />
-              <span>共 {result.events.length} 个知识节点</span>
+              <span>共 {result.events.length} 个{activeModeMeta.nodeLabel}</span>
+            </div>
+            <div className="report-profile-tags">
+              <span className="profile-tag mode-tag">{activeModeMeta.label}</span>
             </div>
             {result.query_profile && (
               <div className="report-profile-tags">
@@ -377,6 +524,9 @@ function ReportContent() {
                 {result.warning}
               </div>
             )}
+            {result.source_summary && (
+              <SourceSummaryBox result={result} />
+            )}
           </div>
 
           <div className="report-divider" />
@@ -386,6 +536,12 @@ function ReportContent() {
             <p className="summary-label">引导摘要</p>
             <div className="summary-text">{result.summary}</div>
           </section>
+
+          {result.mode_report?.sections?.length ? (
+            <ModeReportView result={result} />
+          ) : (
+            <div className="report-warning">当前没有生成模式化报告，以下展示通用事件脉络。</div>
+          )}
 
           {/* 知识图谱 */}
           {result.events.length > 1 && (
@@ -460,11 +616,7 @@ function ReportContent() {
                         <div className="side-note">
                           <p className="side-note-label">来源</p>
                           {event.sources.map((src, si) => (
-                            <div key={si} className="side-note-source">
-                              <a href={src.url} target="_blank" rel="noopener noreferrer">
-                                {src.name} <ExternalLink size={10} style={{ display: 'inline', verticalAlign: 'middle' }} />
-                              </a>
-                            </div>
+                            <SourcePill key={`${src.url || src.name}-${si}`} source={src} />
                           ))}
                         </div>
                       )}
@@ -483,9 +635,7 @@ function ReportContent() {
                     <div className="side-note">
                       <p className="side-note-label">来源</p>
                       {event.sources.map((src, si) => (
-                        <div key={si} className="side-note-source">
-                          <a href={src.url} target="_blank" rel="noopener noreferrer">{src.name}</a>
-                        </div>
+                        <SourcePill key={`${src.url || src.name}-${si}`} source={src} />
                       ))}
                     </div>
                   )}
@@ -580,12 +730,20 @@ function ReportContent() {
           <p className="toc-heading">章节</p>
           <div className="toc-links">
             {result.chapters.length > 0 ? (
-              result.chapters.map((ch, i) => (
-                <button key={i} className="toc-link">{i + 1}. {ch.title}</button>
-              ))
+              <>
+                {result.mode_report?.sections.map((section, i) => (
+                  <button key={`mode-${i}`} className="toc-link">{i + 1}. {section.title}</button>
+                ))}
+                {result.chapters.map((ch, i) => (
+                  <button key={i} className="toc-link">{i + 1}. {ch.title}</button>
+                ))}
+              </>
             ) : (
               <>
                 <button className="toc-link">引导摘要</button>
+                {result.mode_report?.sections.map((section, i) => (
+                  <button key={`mode-${i}`} className="toc-link">{i + 1}. {section.title}</button>
+                ))}
                 <button className="toc-link">知识网络</button>
                 <button className="toc-link">关键线索</button>
                 {result.insight?.title && <button className="toc-link">行动启发</button>}

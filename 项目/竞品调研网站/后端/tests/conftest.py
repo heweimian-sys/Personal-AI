@@ -6,10 +6,20 @@
 """
 from __future__ import annotations
 
+import os
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+os.environ["OPENAI_API_KEY"] = ""
+os.environ["OPENAI_BASE_URL"] = ""
+os.environ["OPENAI_MODEL"] = ""
+os.environ["MODEL_API_KEY"] = ""
+os.environ["MODEL_BASE_URL"] = ""
+os.environ["MODEL_NAME"] = ""
+os.environ["MODEL_WIRE_API"] = "chat"
 
 from app.core.db import Base, get_db
 from app.main import app

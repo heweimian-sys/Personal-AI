@@ -11,13 +11,10 @@
 """
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass
 
-from openai import AsyncOpenAI
-
-from app.core.config import settings
+from app.services.deepseek_service import DeepSeekService
 
 logger = logging.getLogger(__name__)
 
@@ -252,24 +249,11 @@ async def classify_by_llm(query: str) -> QueryProfile:
     规则无法判断时使用。
     """
     try:
-        client = AsyncOpenAI(
-            api_key=settings.DEEPSEEK_API_KEY,
-            base_url=settings.DEEPSEEK_BASE_URL,
-            timeout=60.0,
-        )
-
-        response = await client.chat.completions.create(
-            model=settings.DEEPSEEK_MODEL,
-            messages=[
-                {"role": "system", "content": _CLASSIFY_SYSTEM_PROMPT},
-                {"role": "user", "content": f"请分类：{query}"},
-            ],
+        result = await DeepSeekService().chat_json(
+            _CLASSIFY_SYSTEM_PROMPT,
+            f"请分类：{query}",
             temperature=0.1,
-            response_format={"type": "json_object"},
         )
-
-        content = response.choices[0].message.content
-        result = json.loads(content)
 
         topic_type = result.get("topic_type", "general")
         # 校验类型合法性

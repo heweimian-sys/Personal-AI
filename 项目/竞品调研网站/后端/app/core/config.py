@@ -38,6 +38,17 @@ class Settings(BaseSettings):
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com/v1"
     DEEPSEEK_MODEL: str = "deepseek-chat"
 
+    # OpenAI 兼容模型服务（优先于 DeepSeek 配置）
+    MODEL_API_KEY: str = ""
+    MODEL_BASE_URL: str = ""
+    MODEL_NAME: str = ""
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = ""
+    OPENAI_MODEL: str = ""
+    MODEL_WIRE_API: str = "chat"  # "chat" | "responses"
+    MODEL_REASONING_EFFORT: str = ""
+    DISABLE_RESPONSE_STORAGE: bool = False
+
     # 访问密码（保护 API 不被滥用）
     # 留空 = 本地开发模式，跳过认证
     ACCESS_PASSWORD: str = ""

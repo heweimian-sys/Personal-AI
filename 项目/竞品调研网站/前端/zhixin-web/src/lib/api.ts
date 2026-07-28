@@ -5,8 +5,8 @@
  */
 
 import axios from 'axios';
-import type { ResearchResult } from './types';
-import { MOCK_REPORT } from './mock';
+import type { DashboardStats, ReportSummaryItem, ResearchMode, ResearchResult } from './types';
+import { getMockReport } from './mock';
 
 /**
  * 后端 API 基础地址
@@ -29,10 +29,11 @@ const api = axios.create({
  * @param query 查询关键词
  * @returns 研究结果（事件、关系、章节、摘要、洞察）
  */
-export async function research(query: string): Promise<ResearchResult> {
+export async function research(query: string, mode: ResearchMode = 'explore'): Promise<ResearchResult> {
   try {
     const response = await api.post('/api/research', {
       query,
+      mode,
       search_limit: 10,
       max_events: 8,
     });
@@ -40,12 +41,59 @@ export async function research(query: string): Promise<ResearchResult> {
   } catch (err) {
     // 后端不可用或请求失败时，降级到 Mock 数据
     console.warn('[知行] 后端服务不可用，使用 Mock 数据展示。', err);
+    const mock = getMockReport(mode);
     return {
-      ...MOCK_REPORT,
+      ...mock,
       query,
+      mode,
       source_status: 'mock',
       warning: '当前为演示数据（后端服务未启动）。启动后端后可获得真实搜索结果。',
     } as ResearchResult;
+  }
+}
+
+/** 获取历史报告列表 */
+export async function listReports(limit = 30): Promise<ReportSummaryItem[]> {
+  try {
+    const response = await api.get('/api/reports', { params: { limit } });
+    return response.data?.items || [];
+  } catch (err) {
+    console.warn('[知行] 获取历史报告失败。', err);
+    return [];
+  }
+}
+
+/** 获取历史报告详情 */
+export async function getReport(id: number): Promise<ResearchResult> {
+  const response = await api.get(`/api/reports/${id}`);
+  return response.data as ResearchResult;
+}
+
+/** 删除历史报告 */
+export async function deleteReport(id: number): Promise<boolean> {
+  try {
+    await api.delete(`/api/reports/${id}`);
+    return true;
+  } catch (err) {
+    console.warn('[知行] 删除历史报告失败。', err);
+    return false;
+  }
+}
+
+/** 获取 Dashboard 统计 */
+export async function getDashboardStats(): Promise<DashboardStats> {
+  try {
+    const response = await api.get('/api/dashboard');
+    return response.data as DashboardStats;
+  } catch (err) {
+    console.warn('[知行] 获取 Dashboard 失败。', err);
+    return {
+      total_reports: 0,
+      total_events: 0,
+      total_relations: 0,
+      total_insights: 0,
+      latest_reports: [],
+    };
   }
 }
 

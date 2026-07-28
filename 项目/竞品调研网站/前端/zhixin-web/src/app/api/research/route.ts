@@ -3,7 +3,7 @@
  * 比 next.config.ts rewrites 更可靠，避免开发模式下的竞态条件
  */
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8010';
 
 export async function POST(request: Request) {
   try {

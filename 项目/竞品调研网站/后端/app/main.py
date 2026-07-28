@@ -16,10 +16,18 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import verify_token
 from app.core.config import settings
-from app.core.db import init_db
+from app.core.db import get_db, init_db
+from app.services.report_storage_service import (
+    delete_report,
+    get_dashboard_stats,
+    get_report_payload,
+    list_report_summaries,
+    save_research_result,
+)
 from app.services.research_service import ResearchService, ResearchError
 
 
@@ -79,28 +87,89 @@ class ResearchRequest(BaseModel):
     """研究请求体"""
 
     query: str
+    mode: str = "explore"
     search_limit: int = 10
     max_events: int = 8
 
 
 @app.post("/api/research")
-async def research(req: ResearchRequest, _=Depends(verify_token)):
+async def research(
+    req: ResearchRequest,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(verify_token),
+):
     """研究接口：输入关键词，返回带因果脉络的完整报告
 
     流程：搜索 → 提取事件 → 分析关系 → 组织章节 → 生成摘要
     """
     if not req.query or not req.query.strip():
         raise HTTPException(status_code=400, detail="查询关键词不能为空")
+    if req.mode not in {"create", "work", "explore"}:
+        raise HTTPException(status_code=400, detail="研究模式必须是 create、work 或 explore")
 
     service = ResearchService()
 
     try:
         result = await service.research(
             query=req.query.strip(),
+            mode=req.mode,
             search_limit=req.search_limit,
             max_events=req.max_events,
         )
     except ResearchError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    return result.to_dict()
+    saved_report = await save_research_result(db, result)
+    payload = result.to_dict()
+    payload["report_id"] = saved_report.id
+    payload["generated_at"] = (
+        saved_report.generated_at.isoformat() if saved_report.generated_at else None
+    )
+    return payload
+
+
+@app.get("/api/reports")
+async def reports(
+    limit: int = 30,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(verify_token),
+):
+    """历史报告列表"""
+    return {
+        "items": await list_report_summaries(db, limit=limit),
+    }
+
+
+@app.get("/api/reports/{report_id}")
+async def report_detail(
+    report_id: int,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(verify_token),
+):
+    """历史报告详情"""
+    payload = await get_report_payload(db, report_id)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="报告不存在")
+    return payload
+
+
+@app.delete("/api/reports/{report_id}")
+async def remove_report(
+    report_id: int,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(verify_token),
+):
+    """删除历史报告"""
+    deleted = await delete_report(db, report_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="报告不存在")
+    return {"deleted": True, "id": report_id}
+
+
+@app.get("/api/dashboard")
+async def dashboard(
+    db: AsyncSession = Depends(get_db),
+    _=Depends(verify_token),
+):
+    """Dashboard 汇总统计"""
+    return await get_dashboard_stats(db)

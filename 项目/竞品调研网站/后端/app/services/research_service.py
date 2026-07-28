@@ -33,6 +33,9 @@ from app.services.deepseek_service import (
     AnalyzedRelation,
     ChapterOutline,
     GeneratedInsight,
+    ModeReport,
+    ModeReportSection,
+    normalize_research_mode,
 )
 from app.services.query_classifier import classify_query, QueryProfile
 
@@ -57,21 +60,27 @@ class ResearchResult:
     events: list[ExtractedEvent]
     relations: list[AnalyzedRelation]
     chapters: list[ChapterOutline]
+    mode_report: ModeReport | None = None
     insight: GeneratedInsight | None = None
     query_profile: dict | None = None
+    source_summary: dict | None = None
     source_status: str = "real"  # "real" | "fallback"
     warning: str | None = None
+    mode: str = "explore"
 
     def to_dict(self) -> dict:
         """转为字典格式（用于组装 Report JSON）"""
         return {
             "query": self.query,
+            "mode": self.mode,
             "summary": self.summary,
             "events": [e.to_dict() for e in self.events],
             "relations": [r.to_dict() for r in self.relations],
             "chapters": [c.to_dict() for c in self.chapters],
+            "mode_report": self.mode_report.to_dict() if self.mode_report else None,
             "insight": self.insight.to_dict() if self.insight else None,
             "query_profile": self.query_profile,
+            "source_summary": self.source_summary,
             "source_status": self.source_status,
             "warning": self.warning,
         }
@@ -113,6 +122,7 @@ class ResearchService:
     async def research(
         self,
         query: str,
+        mode: str = "explore",
         search_limit: int = 10,
         max_events: int = 8,
     ) -> ResearchResult:
@@ -129,14 +139,15 @@ class ResearchService:
         Raises:
             ResearchError: 流程中任一步骤失败
         """
-        logger.info("开始研究流程: query='%s'", query)
+        mode = normalize_research_mode(mode)
+        logger.info("开始研究流程: query='%s', mode='%s'", query, mode)
 
         # Step 0: 主题分类
         query_profile = await classify_query(query)
         logger.info("主题分类完成: type='%s', rewritten='%s'", query_profile.topic_type, query_profile.rewritten_query[:50])
 
         # 搜索时使用改写后的查询词
-        search_query = query_profile.rewritten_query
+        search_query = _mode_search_query(query_profile.rewritten_query, mode)
 
         # Step 1: 搜索
         try:
@@ -149,63 +160,85 @@ class ResearchService:
             logger.warning("搜索结果为空")
             return ResearchResult(
                 query=query,
+                mode=mode,
                 summary="未找到与该关键词相关的信息。",
                 events=[],
                 relations=[],
                 chapters=[],
+                mode_report=None,
                 insight=None,
                 query_profile=query_profile.to_dict(),
+                source_summary=_build_source_summary([], getattr(self, '_source_status', 'real')),
                 source_status=getattr(self, '_source_status', 'real'),
                 warning=getattr(self, '_warning', None),
             )
 
         # Step 2: 提取事件
         try:
-            events = await self._extract_events(query, search_results, max_events, query_profile.to_dict())
+            events = await self._extract_events(query, search_results, max_events, query_profile.to_dict(), mode)
         except Exception as e:
             logger.error("事件提取失败: %s", e)
             raise ResearchError(f"事件提取失败: {e}") from e
 
+        source_summary = _build_source_summary(events, getattr(self, '_source_status', 'real'))
+
         if not events:
             return ResearchResult(
                 query=query,
+                mode=mode,
                 summary="找到了相关信息，但无法提取结构化事件。",
                 events=[],
                 relations=[],
                 chapters=[],
+                mode_report=None,
                 insight=None,
                 query_profile=query_profile.to_dict(),
+                source_summary=source_summary,
                 source_status=getattr(self, '_source_status', 'real'),
                 warning=getattr(self, '_warning', None),
             )
 
         # Step 3: 分析关系
         try:
-            relations = await self._analyze_relations(query, events, query_profile.to_dict())
+            relations = await self._analyze_relations(query, events, query_profile.to_dict(), mode)
         except Exception as e:
             logger.warning("关系分析失败（非致命）: %s", e)
             relations = []
 
         # Step 4: 组织章节
         try:
-            chapters = await self._organize_chapters(query, events, relations, query_profile.to_dict())
+            chapters = await self._organize_chapters(query, events, relations, query_profile.to_dict(), mode)
         except Exception as e:
             logger.warning("章节组织失败（非致命）: %s", e)
             chapters = []
 
         # Step 5: 生成洞察（非致命）
         try:
-            insight = await self._generate_insight(query, events, relations, query_profile.to_dict())
+            insight = await self._generate_insight(query, events, relations, query_profile.to_dict(), mode)
+            if not isinstance(insight, GeneratedInsight):
+                insight = None
         except Exception as e:
             logger.warning("洞察生成失败（非致命）: %s", e)
             insight = None
 
-        # Step 6: 生成引导摘要
-        summary = self._generate_summary(query, events, chapters)
+        # Step 6: 生成三模式报告（非致命，有规则兜底）
+        try:
+            mode_report = await self._generate_mode_report(
+                query, mode, events, relations, search_results, query_profile.to_dict()
+            )
+            if not isinstance(mode_report, ModeReport):
+                mode_report = _fallback_mode_report(query, mode, events, relations)
+        except Exception as e:
+            logger.warning("模式报告生成失败，使用规则兜底（非致命）: %s", e)
+            mode_report = _fallback_mode_report(query, mode, events, relations)
+
+        # Step 7: 生成引导摘要
+        summary = self._generate_summary(query, mode, events, chapters, mode_report)
 
         logger.info(
-            "研究流程完成: query='%s', 事件=%d, 关系=%d, 章节=%d, 洞察=%s",
+            "研究流程完成: query='%s', mode='%s', 事件=%d, 关系=%d, 章节=%d, 洞察=%s",
             query,
+            mode,
             len(events),
             len(relations),
             len(chapters),
@@ -214,12 +247,15 @@ class ResearchService:
 
         return ResearchResult(
             query=query,
+            mode=mode,
             summary=summary,
             events=events,
             relations=relations,
             chapters=chapters,
+            mode_report=mode_report,
             insight=insight,
             query_profile=query_profile.to_dict(),
+            source_summary=source_summary,
             source_status=getattr(self, '_source_status', 'real'),
             warning=getattr(self, '_warning', None),
         )
@@ -267,20 +303,22 @@ class ResearchService:
         search_results: list[SearchResult],
         max_events: int,
         query_profile: dict | None = None,
+        mode: str = "explore",
     ) -> list[ExtractedEvent]:
         """Step 2: 用 DeepSeek 提取结构化事件"""
         logger.info("Step 2: 提取事件")
-        return await self.ai_service.extract_events(query, search_results, max_events, query_profile)
+        return await self.ai_service.extract_events(query, search_results, max_events, query_profile, mode)
 
     async def _analyze_relations(
         self,
         query: str,
         events: list[ExtractedEvent],
         query_profile: dict | None = None,
+        mode: str = "explore",
     ) -> list[AnalyzedRelation]:
         """Step 3: 用 DeepSeek 分析事件间关系"""
         logger.info("Step 3: 分析关系")
-        return await self.ai_service.analyze_relations(query, events, query_profile)
+        return await self.ai_service.analyze_relations(query, events, query_profile, mode)
 
     async def _organize_chapters(
         self,
@@ -288,10 +326,11 @@ class ResearchService:
         events: list[ExtractedEvent],
         relations: list[AnalyzedRelation],
         query_profile: dict | None = None,
+        mode: str = "explore",
     ) -> list[ChapterOutline]:
         """Step 4: 用 DeepSeek 组织章节"""
         logger.info("Step 4: 组织章节")
-        return await self.ai_service.organize_chapters(query, events, relations, query_profile)
+        return await self.ai_service.organize_chapters(query, events, relations, query_profile, mode)
 
     async def _generate_insight(
         self,
@@ -299,16 +338,34 @@ class ResearchService:
         events: list[ExtractedEvent],
         relations: list[AnalyzedRelation],
         query_profile: dict | None = None,
+        mode: str = "explore",
     ) -> GeneratedInsight:
         """Step 5: 用 DeepSeek 生成洞察"""
         logger.info("Step 5: 生成洞察")
-        return await self.ai_service.generate_insight(query, events, relations, query_profile)
+        return await self.ai_service.generate_insight(query, events, relations, query_profile, mode)
+
+    async def _generate_mode_report(
+        self,
+        query: str,
+        mode: str,
+        events: list[ExtractedEvent],
+        relations: list[AnalyzedRelation],
+        search_results: list[SearchResult],
+        query_profile: dict | None = None,
+    ) -> ModeReport:
+        """Step 6: 用 DeepSeek 生成三模式报告"""
+        logger.info("Step 6: 生成模式报告")
+        return await self.ai_service.generate_mode_report(
+            query, mode, events, relations, search_results, query_profile
+        )
 
     def _generate_summary(
         self,
         query: str,
+        mode: str,
         events: list[ExtractedEvent],
         chapters: list[ChapterOutline],
+        mode_report: ModeReport | None = None,
     ) -> str:
         """Step 5: 生成引导摘要（2-3 句）
 
@@ -318,7 +375,12 @@ class ResearchService:
         if not events:
             return f"关于「{query}」，暂未找到足够的信息。"
 
-        parts = [f"关于「{query}」，"]
+        mode_labels = {"create": "创作", "work": "工作", "explore": "探索"}
+        parts = [f"关于「{query}」，这是一份面向{mode_labels.get(mode, '探索')}目的的研究。"]
+
+        if mode_report and mode_report.sections:
+            section_titles = [section.title for section in mode_report.sections[:3]]
+            parts.append(f"报告会先处理{'、'.join(section_titles)}等重点。")
 
         if chapters:
             chapter_titles = [ch.title for ch in chapters]
@@ -335,6 +397,131 @@ class ResearchService:
             parts.append(f"到「{last_event.title}」结束。")
 
         return "".join(parts)
+
+
+# ============================================================
+# 三模式与来源辅助
+# ============================================================
+
+def _mode_search_query(query: str, mode: str) -> str:
+    """Add lightweight mode intent to search query."""
+    mode = normalize_research_mode(mode)
+    suffix = {
+        "create": "观点 冲突 案例 证据",
+        "work": "市场 趋势 风险 案例 日期 来源",
+        "explore": "解释 脉络 误解 入门 来源",
+    }[mode]
+    return f"{query} {suffix}"
+
+
+def _build_source_summary(events: list[ExtractedEvent], source_status: str = "real") -> dict:
+    """Build source quality summary for the frontend."""
+    sources: list[dict] = []
+    seen: set[str] = set()
+    for event in events:
+        for src in event.sources:
+            key = src.get("url") or src.get("name") or ""
+            if key and key in seen:
+                continue
+            if key:
+                seen.add(key)
+            sources.append(src)
+
+    total = len(sources)
+    with_url = sum(1 for src in sources if src.get("url"))
+    with_date = sum(1 for src in sources if src.get("published_at"))
+    high = sum(1 for src in sources if src.get("credibility") == "high")
+    medium = sum(1 for src in sources if src.get("credibility") == "medium")
+    unsupported_events = [
+        event.title for event in events if not event.sources or not any(src.get("url") for src in event.sources)
+    ]
+
+    notes: list[str] = []
+    if source_status != "real":
+        notes.append("当前使用兜底或演示数据，来源不可作为正式判断依据。")
+    if total == 0:
+        notes.append("没有可核查来源，报告只适合做结构演示。")
+    elif with_date < total:
+        notes.append("部分来源缺少发布日期，涉及趋势和市场数字时需要进一步核查。")
+    if unsupported_events:
+        notes.append(f"{len(unsupported_events)} 个节点缺少可核查链接。")
+
+    return {
+        "total": total,
+        "with_url": with_url,
+        "with_date": with_date,
+        "high_credibility": high,
+        "medium_credibility": medium,
+        "unsupported_events": unsupported_events,
+        "notes": notes,
+    }
+
+
+def _event_source_refs(event: ExtractedEvent) -> list[dict]:
+    return event.sources[:2] if event.sources else []
+
+
+def _fallback_mode_report(
+    query: str,
+    mode: str,
+    events: list[ExtractedEvent],
+    relations: list[AnalyzedRelation],
+) -> ModeReport:
+    """Create a deterministic mode report when AI sectioning fails."""
+    mode = normalize_research_mode(mode)
+    evidence = list(range(min(len(events), 3)))
+    source_refs: list[dict] = []
+    for idx in evidence:
+        source_refs.extend(_event_source_refs(events[idx]))
+
+    relation_hint = ""
+    if relations:
+        relation_hint = f"已识别 {len(relations)} 条事件关系，可作为判断脉络的辅助证据。"
+
+    first = events[0].summary if events else "目前缺少足够材料。"
+    titles = {
+        "create": "创作角度报告",
+        "work": "工作决策报告",
+        "explore": "探索理解报告",
+    }
+    sections_by_mode = {
+        "create": [
+            ModeReportSection("主题速览", first, evidence_indices=evidence, source_refs=source_refs),
+            ModeReportSection("差异化角度", bullets=[
+                "从资料中的反常识事实切入，而不是重复常见情绪判断。",
+                "把人物、制度、技术或文化因素拆开比较，寻找新的表达角度。",
+                "优先使用有明确来源的案例承载观点。",
+            ], evidence_indices=evidence, source_refs=source_refs),
+            ModeReportSection("观点冲突", body="现有资料不足以确认真实对立立场时，不应制造争议；建议继续补充权威媒体、研究或当事方材料。", evidence_indices=evidence, source_refs=source_refs),
+            ModeReportSection("内容提纲", bullets=["开头：用一个具体案例进入主题。", "核心论证：区分常见叙事与差异化角度。", "结尾：回到用户自己的判断，不替用户完成成稿。"]),
+        ],
+        "work": [
+            ModeReportSection("执行摘要", first, evidence_indices=evidence, source_refs=source_refs),
+            ModeReportSection("风险与待确认", body="对缺少日期、缺少来源或只有单一来源支撑的数字保持低结论强度。", bullets=[
+                "技术风险：确认方案成熟度和依赖条件。",
+                "商业风险：确认市场数字的发布日期和统计口径。",
+                "执行风险：确认组织、预算和合规约束。",
+            ], evidence_indices=evidence, source_refs=source_refs),
+            ModeReportSection("会议速记", bullets=[
+                f"{query} 当前最可靠的事实来源是什么？",
+                "哪些判断是行业预测，哪些是已经发生的事实？",
+                "还缺哪些日期、数字或案例才能进入决策？",
+                "关键参与者的角色和利益是否一致？",
+                "短期不适合做什么？",
+            ]),
+        ],
+        "explore": [
+            ModeReportSection("一句话认识", first, evidence_indices=evidence, source_refs=source_refs),
+            ModeReportSection("核心脉络", body=relation_hint or "目前资料可以先作为入门脉络，后续应补充更高质量来源。", evidence_indices=evidence, source_refs=source_refs),
+            ModeReportSection("继续探索", bullets=[
+                "先读一份权威入门资料，建立基本概念。",
+                "再找一个具体案例，理解它如何发生在现实中。",
+                "最后比较两种不同观点，形成自己的判断。",
+            ]),
+        ],
+    }
+    notes = ["模式报告使用规则兜底生成；如需更强内容质量，请配置可用的 AI 服务。"]
+    return ModeReport(mode=mode, title=f"{query} · {titles[mode]}", sections=sections_by_mode[mode], source_notes=notes)
 
 
 # ============================================================
