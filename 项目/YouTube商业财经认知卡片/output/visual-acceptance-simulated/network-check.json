@@ -1,0 +1,25 @@
+{
+  "checked_at": "2026-10-09T15:21:45.326915+00:00",
+  "saved_draft_allowed_domains": [
+    "youtube.com",
+    "www.youtube.com",
+    "youtu.be"
+  ],
+  "runtime_status": "YouTube proxy CONNECT rejected with 403",
+  "requests": [
+    {
+      "destination": "YouTube watch",
+      "result": "Tunnel connection failed: 403 Forbidden"
+    },
+    {
+      "destination": "YouTube oEmbed",
+      "result": "Tunnel connection failed: 403 Forbidden"
+    },
+    {
+      "destination": "registry.npmjs.org",
+      "result": "HTTP 200"
+    }
+  ],
+  "diagnosis": "拒绝发生在代理 CONNECT 建立 HTTPS 隧道阶段，未收到 YouTube 应用响应；草稿允许域名但当前运行环境仍拒绝。无法从客户端区分未应用配置、传播延迟或代理额外策略。无证据表明视频私有、需登录或无字幕。",
+  "action": "暂停获取模块；未下载视频，未尝试替代工具或绕过代理。"
+}

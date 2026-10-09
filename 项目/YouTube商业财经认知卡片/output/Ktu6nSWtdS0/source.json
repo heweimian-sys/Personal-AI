@@ -1,0 +1,25 @@
+{
+  "video_id": "Ktu6nSWtdS0",
+  "url": "https://www.youtube.com/watch?v=Ktu6nSWtdS0",
+  "checked_at": "2026-10-09T13:28:12.989977+00:00",
+  "title": null,
+  "channel": null,
+  "description": null,
+  "published_at": null,
+  "attempts": [
+    {
+      "kind": "watch",
+      "status": "failed",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "kind": "oembed",
+      "status": "failed",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    }
+  ],
+  "transcript_status": "unavailable",
+  "segments": [],
+  "visual_material": "original_typography_only",
+  "native_skill_found": false
+}

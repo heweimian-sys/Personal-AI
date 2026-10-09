@@ -1,0 +1,97 @@
+{
+  "width": 1440,
+  "height": 1920,
+  "hero_fraction": 0.54,
+  "font_size": 58,
+  "font": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+  "variant": "A",
+  "visual": "original_typography",
+  "native_skill_used": false,
+  "native_pixel_equivalence": "not_claimed",
+  "layout_checks": [
+    {
+      "card": 1,
+      "item": 1,
+      "lines": 1,
+      "bottom": 1186,
+      "slot_bottom": 1208
+    },
+    {
+      "card": 1,
+      "item": 2,
+      "lines": 1,
+      "bottom": 1309,
+      "slot_bottom": 1332
+    },
+    {
+      "card": 1,
+      "item": 3,
+      "lines": 1,
+      "bottom": 1432,
+      "slot_bottom": 1455
+    },
+    {
+      "card": 1,
+      "item": 4,
+      "lines": 1,
+      "bottom": 1556,
+      "slot_bottom": 1578
+    },
+    {
+      "card": 1,
+      "item": 5,
+      "lines": 1,
+      "bottom": 1679,
+      "slot_bottom": 1702
+    },
+    {
+      "card": 1,
+      "item": 6,
+      "lines": 1,
+      "bottom": 1802,
+      "slot_bottom": 1825
+    },
+    {
+      "card": 2,
+      "item": 1,
+      "lines": 1,
+      "bottom": 1186,
+      "slot_bottom": 1208
+    },
+    {
+      "card": 2,
+      "item": 2,
+      "lines": 1,
+      "bottom": 1309,
+      "slot_bottom": 1332
+    },
+    {
+      "card": 2,
+      "item": 3,
+      "lines": 1,
+      "bottom": 1432,
+      "slot_bottom": 1455
+    },
+    {
+      "card": 2,
+      "item": 4,
+      "lines": 1,
+      "bottom": 1556,
+      "slot_bottom": 1578
+    },
+    {
+      "card": 2,
+      "item": 5,
+      "lines": 1,
+      "bottom": 1679,
+      "slot_bottom": 1702
+    },
+    {
+      "card": 2,
+      "item": 6,
+      "lines": 1,
+      "bottom": 1802,
+      "slot_bottom": 1825
+    }
+  ]
+}

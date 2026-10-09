@@ -1,0 +1,11 @@
+__pycache__/
+.venv/
+tmp/
+output/**/*.jpg
+output/**/*.png
+output/**/*.mp4
+output/**/*.webm
+output/**/watch.html
+!output/visual-acceptance-simulated/cover.jpg
+!output/visual-acceptance-simulated/content-01.jpg
+!output/visual-acceptance-simulated/preview.jpg
